@@ -3,3 +3,6 @@
 
 # Ignore code coverage reports
 /coverage/
+
+# Ignore node modules
+node_modules
