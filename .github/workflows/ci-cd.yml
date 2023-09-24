@@ -1,0 +1,102 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+  build_backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
+
+  test_backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
+
+      - name: Run backend tests
+        run: |
+          cd backend
+          npm test
+
+  check_code_coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
+
+      - name: Run backend tests and calculate code coverage
+        run: |
+          cd backend
+          npm test -- --coverage
+
+      - name: Check code coverage
+        run: |
+          cd backend
+          COVERAGE_THRESHOLD=90 # Define your desired coverage threshold
+          COVERAGE_REPORT=$(<coverage/lcov-report/index.html)
+          if [[ $COVERAGE_REPORT == *"<span class=\"strong\">$COVERAGE_THRESHOLD%<\/span>"* ]]; then
+            echo "Code coverage is at least $COVERAGE_THRESHOLD%."
+          else
+            echo "Code coverage is below $COVERAGE_THRESHOLD%."
+            exit 1
+          fi

@@ -2,7 +2,7 @@
 .env
 
 # Ignore code coverage reports
-/coverage/
+server/coverage/
 
 # Ignore node modules
 node_modules

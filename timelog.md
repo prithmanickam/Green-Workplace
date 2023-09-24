@@ -30,3 +30,8 @@
 * *1.5 hours* Created Database Schemas
 * *0.5 hour* Initalised React and Nodejs Express app
 
+### 24 Sep 2023
+* *2 hours* Login Page and Navbar
+* *2 hours* Login Authentication
+* *2 hours* Testing for login and getUserData apis
+* *0.5 hour* Added ci-cd pipeline
