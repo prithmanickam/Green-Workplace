@@ -1,28 +1,37 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom"; // Import BrowserRouter
-import TopNavbar from "./components/TopNavbar";
-import LoginPage from "./pages/LoginPage";
-import AccountPage from "./pages/AccountPage";
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import TopNavbar from './components/TopNavbar';
+import LoginPage from './pages/LoginPage';
+import AccountPage from './pages/AccountPage';
+import HomePage from './pages/HomePage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
-  const isLoggedIn = window.localStorage.getItem("loggedIn");
+  const isLoggedIn = window.localStorage.getItem('loggedIn') === 'true';
 
   return (
-    <Router> 
+    <Router>
       <>
         <TopNavbar />
         <Routes>
           {/* Public Routes */}
           <Route path="/home" element={<LoginPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/account" element={<AccountPage />} />
+
+          {/* Protected Route */}
+          <Route
+            path="/homepage"
+            element={<ProtectedRoute element={<HomePage />} isLoggedIn={isLoggedIn} />}
+          />
+          <Route
+            path="/account"
+            element={<ProtectedRoute element={<AccountPage />} isLoggedIn={isLoggedIn} />}
+          />
 
           <Route
             exact
             path="/"
-            element={
-              isLoggedIn === "true" ? <AccountPage /> : <LoginPage />
-            }
+            element={isLoggedIn === true ? <HomePage /> : <LoginPage />}
           />
         </Routes>
       </>

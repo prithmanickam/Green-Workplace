@@ -1,0 +1,39 @@
+.user-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px; 
+    width: 100%;
+    text-decoration: none;
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 0 0 2px rgb(160, 160, 160); 
+  }
+  
+  .user-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background-color: grey; 
+    z-index: -1;
+    border-radius: 18px 18px 0 0; 
+  }
+  
+  .home-page {
+    text-align: center;
+    padding: 30px;
+  }
+  
+  .user-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .user-card:hover {
+    transform: scale(1.05);
+  }
+  

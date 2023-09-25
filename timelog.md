@@ -35,3 +35,6 @@
 * *2 hours* Login Authentication
 * *2 hours* Testing for login and getUserData apis
 * *0.5 hour* Added ci-cd pipeline
+
+### 25 Sep 2023
+* *2 hours* Homepage for Admins and Private Routing

@@ -49,7 +49,7 @@ const LoginPage = () => {
             window.localStorage.setItem("token", data.token);
             window.localStorage.setItem("loggedIn", true);
 
-            window.location.href = "./account";
+            window.location.href = "./homepage";
           }
         });
     } catch (error) {
