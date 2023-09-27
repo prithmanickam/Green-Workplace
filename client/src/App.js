@@ -1,18 +1,20 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import TopNavbar from './components/TopNavbar';
+import {Route, Routes, BrowserRouter } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import AccountPage from './pages/AccountPage';
 import HomePage from './pages/HomePage';
 import ProtectedRoute from './components/ProtectedRoute';
+import AddTeamsPage from './pages/AddTeamsPage';
+import AddEmployeesPage from './pages/AddEmployeesPage';
+import CompanyDashboardPage from './pages/CompanyDashboardPage';
+import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
 
 const App = () => {
   const isLoggedIn = window.localStorage.getItem('loggedIn') === 'true';
 
   return (
-    <Router>
+    <BrowserRouter>
       <>
-        <TopNavbar />
         <Routes>
           {/* Public Routes */}
           <Route path="/home" element={<LoginPage />} />
@@ -33,9 +35,28 @@ const App = () => {
             path="/"
             element={isLoggedIn === true ? <HomePage /> : <LoginPage />}
           />
+        
+
+        <Route
+          path="/AddEmployees"
+          element={<ProtectedRoute element={<AddEmployeesPage />} isLoggedIn={isLoggedIn} />}
+        />
+        <Route
+          path="/AddTeams"
+          element={<ProtectedRoute element={<AddTeamsPage />} isLoggedIn={isLoggedIn} />}
+        />
+        <Route
+          path="/CompanyAdminFunctions"
+          element={<ProtectedRoute element={<CompanyAdminFunctionsPage />} isLoggedIn={isLoggedIn} />}
+        />
+        <Route
+          path="/CompanyDashboard"
+          element={<ProtectedRoute element={<CompanyDashboardPage />} isLoggedIn={isLoggedIn} />}
+        />
         </Routes>
+        
       </>
-    </Router>
+    </BrowserRouter>
   );
 };
 

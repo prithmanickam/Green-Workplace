@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, Typography } from "@mui/material";
 import "../css/HomePage.css";
 import greyBackground from "../images/greyBackground.png";
+import TopNavbar from '../components/TopNavbar';
 
 export default function HomePage() {
   const cardData = [
@@ -37,42 +38,46 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="home-page">
-      <h1>HomePage</h1>
-      <div className="user-grid">
-        {cardData.map((card) => (
-          <Link to={`/${card.link}`} key={card.id} className="user-card">
-            <Card
-              sx={{
-                borderRadius: "20px",
-                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                textDecoration: "none",
-                color: "#333",
-                transition: "transform 0.2s ease-in-out",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              <div
-                style={{
-                  backgroundImage: `url(${card.picture})`, 
-                  backgroundPosition: "center top",
-                  backgroundSize: "100% 50%",
-                  height: "150px",
-                }}
-              ></div>
+    <>
+      <TopNavbar />
+      <div className="home-page">
 
-              <CardContent>
-                <Typography variant="h6">{card.name}</Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {card.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+        <h1>HomePage</h1>
+        <div className="user-grid">
+          {cardData.map((card) => (
+            <Link to={`/${card.link}`} key={card.id} className="user-card">
+              <Card
+                sx={{
+                  borderRadius: "20px",
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+                  textDecoration: "none",
+                  color: "#333",
+                  transition: "transform 0.2s ease-in-out",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div
+                  style={{
+                    backgroundImage: `url(${card.picture})`,
+                    backgroundPosition: "center top",
+                    backgroundSize: "100% 50%",
+                    height: "150px",
+                  }}
+                ></div>
+
+                <CardContent>
+                  <Typography variant="h6">{card.name}</Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {card.description}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

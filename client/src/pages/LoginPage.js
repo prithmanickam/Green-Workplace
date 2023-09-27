@@ -12,6 +12,7 @@ import Typography from "@mui/material/Typography";
 import { Container } from "@mui/material";
 import React, { useState } from "react";
 import { baseURL } from "../utils/constant";
+import TopNavbar from '../components/TopNavbar';
 
 const LoginPage = () => {
 
@@ -59,6 +60,7 @@ const LoginPage = () => {
 
   return (
     <Container maxWidth={false} disableGutters>
+      <TopNavbar />
       <Grid
         container
         sx={{ height: "90vh", width: "100%", px: 4 }}

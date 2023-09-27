@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { baseURL } from "../utils/constant";
+import TopNavbar from '../components/TopNavbar';
 
 export default function UserDetails() {
   const [userData, setUserData] = useState("");
@@ -33,10 +34,12 @@ export default function UserDetails() {
 
   return (
     <div>
+      <TopNavbar />
       <h1>Account Page</h1>
       <h2>Name: {userData.firstname}</h2>
       <h2>Email: {userData.email}</h2>
       <button onClick={logout}>Log out</button>
     </div>
+
   );
 }

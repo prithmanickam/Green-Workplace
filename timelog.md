@@ -38,3 +38,8 @@
 
 ### 25 Sep 2023
 * *2 hours* Homepage for Admins and Private Routing
+
+### 27 Sep 2023
+* *5 hours* Created dynamic side navbar and padding so contents aren't hidden underneath
+* *1 hours* template pages for Company Dashboard (with grid layout), Add Employees, Add Teams, Admin Functions.
+
