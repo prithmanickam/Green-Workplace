@@ -41,5 +41,8 @@
 
 ### 27 Sep 2023
 * *5 hours* Created dynamic side navbar and padding so contents aren't hidden underneath
-* *1 hours* template pages for Company Dashboard (with grid layout), Add Employees, Add Teams, Admin Functions.
+* *1 hours* Created template pages for Company Dashboard (with grid layout), Add Employees, Add Teams, Admin Functions.
+
+### 28 Sep 2023
+* *4 hours* Create Light and Darkmode, which can be toggled in both navbars.
 

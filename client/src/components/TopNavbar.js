@@ -9,6 +9,10 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import AdbIcon from '@mui/icons-material/Adb';
 import { Link, useNavigate } from 'react-router-dom';
+import { ThemeContext } from '../context/ThemeContext';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import { getThemeColors } from '../utils/themeUtils'; 
 
 function TopNavbar() {
   const navigate = useNavigate();
@@ -20,8 +24,11 @@ function TopNavbar() {
     navigate('/login');
   };
 
+  const { mode, toggleMode } = React.useContext(ThemeContext)
+  const { sameThemeColour, oppositeThemeColour } = getThemeColors(mode);
+
   return (
-    <AppBar position="static" sx={{ backgroundColor: 'black' }}>
+    <AppBar position="static" sx={{ backgroundColor: sameThemeColour }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -61,20 +68,25 @@ function TopNavbar() {
                 Green-Workplace
               </Typography>
             )}
-            <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+            <AdbIcon sx={{ color: "green", display: { xs: 'none', md: 'flex' }, mr: 1 }} />
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h5 style={{ color: oppositeThemeColour }}>{mode.charAt(0).toUpperCase() + mode.slice(1)} Mode</h5>
+            <IconButton sx={{ mr: 1, color: oppositeThemeColour }} onClick={() => toggleMode()}>
+              {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
             {isLoggedIn ? (
               <>
-                <Button color="inherit" onClick={handleLogout}>
-                  Logout
-                </Button>
+
                 <Link to="/account" style={{ textDecoration: 'none' }}>
-                  <IconButton sx={{ p: 0 }}>
+                  <IconButton sx={{ mr: 1 }}>
                     <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
                   </IconButton>
                 </Link>
+                <Button onClick={handleLogout}>
+                  Logout
+                </Button>
               </>
             ) : null}
           </Box>

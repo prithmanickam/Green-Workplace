@@ -11,9 +11,7 @@ export default function CompanyDashboard() {
     <Box sx={{ display: 'flex' }}>
       <SideNavbar />
       <Box component="main" sx={{ flexGrow: 1, py: 10, px: 5, display: 'flex', flexDirection: 'column' }}>
-        <Typography variant="h4" gutterBottom>
-          Company Dashboard
-        </Typography>
+      <h1>Company Dashboard</h1>
         <div style={{ flex: 1, display: 'flex' }}>
           <Grid container spacing={3}>
             {/* First row */}

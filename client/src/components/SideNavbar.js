@@ -11,6 +11,9 @@ import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import ListItem from '@mui/material/ListItem';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import AdbIcon from '@mui/icons-material/Adb';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -18,10 +21,11 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import SettingsIcon from '@mui/icons-material/Settings';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { useNavigate, Link } from 'react-router-dom';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import AdbIcon from '@mui/icons-material/Adb';
+import { ThemeContext } from '../context/ThemeContext';
+import { getThemeColors } from '../utils/themeUtils'; 
 
 const drawerWidth = 240;
 
@@ -74,6 +78,11 @@ export default function SideNavbar() {
   const [open, setOpen] = React.useState(true);
   const [selectedRoute, setSelectedRoute] = React.useState('/homepage');
   const navigate = useNavigate();
+  const { mode, toggleMode } = React.useContext(ThemeContext)
+  const { sameThemeColour, oppositeThemeColour } = getThemeColors(mode);
+  const sideNavbarMenuColour = mode === 'light' ? '#ECECEC' : '#2C2C2C';
+  const sideNavbarMenuOptionColour = mode === 'light' ? 'lightgrey' : '#444';
+
 
   const handleMenuItemClick = (route) => {
     setSelectedRoute(route);
@@ -96,7 +105,7 @@ export default function SideNavbar() {
       <MuiAppBar
         position="fixed"
         sx={{
-          backgroundColor: 'black',
+          backgroundColor: sameThemeColour,
           zIndex: (theme) => theme.zIndex.drawer + 1,
           width: `calc(100% - ${0}px)`,
           marginLeft: open ? drawerWidth : 0,
@@ -105,12 +114,13 @@ export default function SideNavbar() {
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
-              color="inherit"
+              //color="inherit"
               aria-label="open drawer"
               onClick={() => setOpen(!open)}
               edge="start"
               sx={{
                 marginRight: '36px',
+                colour: oppositeThemeColour
               }}
             >
               <MenuIcon />
@@ -120,21 +130,27 @@ export default function SideNavbar() {
                 Green-Workplace
               </Typography>
             </Link>
-            <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+            <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, color: "green" }} />
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Button color="inherit" onClick={handleLogout}>
-              Logout
-            </Button>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h5 style={{ color: oppositeThemeColour }}>{mode.charAt(0).toUpperCase() + mode.slice(1)} Mode</h5>
+            <IconButton sx={{ mr: 1, color: oppositeThemeColour }} onClick={() => toggleMode()}>
+              {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
+
             <Link to="/account" style={{ textDecoration: 'none' }}>
-              <IconButton sx={{ p: 0 }}>
+              <IconButton sx={{ mr: 1 }}>
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
               </IconButton>
             </Link>
+            <Button onClick={handleLogout}>
+              Logout
+            </Button>
           </Box>
         </Toolbar>
       </MuiAppBar>
-      <Drawer variant="permanent" open={open} sx={{ '& .MuiDrawer-paper': { backgroundColor: '#2C2C2C' } }}>
+      <Drawer variant="permanent" open={open} sx={{ '& .MuiDrawer-paper': { backgroundColor: sideNavbarMenuColour } }}>
         <Box height={65} />
         <Divider />
         <List>
@@ -152,7 +168,7 @@ export default function SideNavbar() {
                   minHeight: 48,
                   justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
-                  backgroundColor: selectedRoute === item.route ? '#444' : 'transparent',
+                  backgroundColor: selectedRoute === item.route ? sideNavbarMenuOptionColour : 'transparent',
                 }}
               >
                 <ListItemIcon
@@ -160,12 +176,12 @@ export default function SideNavbar() {
                     minWidth: 0,
                     mr: open ? 3 : 'auto',
                     justifyContent: 'center',
-                    color: 'white',
+                    color: oppositeThemeColour,
                   }}
                 >
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0, color: 'white' }} />
+                <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0, color: oppositeThemeColour }} />
               </ListItemButton>
             </ListItem>
           ))}

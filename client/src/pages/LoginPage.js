@@ -150,7 +150,7 @@ const LoginPage = () => {
               </Button>
               <Grid container>
                 <Grid item xs>
-                  <Link href="#" variant="body2" sx={{ color: "black" }}>
+                  <Link href="#" variant="body2">
                     Forgot password?
                   </Link>
                 </Grid>

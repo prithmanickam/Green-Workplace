@@ -1,9 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { baseURL } from "../utils/constant";
 import TopNavbar from '../components/TopNavbar';
+import { Container } from "@mui/material";
+import Box from '@mui/material/Box';
+import { ThemeContext } from '../context/ThemeContext';
+import { getThemeColors } from '../utils/themeUtils'; 
 
 export default function UserDetails() {
   const [userData, setUserData] = useState("");
+  const { mode, toggleMode } = React.useContext(ThemeContext)
+  const { sameThemeColour, oppositeThemeColour } = getThemeColors(mode);
 
   useEffect(() => {
     fetch(`${baseURL}/userData`, {
@@ -33,13 +39,16 @@ export default function UserDetails() {
   };
 
   return (
-    <div>
+    <Box sx={{ backgroundColor: mode === 'light' ? 'white' : 'black', minHeight: "100vh" }}>
       <TopNavbar />
-      <h1>Account Page</h1>
-      <h2>Name: {userData.firstname}</h2>
-      <h2>Email: {userData.email}</h2>
-      <button onClick={logout}>Log out</button>
-    </div>
-
+      <Container maxWidth={false} disableGutters>
+        <Box component="main" sx={{ px: 5 }}>
+          <h1 style={{ color: oppositeThemeColour }}>Account Page</h1>
+          <h2 style={{ color: oppositeThemeColour }}>Name: {userData.firstname}</h2>
+          <h2 style={{ color: oppositeThemeColour }}>Email: {userData.email}</h2>
+          <button onClick={logout}>Log out</button>
+        </Box>
+      </Container>
+    </Box>
   );
 }

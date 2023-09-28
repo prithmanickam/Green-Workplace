@@ -1,11 +1,18 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
+import { Container } from "@mui/material";
 import { Card, CardContent, Typography } from "@mui/material";
-import "../css/HomePage.css";
 import greyBackground from "../images/greyBackground.png";
 import TopNavbar from '../components/TopNavbar';
+import Box from '@mui/material/Box';
+import { ThemeContext } from '../context/ThemeContext';
+import { getThemeColors } from '../utils/themeUtils'; 
+import "../css/HomePage.css";
 
 export default function HomePage() {
+  const { mode, toggleMode } = React.useContext(ThemeContext)
+  const { sameThemeColour, oppositeThemeColour } = getThemeColors(mode);
+
   const cardData = [
     {
       id: 1,
@@ -38,12 +45,17 @@ export default function HomePage() {
   ];
 
   return (
-    <>
+    <Container
+      maxWidth={false}
+      disableGutters
+      sx={{ backgroundColor: mode === 'light' ? 'white' : 'black' }} // Apply background color based on mode
+    >
       <TopNavbar />
-      <div className="home-page">
+      <Box className="home-page" component="main" sx={{ flexGrow: 1, px: 5 }}>
 
-        <h1>HomePage</h1>
-        <div className="user-grid">
+
+        <h1 style={{ color: oppositeThemeColour }}>Homepage</h1>
+        <Box className="user-grid" display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={3} justifyContent="center" marginTop={2}>
           {cardData.map((card) => (
             <Link to={`/${card.link}`} key={card.id} className="user-card">
               <Card
@@ -68,16 +80,16 @@ export default function HomePage() {
                 ></div>
 
                 <CardContent>
-                  <Typography variant="h6">{card.name}</Typography>
-                  <Typography variant="body2" color="textSecondary">
+                  <Typography variant="h6" sx={{ color: oppositeThemeColour }}>{card.name}</Typography>
+                  <Typography variant="body2" color="grey">
                     {card.description}
                   </Typography>
                 </CardContent>
               </Card>
             </Link>
           ))}
-        </div>
-      </div>
-    </>
+        </Box>
+      </Box>
+    </Container>
   );
 }
