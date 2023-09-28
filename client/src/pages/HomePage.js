@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Container } from "@mui/material";
 import { Card, CardContent, Typography } from "@mui/material";
@@ -10,8 +10,8 @@ import { getThemeColors } from '../utils/themeUtils';
 import "../css/HomePage.css";
 
 export default function HomePage() {
-  const { mode, toggleMode } = React.useContext(ThemeContext)
-  const { sameThemeColour, oppositeThemeColour } = getThemeColors(mode);
+  const { mode } = React.useContext(ThemeContext)
+  const { oppositeThemeColour } = getThemeColors(mode);
 
   const cardData = [
     {

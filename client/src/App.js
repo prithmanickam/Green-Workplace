@@ -8,8 +8,6 @@ import AddTeamsPage from './pages/AddTeamsPage';
 import AddEmployeesPage from './pages/AddEmployeesPage';
 import CompanyDashboardPage from './pages/CompanyDashboardPage';
 import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeContextProvider } from './context/ThemeContext';
 
 const App = () => {
@@ -39,7 +37,6 @@ const App = () => {
               path="/"
               element={isLoggedIn === true ? <HomePage /> : <LoginPage />}
             />
-
 
             <Route
               path="/AddEmployees"

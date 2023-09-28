@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { baseURL } from "../utils/constant";
 import TopNavbar from '../components/TopNavbar';
 import { Container } from "@mui/material";
@@ -8,8 +8,8 @@ import { getThemeColors } from '../utils/themeUtils';
 
 export default function UserDetails() {
   const [userData, setUserData] = useState("");
-  const { mode, toggleMode } = React.useContext(ThemeContext)
-  const { sameThemeColour, oppositeThemeColour } = getThemeColors(mode);
+  const { mode } = React.useContext(ThemeContext)
+  const { oppositeThemeColour } = getThemeColors(mode);
 
   useEffect(() => {
     fetch(`${baseURL}/userData`, {

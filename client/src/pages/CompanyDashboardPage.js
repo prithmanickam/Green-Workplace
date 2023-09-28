@@ -1,7 +1,6 @@
 import React from "react";
 import SideNavbar from '../components/SideNavbar';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
