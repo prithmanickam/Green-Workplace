@@ -45,4 +45,11 @@
 
 ### 28 Sep 2023
 * *4 hours* Create Light and Darkmode, which can be toggled in both navbars.
+* *1 hours* Created Add Employee Page
+* *3 hours* Created Send Registration Email API  
+* *1 hours* Created Register Page
+* *2 hours* Started Retrieve email from Registration URL Token API 
 
+### 29 Sep 2023
+* *1.5 hours* Created Register User API
+* *1 hours* Edited homepage so different user types are displayed different menu cards
