@@ -12,11 +12,18 @@ import TableHead from '@mui/material/TableHead';
 import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
+import { Navigate } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
 
 export default function AddEmployees() {
   const [emailInput, setEmailInput] = useState('');
   const [registeredAccounts] = useState([]);
+  const { userData } = useUser();
+
+  if (userData && userData.type !== 'Admin') {
+    return <Navigate to="/homepage" replace />;
+  }
 
   const handleEmailInputChange = (event) => {
     setEmailInput(event.target.value);
@@ -43,7 +50,6 @@ export default function AddEmployees() {
         }
       })
       .catch((error) => {
-        console.error("Error sending registration emails:", error);
         toast.error("An error occurred while sending registration emails.");
       });
 

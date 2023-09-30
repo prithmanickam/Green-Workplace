@@ -11,9 +11,33 @@ import CompanyDashboardPage from './pages/CompanyDashboardPage';
 import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
 import { ThemeContextProvider } from './context/ThemeContext';
 import { UserContextProvider } from './context/UserContext';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   const isLoggedIn = window.localStorage.getItem('loggedIn') === 'true';
+
+  // If the user is logged in, log them out and redirect to the login page
+  const LoginPageLoggedOut = () => {
+    if (isLoggedIn) {
+      window.localStorage.removeItem('token');
+      window.localStorage.removeItem('loggedIn');
+      return <LoginPage />;
+    } else {
+      return <LoginPage />;
+    }
+  };
+  
+  // If the user is logged in, log them out and redirect to the registration page
+  const RegistrationPageLoggedOut = () => {
+    if (isLoggedIn) {
+      window.localStorage.removeItem('token');
+      window.localStorage.removeItem('loggedIn');
+      return <RegistrationPage />;
+    } else {
+      return <RegistrationPage />;
+    }
+  };
 
   return (
     <ThemeContextProvider>
@@ -23,9 +47,11 @@ const App = () => {
             <Routes>
               {/* Public Routes */}
               <Route path="/home" element={<LoginPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register/:token" element={<RegistrationPage />} />
-              <Route path="/register" element={<RegistrationPage />} />
+              <Route path="/login" element={<LoginPageLoggedOut />} />
+              <Route path="/register/:registrationtoken" element={<RegistrationPageLoggedOut />} />
+
+              {/* For testing purposes to create mock accounts */}
+              {/* <Route path="/register" element={<RegistrationPage />} /> */}
 
               {/* Protected Route */}
               <Route
@@ -60,7 +86,17 @@ const App = () => {
                 element={<ProtectedRoute element={<CompanyDashboardPage />} isLoggedIn={isLoggedIn} />}
               />
             </Routes>
-
+            <ToastContainer
+              position="top-right"
+              autoClose={2500}
+              hideProgressBar
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss={false}
+              draggable={false}
+              pauseOnHover={false}
+              theme="light"
+            />
           </>
         </BrowserRouter>
       </UserContextProvider>

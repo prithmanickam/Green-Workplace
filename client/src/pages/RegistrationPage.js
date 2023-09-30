@@ -7,32 +7,24 @@ import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 import Card from "@mui/material/Card";
 import { useParams } from "react-router-dom";
-
-const defaultTheme = createTheme();
+import TopNavbar from '../components/TopNavbar';
 
 export default function Registration() {
     const { registrationtoken } = useParams(); // Get registration token from URL
     const [email, setEmail] = useState("");
-    console.log(registrationtoken)
 
-    //Todo need to finish
     useEffect(() => {
-        console.log("in useeffect");
         // Fetch the user's email using the registration token
         if (registrationtoken) {
-            console.log("there is a reg token");
-            fetch(`http://localhost:5000/api/getEmail?token=${registrationtoken}`)
+            fetch(`http://localhost:5000/api/getEmail?token=${registrationtoken}`, { method: "POST" })
                 .then((res) => res.json())
                 .then((data) => {
-                    console.log("Email should show:");
-                    handleEmailValidation(data.email);
-
                     if (data.status === "ok" && data.email) {
                         setEmail(data.email);
+                        toast.success("Fetched email address from URL Token.");
                     } else {
                         console.log("invalid registration token");
                         toast.error("Invalid registration token.");
@@ -40,12 +32,6 @@ export default function Registration() {
                 });
         }
     }, [registrationtoken]);
-
-    // for testing purposes (will remove)
-    const handleEmailValidation = (validatedEmail) => {
-        console.log("validatedEmail:");
-        console.log(validatedEmail);
-    };
 
     // to register an account / check if detail meet validations
     const handleSubmit = (event) => {
@@ -57,12 +43,13 @@ export default function Registration() {
         });
         const firstname = data.get("firstname");
         const lastname = data.get("lastname");
-        const email = data.get("email");
         const password = data.get("password");
         const confirmPassword = data.get("confirmPassword");
         const passwordRegex = /^(?=.*\d).{6,}$/;
 
-        if (!passwordRegex.test(password)) {
+        if (firstname.trim() === "" || lastname.trim() === "") {
+            toast.error("First Name and Last Name are required.");
+        } else if (!passwordRegex.test(password)) {
             toast.error(
                 "Password should be at least 6 characters long and contain at least 1 digit."
             );
@@ -89,20 +76,17 @@ export default function Registration() {
                 .then((data) => {
                     console.log(data, "userRegister");
                     if (data.status === "ok") {
-                        alert("Registration Successful");
+                        toast.success("Registration Successful");
                     } else {
-                        alert("Something went wrong");
+                        toast.error("Something went wrong");
                     }
                 });
         }
     };
 
-    //testing (ignore)
-    console.log("email outside of functions");
-    console.log(email);
-
     return (
-        <ThemeProvider theme={defaultTheme}>
+        <Container maxWidth={false} disableGutters>
+            <TopNavbar />
             <Container
                 component="main"
                 sx={{
@@ -175,11 +159,11 @@ export default function Registration() {
                                         required
                                         fullWidth
                                         id="email"
-                                        label="Email Address"
+                                        //label="Email Address"
                                         name="email"
                                         autoComplete="email"
-                                    //value={email}
-                                    //disabled // Make the email field uneditable
+                                        value={email}
+                                        disabled // Make the email field uneditable
                                     />
                                 </Grid>
                                 <Grid item xs={12}>
@@ -224,6 +208,6 @@ export default function Registration() {
                     </Box>
                 </Card>
             </Container>
-        </ThemeProvider>
+        </Container>
     );
 }

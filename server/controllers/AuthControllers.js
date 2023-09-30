@@ -10,7 +10,8 @@ const nodemailer = require('nodemailer');
 
 const JWT_SECRET_FOR_REGISTRATION = 'asbfi3e5asf36n2';
 
-module.exports.sendRegistrationEmails = async (req) => {
+// For admin to send registration email to a users email inbox
+module.exports.sendRegistrationEmails = async (req, res) => {
   try {
     const emails = req.body.emails;
 
@@ -42,7 +43,8 @@ module.exports.sendRegistrationEmails = async (req) => {
         <html>
           <body>
             <p>Hello,</p>
-            <p>Click the following link to complete your Green-Workplace registration:</p>
+            <p>Your company has signed you up to Green-Workplace, a site to track your teams hybrid working patterns and carbon footprint.</p>
+            <p>Click the following link to complete your registration:</p>
             <a href="http://localhost:3000/register/${registrationToken}">Register</a>
           </body>
         </html>
@@ -52,25 +54,25 @@ module.exports.sendRegistrationEmails = async (req) => {
       await transporter.sendMail({
         from: 'no-reply@greenworkplace.com',
         to: email,
-        subject: 'Registration Link',
+        subject: 'Green-Workplace Registration Link',
         html: emailContent,
       });
 
       console.log(`Registration email sent to ${email}`);
+      
     }
+    res.status(200).json({ status: "ok"});
   } catch (error) {
-    console.error('Error sending registration emails:', error);
+    res.status(500).json({ status: "error" });
   }
 };
 
 // Endpoint to fetch the user's email using the registration token
 module.exports.getEmailFromToken = async (req, res) => {
   const { token } = req.query;
-  console.log("getEmailFromToken is being called")
 
   try {
     // Verify the registration token
-    console.log('getEmailFromToken API called with token:', token);
     const decodedToken = jwt.verify(token, JWT_SECRET_FOR_REGISTRATION);
 
     const email = decodedToken.email;
@@ -83,7 +85,7 @@ module.exports.getEmailFromToken = async (req, res) => {
   }
 };
 
-
+// Register the user to the database
 module.exports.registerUser = async (req, res) => {
   const { firstname, lastname, email, password } = req.body;
 
@@ -106,14 +108,14 @@ module.exports.registerUser = async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({ status: "ok" });
+    res.status(200).json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ status: "error" });
     console.log(error);
   }
 };
 
-
+// Allows user to login if their credentials are correct
 module.exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -141,6 +143,7 @@ module.exports.loginUser = async (req, res) => {
   }
 };
 
+// Get the user data that logged in
 module.exports.getUserData = async (req, res) => {
   const { token } = req.body;
 

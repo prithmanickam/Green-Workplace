@@ -136,7 +136,7 @@ export default function SideNavbar() {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h5 style={{ color: oppositeThemeColour }}>{mode.charAt(0).toUpperCase() + mode.slice(1)} Mode</h5>
             <IconButton sx={{ mr: 1, color: oppositeThemeColour }} onClick={() => toggleMode()}>
-              {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+              {mode === 'dark' ? <Brightness4Icon /> : <Brightness7Icon />}
             </IconButton>
 
             <Link to="/account" style={{ textDecoration: 'none' }}>

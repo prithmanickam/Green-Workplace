@@ -13,6 +13,7 @@ import { Container } from "@mui/material";
 import React, { useState } from "react";
 import { baseURL } from "../utils/constant";
 import TopNavbar from '../components/TopNavbar';
+import { toast } from "react-toastify";
 
 const LoginPage = () => {
 
@@ -43,9 +44,9 @@ const LoginPage = () => {
         .then((res) => res.json())
         .then((data) => {
           console.log(data, "userRegister");
-          //if login is successful we store the token, and var logged in set to true
+          //if login is successful we store the token, and var loggedIn is set to true
           if (data.status === "ok") {
-            alert("login successful");
+            toast.success("Login successful")
 
             window.localStorage.setItem("token", data.token);
             window.localStorage.setItem("loggedIn", true);
@@ -142,7 +143,7 @@ const LoginPage = () => {
                   backgroundColor: "green",
                   borderRadius: "10px",
                   "&:hover": {
-                    backgroundColor: "darkgreen", // Dark green color on hover
+                    backgroundColor: "darkgreen",
                   },
                 }}
               >

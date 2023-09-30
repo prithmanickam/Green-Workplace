@@ -6,11 +6,12 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 
 export default function CompanyDashboard() {
+
   return (
     <Box sx={{ display: 'flex' }}>
       <SideNavbar />
       <Box component="main" sx={{ flexGrow: 1, py: 10, px: 5, display: 'flex', flexDirection: 'column' }}>
-      <h1>Company Dashboard</h1>
+        <h1>Company Dashboard</h1>
         <div style={{ flex: 1, display: 'flex' }}>
           <Grid container spacing={3}>
             {/* First row */}

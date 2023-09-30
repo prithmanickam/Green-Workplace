@@ -11,6 +11,6 @@ Web app to support companies in managing agile teams’ hybrid working patterns 
 - `cd server`
 - `npm run dev`
 
-## Backend testing
+### Backend testing
 - `npm test`
 - for code coverage: `npm test -- --coverage`

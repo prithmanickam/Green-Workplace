@@ -53,3 +53,11 @@
 ### 29 Sep 2023
 * *1.5 hours* Created Register User API
 * *1 hours* Edited homepage so different user types are displayed different menu cards
+* *2 hours* Fixed Bug / Completed Retrieve email from Registration URL Token API
+* *2.5 hours* Created passing tests for Send Registation Emails API and Get Users Email From URL Token API (currently 98% code coverage)
+
+### 30 Sep 2023
+* *1 hours* Ensure users are logged out when in login / registration pages
+* *1 hours* Allowed private routing for user type
+* *1 hours* Fixed api bugs to allow frontend toasts (pop-ups) for for api requests
+

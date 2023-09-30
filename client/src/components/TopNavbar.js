@@ -12,7 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import { getThemeColors } from '../utils/themeUtils'; 
+import { getThemeColors } from '../utils/themeUtils';
 
 function TopNavbar() {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ function TopNavbar() {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h5 style={{ color: oppositeThemeColour }}>{mode.charAt(0).toUpperCase() + mode.slice(1)} Mode</h5>
             <IconButton sx={{ mr: 1, color: oppositeThemeColour }} onClick={() => toggleMode()}>
-              {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+              {mode === 'dark' ? <Brightness4Icon /> : <Brightness7Icon />}
             </IconButton>
             {isLoggedIn ? (
               <>
