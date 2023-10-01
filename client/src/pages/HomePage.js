@@ -2,14 +2,13 @@ import React, { useEffect } from "react";
 import { baseURL } from "../utils/constant";
 import { Link } from "react-router-dom";
 import { Container } from "@mui/material";
-import { Card, CardContent, Typography } from "@mui/material";
+import { Card, CardContent, Typography, CardMedia } from "@mui/material";
 import greyBackground from "../images/greyBackground.png";
 import TopNavbar from '../components/TopNavbar';
 import Box from '@mui/material/Box';
 import { ThemeContext } from '../context/ThemeContext';
 import { useUser } from '../context/UserContext';
 import { getThemeColors } from '../utils/themeUtils';
-import "../css/HomePage.css";
 
 export default function HomePage() {
   const { mode } = React.useContext(ThemeContext)
@@ -72,16 +71,16 @@ export default function HomePage() {
     {
       id: 1,
       name: "Set Carbon Footprint",
-      description: "Set your route to work based on the days you are working in office. You can use a map or do it manually, and it will calculate your carbon footprint.",
+      description: "Set your route to work for the days you are working at office and it will calculate your carbon footprint. You can use a map or set it manually.",
       picture: greyBackground,
       link: "SetCarbonFootprint"
     },
     {
       id: 2,
-      name: "Individual Dashboard",
-      description: "Show your carbon footprint metrics and history. Also to set your prefernce for WAO.",
+      name: "Your Dashboard",
+      description: "Show your carbon footprint metrics and history. Also to set your preference for Work At Office days.",
       picture: greyBackground,
-      link: "IndividualDashboard"
+      link: "YourDashboard"
     },
     {
       id: 3,
@@ -99,7 +98,7 @@ export default function HomePage() {
     },
     {
       id: 5,
-      name: "Team Ownership Functions",
+      name: "Team Owner Functions",
       description: "Team owner functions i.e. Add/delete team members, set the teams WAO days, and edit team name.",
       picture: greyBackground,
       link: "TeamOwnershipFunctions"
@@ -118,8 +117,23 @@ export default function HomePage() {
       picture: greyBackground,
       link: "CompanyDashboard"
     },
+    {
+      id: 8,
+      name: "Book Floors",
+      description: "View floors current capacity based on days of the week. Team Owners will book on behalf of the team.",
+      picture: greyBackground,
+      link: "BookFloors"
+    },
+    {
+      id: 9,
+      name: "View Events",
+      description: "Create or view events e.g. Socials, ERG's, Sports Clubs.",
+      picture: greyBackground,
+      link: "ViewEvents"
+    },
+
   ];
-  
+
   //display the right cards for the type of user logged in
   let cardData = cardDataForEmployee;
 
@@ -129,6 +143,9 @@ export default function HomePage() {
   if (userData && userData.type === 'Team Member') {
     cardData = cardDataForEmployee.filter(card => card.id !== 5);
   }
+  if (userData && userData.type === 'Team Owner') {
+    cardData = cardDataForEmployee.filter(card => card.id !== 6);
+  }
 
   return (
     <Container
@@ -137,43 +154,47 @@ export default function HomePage() {
       sx={{ backgroundColor: mode === 'light' ? 'white' : 'black' }} // Apply background color based on mode
     >
       <TopNavbar />
-      <Box className="home-page" component="main" sx={{ flexGrow: 1, px: 5 }}>
-
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+        }}
+      >
 
         <h1 style={{ color: oppositeThemeColour }}>Homepage</h1>
-        <Box className="user-grid" display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={3} justifyContent="center" marginTop={2}>
+        <Box className="user-grid" display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={6} justifyContent="center" marginTop={2}>
 
           {cardData.map((card) => (
-            <Link to={`/${card.link}`} key={card.id} className="user-card">
+            <Link to={`/${card.link}`} key={card.id} style={{ textDecoration: 'none' }}>
               <Card
                 sx={{
-                  borderRadius: "20px",
-                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                  textDecoration: "none",
-                  color: "#333",
-                  transition: "transform 0.2s ease-in-out",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
+                  maxWidth: 345,
+                  minHeight: 285,
+                  borderRadius: '15px', // Rounded corners
+                  transition: 'transform 0.2s', // Smooth transition on hover
+                  '&:hover': {
+                    transform: 'scale(1.05)', // Scale up by 5% on hover
+                  },
                 }}
               >
-                <div
-                  style={{
-                    backgroundImage: `url(${card.picture})`,
-                    backgroundPosition: "center top",
-                    backgroundSize: "100% 50%",
-                    height: "150px",
-                  }}
-                ></div>
-
+                <CardMedia sx={{ height: 140 }} image={card.picture} title={card.name} />
                 <CardContent>
-                  <Typography variant="h6" sx={{ color: oppositeThemeColour }}>{card.name}</Typography>
-                  <Typography variant="body2" color="grey">
+                  <Typography gutterBottom variant="h5" component="div">
+                    {card.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
                     {card.description}
                   </Typography>
                 </CardContent>
               </Card>
+
             </Link>
+
+
           ))}
         </Box>
       </Box>

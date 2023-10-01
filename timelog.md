@@ -61,3 +61,8 @@
 * *1 hours* Allowed private routing for user type
 * *1 hours* Fixed api bugs to allow frontend toasts (pop-ups) for for api requests
 
+### 1 Oct 2023
+* *1 hours* Fixed overlapping cards bug in Homepage and added side navbar menu options for Team Members and Team Owners
+
+
+

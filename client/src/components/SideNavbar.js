@@ -25,15 +25,35 @@ import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { useNavigate, Link } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
-import { getThemeColors } from '../utils/themeUtils'; 
+import { getThemeColors } from '../utils/themeUtils';
+import { useUser } from '../context/UserContext';
+import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
+import ChatIcon from '@mui/icons-material/Chat';
+import AppsIcon from '@mui/icons-material/Apps';
+import GroupIcon from '@mui/icons-material/Group';
+import BusinessIcon from '@mui/icons-material/Business';
+import EventSeatIcon from '@mui/icons-material/EventSeat';
+import EventIcon from '@mui/icons-material/Event';
 
 const drawerWidth = 240;
 
-const menuItems = [
-  { text: 'Company Dashboard', route: '/CompanyDashboard', icon: <DashboardIcon /> },
+const adminMenuItems = [
+  { text: 'Company Dashboard', route: '/CompanyDashboard', icon: <BusinessIcon /> },
   { text: 'Add Employees', route: '/AddEmployees', icon: <PersonAddIcon /> },
   { text: 'Add Teams', route: '/AddTeams', icon: <GroupAddIcon /> },
   { text: 'Admin Functions', route: '/CompanyAdminFunctions', icon: <SettingsIcon /> },
+];
+
+const employeeMenuItems = [
+  { text: 'Set Carbon Footprint', route: '/SetCarbonFootprint', icon: <EnergySavingsLeafIcon /> },
+  { text: 'Your Dashboard', route: '/YourDashboard', icon: <DashboardIcon /> },
+  { text: 'Team Chat', route: '/TeamChat', icon: <ChatIcon /> },
+  { text: 'Team Dashboard', route: '/TeamDashboard', icon: <AppsIcon /> },
+  { text: 'Team Owner Functions', route: '/TeamDashboard', icon: <SettingsIcon /> },
+  { text: 'Join or Leave a Team', route: '/TeamDashboard', icon: <GroupIcon /> },
+  { text: 'Company Dashboard', route: '/CompanyDashboard', icon: <BusinessIcon /> },
+  { text: 'Book Floors', route: '/TeamDashboard', icon: <EventSeatIcon /> },
+  { text: 'View Events', route: '/ViewEvents', icon: <EventIcon /> },
 ];
 
 const openedMixin = (theme) => ({
@@ -82,7 +102,20 @@ export default function SideNavbar() {
   const { sameThemeColour, oppositeThemeColour } = getThemeColors(mode);
   const sideNavbarMenuColour = mode === 'light' ? '#ECECEC' : '#2C2C2C';
   const sideNavbarMenuOptionColour = mode === 'light' ? 'lightgrey' : '#444';
+  const { userData } = useUser();
 
+  //display the right cards for the type of user logged in
+  let menuItems = employeeMenuItems;
+
+  if (userData && userData.type === 'Admin') {
+    menuItems = adminMenuItems;
+  }
+  if (userData && userData.type === 'Team Member') {
+    menuItems = employeeMenuItems.filter(card => card.text !== "Team Owner Functions");
+  }
+  if (userData && userData.type === 'Team Owner') {
+    menuItems = employeeMenuItems.filter(card => card.text !== "Join or Leave a Team");
+  }
 
   const handleMenuItemClick = (route) => {
     setSelectedRoute(route);
