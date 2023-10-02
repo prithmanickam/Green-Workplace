@@ -7,6 +7,8 @@ import HomePage from './pages/HomePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AddTeamsPage from './pages/AddTeamsPage';
 import AddEmployeesPage from './pages/AddEmployeesPage';
+import SetCarbonFootprintPage from './pages/SetCarbonFootprintPage';
+import FootprintMapPage from './pages/FootprintMapPage';
 import CompanyDashboardPage from './pages/CompanyDashboardPage';
 import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
 import { ThemeContextProvider } from './context/ThemeContext';
@@ -84,6 +86,14 @@ const App = () => {
               <Route
                 path="/CompanyDashboard"
                 element={<ProtectedRoute element={<CompanyDashboardPage />} isLoggedIn={isLoggedIn} />}
+              />
+              <Route
+                path="/SetCarbonFootprint"
+                element={<ProtectedRoute element={<SetCarbonFootprintPage />} isLoggedIn={isLoggedIn} />}
+              />
+              <Route
+                path="/SetCarbonFootprint/UseMap"
+                element={<ProtectedRoute element={<FootprintMapPage />} isLoggedIn={isLoggedIn} />}
               />
             </Routes>
             <ToastContainer

@@ -7,7 +7,7 @@ import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
-import AdbIcon from '@mui/icons-material/Adb';
+import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
@@ -44,7 +44,7 @@ function TopNavbar() {
                   display: { xs: 'none', md: 'flex' },
                   fontFamily: 'Arial',
                   fontWeight: 700,
-                  color: '#5AB034',
+                  color: '#1ED760',
                   textDecoration: 'none',
                 }}
               >
@@ -61,14 +61,14 @@ function TopNavbar() {
                   display: { xs: 'none', md: 'flex' },
                   fontFamily: 'Arial',
                   fontWeight: 700,
-                  color: '#5AB034',
+                  color: '#1ED760',
                   textDecoration: 'none',
                 }}
               >
                 Green-Workplace
               </Typography>
             )}
-            <AdbIcon sx={{ color: "green", display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+            <EnergySavingsLeafIcon sx={{ color: "#1ED760", display: { xs: 'none', md: 'flex' }, mr: 1 }} />
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

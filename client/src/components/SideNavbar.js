@@ -13,7 +13,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ListItem from '@mui/material/ListItem';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import AdbIcon from '@mui/icons-material/Adb';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -159,11 +158,11 @@ export default function SideNavbar() {
               <MenuIcon />
             </IconButton>
             <Link to="/homepage" style={{ textDecoration: 'none' }}>
-              <Typography variant="h6" noWrap sx={{ color: '#5AB034', fontFamily: 'Arial', fontWeight: 700 }}>
+              <Typography variant="h6" noWrap sx={{ color: '#1ED760', fontFamily: 'Arial', fontWeight: 700 }}>
                 Green-Workplace
               </Typography>
             </Link>
-            <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, color: "green" }} />
+            <EnergySavingsLeafIcon sx={{ color: "#1ED760", display: { xs: 'none', md: 'flex' }, mr: 1 }} />
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

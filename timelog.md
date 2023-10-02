@@ -63,6 +63,10 @@
 
 ### 1 Oct 2023
 * *1 hours* Fixed overlapping cards bug in Homepage and added side navbar menu options for Team Members and Team Owners
+* *1 hours* Created Set Carbon Footprint Page (Navigation for Use Map and Manual)
+* *6 hours* Started Creating the Use Map function for Set Carbon Footprint Page (UI Completed and used Google Maps API for operations e.g. displaying route and calculating distance and time)
+
+### 2 Oct 2023
 
 
 
