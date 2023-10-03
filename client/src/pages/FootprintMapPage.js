@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopNavbar from '../components/TopNavbar';
 import { Card, CardContent, Typography, Box, TextField, Button, Stack, ToggleButton, ToggleButtonGroup, Grid, Divider } from '@mui/material';
@@ -13,6 +13,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { toast } from "react-toastify";
+import { useUser } from '../context/UserContext';
 
 import {
   useJsApiLoader,
@@ -27,11 +28,14 @@ const center = { lat: 55.8721, lng: -4.2897 };
 
 function FootprintMapPage() {
 
+
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries: ['places'],
   });
 
+  // light/dark theme modifications 
   const { mode } = React.useContext(ThemeContext);
   let sideBarColour = 'rgba(0, 0, 0, 0.8)';
 
@@ -39,26 +43,34 @@ function FootprintMapPage() {
     sideBarColour = 'rgba(255, 255, 255, 0.6)';
   }
 
+  const { userData } = useUser();
+  const navigate = useNavigate()
+  if (!userData || (userData.type !== 'Team Member')) {
+    console.log("nav backk")
+    navigate('/SetCarbonFootprint');
+  }
+  const email = userData.email;
+
+  // use states constants
   const [day, setDay] = React.useState('');
   const [map, setMap] = useState(null);
   const [directionsResponse, setDirectionsResponse] = useState(null);
   const [distance, setDistance] = useState('');
   const [duration, setDuration] = useState('');
-  const [travelMode, setTravelMode] = useState('DRIVING');
+  const [travelMode, setTravelMode] = useState('TRANSIT');
   const [departureTime, setDepartureTime] = useState('08:00');
   const [carbonFootprint, setCarbonFootprint] = useState('');
-
+  const [leafIconColour, setLeafIconColour] = useState('#eed202');
 
   const originRef = useRef();
   const destiantionRef = useRef();
-  const navigate = useNavigate();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (distance !== '') {
-      const carbonFootprint = calculateCarbonFootprint(parseFloat(distance));
+      const carbonFootprint = calculateCarbonFootprint(parseFloat(distance), travelMode);
       setCarbonFootprint(carbonFootprint);
     }
-  }, [distance]);
+  }, [distance, travelMode]);
 
   if (!isLoaded) {
     console.log(map)
@@ -67,7 +79,8 @@ function FootprintMapPage() {
 
   // Calculates the distance and duration
   async function calculateRoute() {
-    if (originRef.current.value === '' || destiantionRef.current.value === '') {
+    if (originRef.current.value === '' || destiantionRef.current.value === '' || travelMode === null || day === '') {
+      toast.error("Enter all fields.");
       return;
     }
 
@@ -96,20 +109,43 @@ function FootprintMapPage() {
       setDirectionsResponse(results);
       setDistance(results.routes[0].legs[0].distance.text);
       setDuration(results.routes[0].legs[0].duration.text);
+
+      if (travelMode === 'DRIVING') {
+        setLeafIconColour('#C00000');
+
+      } else if (travelMode === 'TRANSIT') {
+        setLeafIconColour('#eed202');
+
+      } else {
+        setLeafIconColour('#1ED760');
+      }
     } else {
       console.error('Google Maps API has not loaded');
       toast.error("Google Maps API has not loaded")
     }
   }
 
-  // To Calculate Carbon Footprint (Currently calculate with respect to driving)
-  function calculateCarbonFootprint(distance) {
-    // Using my assumption that an average fuel efficiency of 10 km/l and carbon emissions of 2.3 kg/liter
-    const fuelEfficiency = 10; // in km/l
-    const carbonEmissionsPerLiter = 2.3; // in kg/l
-    const fuelConsumed = distance / fuelEfficiency; // in liters
-    const carbonFootprint = fuelConsumed * carbonEmissionsPerLiter; // kg CO2
-    return carbonFootprint.toFixed(2);
+  function calculateCarbonFootprint(distance, travelMode) {
+
+    if (travelMode === 'DRIVING') {
+      console.log("drive")
+      // My assumptions for driving
+      const fuelEfficiency = 10; // in km/l
+      const carbonEmissionsPerLiter = 2.3; // in kg/liter
+      const fuelConsumed = distance / fuelEfficiency; // in liters
+      const carbonFootprint = fuelConsumed * carbonEmissionsPerLiter; // kg CO2
+      return carbonFootprint.toFixed(2);
+
+    } else if (travelMode === 'TRANSIT') {
+      // Assumption that 100 grams of CO2 per passenger-kilometer (0.1 kg/km)
+      const averageEmissionsPerKm = 0.1;
+      const carbonFootprint = distance * averageEmissionsPerKm; // kg CO2
+      return carbonFootprint.toFixed(2);
+
+    } else {
+      // For walking or cycling
+      return 0;
+    }
   }
 
   function navigateBack() {
@@ -135,6 +171,39 @@ function FootprintMapPage() {
 
   function handleDepartureTimeChange(event) {
     setDepartureTime(event.target.value);
+  }
+
+  function handleSubmit(event) {
+    if (duration === "" || carbonFootprint === "" || day === "") {
+      toast.error("Duration or Carbon Footprint must not be empty.");
+    } else {
+      console.log(day, duration, carbonFootprint);
+      //toast.success(`Carbon Stats Saved for ${day}.`);
+      fetch("http://localhost:5000/api/postCarbonFootprint", {
+        method: "POST",
+        crossDomain: true,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({
+          email,
+          day,
+          duration,
+          carbonFootprint,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data, "SetCarbonFootprint");
+          if (data.status === "ok") {
+            toast.success(`Carbon Stats Saved for ${day}.`);
+          } else {
+            toast.error("Something went wrong");
+          }
+        });
+    }
   }
 
   return (
@@ -321,7 +390,7 @@ function FootprintMapPage() {
             <Grid container alignItems="center" spacing={1}>
               <Grid item xs={9}>
                 <Typography style={{ fontSize: '15px' }}>Distance: {distance}</Typography>
-                <Typography style={{ fontSize: '15px' }}>Time: {duration}</Typography>
+                <Typography style={{ fontSize: '15px' }}>Duration: {duration}</Typography>
                 <Box py={1}>
                   <Divider />
                 </Box>
@@ -329,7 +398,7 @@ function FootprintMapPage() {
                 <Typography style={{ fontSize: '15px', fontWeight: 'bold' }}>{carbonFootprint} kg CO2</Typography>
               </Grid>
               <Grid item xs={3} container justifyContent="flex-end">
-                <EnergySavingsLeafIcon sx={{ color: '#eed202', fontSize: 30 }} />
+                <EnergySavingsLeafIcon sx={{ color: leafIconColour, fontSize: 30 }} />
               </Grid>
             </Grid>
           </CardContent>
@@ -338,7 +407,7 @@ function FootprintMapPage() {
         <Stack direction="row" spacing={2} p={2} justifyContent="center">
           <Button
             type='submit'
-            //onClick={calculateRoute}
+            onClick={handleSubmit}
             sx={{
               mt: 3, mb: 2, px: 6,
               color: "white",

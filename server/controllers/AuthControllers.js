@@ -59,9 +59,9 @@ module.exports.sendRegistrationEmails = async (req, res) => {
       });
 
       console.log(`Registration email sent to ${email}`);
-      
+
     }
-    res.status(200).json({ status: "ok"});
+    res.status(200).json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ status: "error" });
   }

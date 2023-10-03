@@ -67,6 +67,10 @@
 * *6 hours* Started Creating the Use Map function for Set Carbon Footprint Page (UI Completed and used Google Maps API for operations e.g. displaying route and calculating distance and time)
 
 ### 2 Oct 2023
+* *6 hours* Finished creating the Use Map function for Set Carbon Footprint Page (Can calculate carbon footprint for all travel modes, created APIs for posting and reseting user's current Week carbon stats, passing tests for all APIs)
+
+### 3 Oct 2023
+* *0.5 hours* Fixed Bug in accessing unauthorised pages by modifying URL
 
 
 

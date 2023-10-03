@@ -56,7 +56,6 @@ export default function Registration() {
         } else if (password !== confirmPassword) {
             toast.error("Password and Confirm Password do not match.");
         } else {
-            toast.success("Sign up successful!");
             fetch("http://localhost:5000/api/register", {
                 method: "POST",
                 crossDomain: true,

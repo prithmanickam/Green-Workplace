@@ -21,7 +21,7 @@ export default function AddEmployees() {
   const [registeredAccounts] = useState([]);
   const { userData } = useUser();
 
-  if (userData && userData.type !== 'Admin') {
+  if (!userData || (userData.type !== 'Admin')) {
     return <Navigate to="/homepage" replace />;
   }
 

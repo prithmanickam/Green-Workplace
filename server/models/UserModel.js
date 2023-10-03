@@ -1,22 +1,43 @@
 const mongoose = require("mongoose");
 
- const UserSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
   {
     firstname: String,
     lastname: String,
-    type: { type: String, default: "Team Member" }, //team member, team owner, or admin
+    type: { type: String, default: "Team Member" }, // Team member, team owner, or admin
     email: { type: String, unique: true },
     password: String,
     accountCreated: { type: Date, default: Date.now },
     company: String,
     team: String,
-    profilePicture: { type: String, default: "defaultProfilePicture.png" },
+    profilePicture: String,
     workAtOfficePreference: [String],
-    weeklyMetric: [Number],
-    
-  },
+    weeklyMetric: [],
+    currentWeekStats: {
+      Monday: {
+        duration: String,
+        carbon: Number,
+      },
+      Tuesday: {
+        duration: String,
+        carbon: Number,
+      },
+      Wednesday: {
+        duration: String,
+        carbon: Number,
+      },
+      Thursday: {
+        duration: String,
+        carbon: Number,
+      },
+      Friday: {
+        duration: String,
+        carbon: Number,
+      },
+    },
+  }
 );
 
-const User = mongoose.model("users", UserSchema); 
+const User = mongoose.model("users", UserSchema);
 
-module.exports = User; 
+module.exports = User;

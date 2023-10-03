@@ -1,20 +1,77 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
 import { Card, CardContent, Typography, Box, Button, Stack, Grid } from '@mui/material';
-//import { useUser } from '../context/UserContext';
+import { useUser } from '../context/UserContext';
+import { toast } from "react-toastify";
 
 export default function SetCarbonFootprint() {
-  //const { userData } = useUser();
+  const { userData } = useUser();
+
+  if (!userData || (userData.type !== 'Team Member')) {
+    return <Navigate to="/homepage" replace />;
+  }
+
+  const email = userData.email;
 
   // placeholders before using user data
   const cardsData = [
-    { day: "Mon", time: "2 hours", carbonFootprint: "5 kg" },
-    { day: "Tue", time: "1.5 hours", carbonFootprint: "4 kg" },
-    { day: "Wed", time: "0 hours", carbonFootprint: "0 kg" },
-    { day: "Thu", time: "2.5 hours", carbonFootprint: "6 kg" },
-    { day: "Fri", time: "0 hours", carbonFootprint: "0 kg" },
+    {
+      day: "Monday",
+      duration: userData.currentWeekStats?.Monday?.duration || "0 min",
+      carbonFootprint: `${userData.currentWeekStats?.Monday?.carbon || 0} kg`,
+    },
+    {
+      day: "Tuesday",
+      duration: userData.currentWeekStats?.Tuesday?.duration || "0 min",
+      carbonFootprint: `${userData.currentWeekStats?.Tuesday?.carbon || 0} kg`,
+    },
+    {
+      day: "Wednesday",
+      duration: userData.currentWeekStats?.Wednesday?.duration || "0 min",
+      carbonFootprint: `${userData.currentWeekStats?.Wednesday?.carbon || 0} kg`,
+    },
+    {
+      day: "Thursday",
+      duration: userData.currentWeekStats?.Thursday?.duration || "0 min",
+      carbonFootprint: `${userData.currentWeekStats?.Thursday?.carbon || 0} kg`,
+    },
+    {
+      day: "Friday",
+      duration: userData.currentWeekStats?.Friday?.duration || "0 min",
+      carbonFootprint: `${userData.currentWeekStats?.Friday?.carbon || 0} kg`,
+    },
   ];
+
+  function handleReset(day) {
+    console.log(day)
+
+    //console.log(day, duration, carbonFootprint);
+    //toast.success(`Carbon Stats Saved for ${day}.`);
+    fetch("http://localhost:5000/api/resetCarbonFootprint", {
+      method: "POST",
+      crossDomain: true,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({
+        day,
+        email,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data, "ResetCarbonFootprint");
+        if (data.status === "ok") {
+          toast.success(`Carbon Stats Reseted for ${day}.`);
+        } else {
+          toast.error("Something went wrong");
+        }
+      });
+  }
+
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -69,13 +126,13 @@ export default function SetCarbonFootprint() {
                     {card.day}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Time: {card.time}
+                    Duration: {card.duration}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Your carbon footprint: {card.carbonFootprint}
+                    Carbon Footprint: {card.carbonFootprint}
                   </Typography>
                 </CardContent>
-                <Button variant="outlined" fullWidth>
+                <Button variant="outlined" fullWidth onClick={() => handleReset(card.day)}>
                   Reset
                 </Button>
               </Card>
