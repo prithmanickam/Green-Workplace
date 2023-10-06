@@ -24,13 +24,17 @@ export default function AddTeams() {
   const [nonTeamOwners, setNonTeamOwners] = useState([]);
 
   //to select pick team members
-  //const [registeredAccounts, setRegisteredAccounts] = useState([]);
+  const [registeredAccounts, setRegisteredAccounts] = useState([]);
 
   const [selectedTeamOwner, setSelectedTeamOwner] = useState(null);
 
   const { userData } = useUser();
 
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState([]);
+
   const [teams, setTeams] = useState([]);
+
+  //console.log(selectedTeamMembers)
 
   useEffect(() => {
     // to get all teams
@@ -47,6 +51,7 @@ export default function AddTeams() {
             email: team.teamOwner.email,
             teamName: team.teamName,
             office: team.office,
+            noOfMembers: team.teamMembers.length,
           }));
           setTeams(allTeams);
         } else {
@@ -78,6 +83,26 @@ export default function AddTeams() {
       .catch((error) => {
         toast.error("An error occurred while fetching user data.");
       });
+
+    // Get all users (not admins) - for selecting team members
+    fetch("http://localhost:5000/api/getAllUsers", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          const allEmails = data.users.map((user) => user.email);
+          setRegisteredAccounts(allEmails);
+        } else {
+          toast.error("Failed to fetch user data. Please try again.");
+        }
+      })
+      .catch((error) => {
+        toast.error("An error occurred while fetching user data.");
+      });
   }, []);
 
   console.log(teams)
@@ -95,8 +120,8 @@ export default function AddTeams() {
     const divisions = data.get("divisions");
     const office = data.get("office");
     const company = "Company1";
-    const teamMembers = data.get("teamMembers");
-    console.log(teamOwner, teamName, divisions, office)
+    const teamMembers = selectedTeamMembers;
+    console.log(teamOwner, teamName, divisions, office, teamMembers)
 
 
     if (teamOwner === null || teamName === "" || divisions === "" || office === "") {
@@ -134,35 +159,19 @@ export default function AddTeams() {
     return <Navigate to="/homepage" replace />;
   }
 
-  const handleEmailInputChange = (event) => {
-    setEmailInput(event.target.value);
+  // Handle adding a team member to the selectedTeamMembers array
+  const handleAddTeamMember = (event, newValue) => {
+    if (newValue) {
+      setSelectedTeamMembers([...selectedTeamMembers, newValue]);
+      setEmailInput(''); // Clear the email input
+    }
   };
 
-  // Send registration emails to emails that were entered in the input box
-  const handleAddEmails = () => {
-    const emails = emailInput.split(',').map((email) => email.trim());
-
-    // Make a POST request to the backend API
-    fetch("http://localhost:5000/api/sendRegistrationEmails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ emails }), // Send the list of emails to the server
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          toast.success("Registration emails sent successfully!");
-        } else {
-          toast.error("Failed to send registration emails. Please try again.");
-        }
-      })
-      .catch((error) => {
-        toast.error("An error occurred while sending registration emails.");
-      });
-
-    setEmailInput('');
+  // Handle removing a team member from the selectedTeamMembers array
+  const handleRemoveTeamMember = (index) => {
+    const updatedTeamMembers = [...selectedTeamMembers];
+    updatedTeamMembers.splice(index, 1);
+    setSelectedTeamMembers(updatedTeamMembers);
   };
 
   return (
@@ -203,25 +212,10 @@ export default function AddTeams() {
                           name="teamName"
                           label="Team Name"
                           variant="outlined"
+                          fullWidth
                         />
                       </Grid>
                       <Grid item xs={4}>
-                        <TextField
-                          required
-                          name="divisions"
-                          label="Divisions"
-                          variant="outlined"
-                        />
-                      </Grid>
-                      <Grid item xs={4}>
-                        <TextField
-                          required
-                          name="office"
-                          label="Office"
-                          variant="outlined"
-                        />
-                      </Grid>
-                      <Grid item xs={8}>
                         <TextField
                           name="company"
                           label="Company"
@@ -231,16 +225,49 @@ export default function AddTeams() {
                           disabled
                         />
                       </Grid>
-
-                      <Grid item xs={12}>
+                      <Grid item xs={4}>
                         <TextField
-                          id="teamMembers"
-                          label="Add Team Members (Optional)"
+                          required
+                          name="office"
+                          label="Office"
                           variant="outlined"
                           fullWidth
-                          value={emailInput}
-                          onChange={handleEmailInputChange}
                         />
+                      </Grid>
+                      <Grid item xs={8}>
+                        <TextField
+                          required
+                          name="divisions"
+                          label="Divisions (in order from company, separated by commas)"
+                          variant="outlined"
+                          fullWidth
+                        />
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Autocomplete
+                          id="teamMembers"
+                          label="Add Team Members (Optional)"
+                          options={registeredAccounts}
+                          value={emailInput}
+                          onChange={handleAddTeamMember} // Handle adding team members
+                          renderInput={(params) => (
+                            <TextField {...params} label="Add Team Members (Optional)" variant="outlined" />
+                          )}
+                        />
+                        {/* Display selected team members */}
+                        {selectedTeamMembers.map((member, index) => (
+                          <div key={index}>
+                            {member}
+                            <Button
+                              variant="outlined"
+                              color="secondary"
+                              onClick={() => handleRemoveTeamMember(index)} // Handle removing team members
+                            >
+                              X
+                            </Button>
+                          </div>
+                        ))}
 
                       </Grid>
                     </Grid>
@@ -266,6 +293,7 @@ export default function AddTeams() {
                         <TableRow>
                           <TableCell>Team Owner Email</TableCell>
                           <TableCell>Team Name</TableCell>
+                          <TableCell>No. of Members</TableCell>
                           <TableCell>Office</TableCell>
                         </TableRow>
                       </TableHead>
@@ -274,6 +302,7 @@ export default function AddTeams() {
                           <TableRow key={index}>
                             <TableCell>{team.email}</TableCell>
                             <TableCell>{team.teamName}</TableCell>
+                            <TableCell>{team.noOfMembers}</TableCell>
                             <TableCell>{team.office}</TableCell>
                           </TableRow>
                         ))}
