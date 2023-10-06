@@ -10,6 +10,28 @@ const nodemailer = require('nodemailer');
 
 const JWT_SECRET_FOR_REGISTRATION = 'asbfi3e5asf36n2';
 
+// Fetch all users (that is not admin)
+module.exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({ type: { $ne: 'Admin' } }); // Find users whose type is not 'Admin'
+    res.status(200).json({ status: "ok", users });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// Fetch all users that are not team owners
+module.exports.getAllNonTeamOwners = async (req, res) => {
+  try {
+    const users = await User.find({ teamOwner: null, type: { $ne: 'Admin' } });
+    res.status(200).json({ status: "ok", users });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
 // For admin to send registration email to a users email inbox
 module.exports.sendRegistrationEmails = async (req, res) => {
   try {

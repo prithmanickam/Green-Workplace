@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SideNavbar from '../components/SideNavbar';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -15,11 +15,39 @@ import TableCell from '@mui/material/TableCell';
 import { toast } from "react-toastify";
 import { Navigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+//import axios from "axios";
 
 export default function AddEmployees() {
   const [emailInput, setEmailInput] = useState('');
-  const [registeredAccounts] = useState([]);
+  const [registeredAccounts, setRegisteredAccounts] = useState([]);
   const { userData } = useUser();
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/getAllUsers", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          // Extract user data (emails, first names, last names, and user types)
+          const allUsers = data.users.map((user) => ({
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            type: user.type,
+          }));
+          setRegisteredAccounts(allUsers);
+        } else {
+          toast.error("Failed to fetch user data. Please try again.");
+        }
+      })
+      .catch((error) => {
+        toast.error("An error occurred while fetching user data.");
+      });
+  }, []);
 
   if (!userData || (userData.type !== 'Admin')) {
     return <Navigate to="/homepage" replace />;
@@ -33,7 +61,6 @@ export default function AddEmployees() {
   const handleAddEmails = () => {
     const emails = emailInput.split(',').map((email) => email.trim());
 
-    // Make a POST request to the backend API
     fetch("http://localhost:5000/api/sendRegistrationEmails", {
       method: "POST",
       headers: {
@@ -93,12 +120,18 @@ export default function AddEmployees() {
                       <TableHead>
                         <TableRow>
                           <TableCell>Email</TableCell>
+                          <TableCell>First Name</TableCell>
+                          <TableCell>Last Name</TableCell>
+                          <TableCell>User Type</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {registeredAccounts.map((email, index) => (
+                        {registeredAccounts.map((user, index) => (
                           <TableRow key={index}>
-                            <TableCell>{email}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>{user.firstname}</TableCell>
+                            <TableCell>{user.lastname}</TableCell>
+                            <TableCell>{user.type}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

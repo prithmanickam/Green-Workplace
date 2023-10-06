@@ -72,5 +72,11 @@
 ### 3 Oct 2023
 * *0.5 hours* Fixed Bug in accessing unauthorised pages by modifying URL
 
+### 4 Oct 2023
+* *1 hours* Fetched all employees and displayed them in a table
+* *4 hours* Started Add Team Page & Add Team API. Worked on fixed User Schema to allow being in multiple teams. Started creating team schema.
+
+### 5 Oct 2023
+* *5 hours* Completed Add Team Page & Nearly done Add Team API. Fixed User Schema to allow being in multiple teams. Created team schema.
 
 

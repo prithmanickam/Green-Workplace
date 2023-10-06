@@ -4,12 +4,28 @@ const UserSchema = new mongoose.Schema(
   {
     firstname: String,
     lastname: String,
-    type: { type: String, default: "Team Member" }, // Team member, team owner, or admin
+    type: { type: String, default: "Team Member" }, // TODO: need to change to employee or admin
+  
     email: { type: String, unique: true },
     password: String,
     accountCreated: { type: Date, default: Date.now },
     company: String,
-    team: String,
+
+    teamOwner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'teams', 
+      default: null
+    },
+
+    teams: [{
+      team: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'teams', 
+      },
+      carbonFootprint: Number,
+      waoPreference: [String],
+    }],
+    
     profilePicture: String,
     workAtOfficePreference: [String],
     weeklyMetric: [],
