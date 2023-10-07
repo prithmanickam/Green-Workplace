@@ -15,4 +15,10 @@ mongoose
 const authRoutes = require("./routes/AuthRoute");
 app.use("/api", authRoutes);
 
+const carbonFootprintRoutes = require("./routes/CarbonFootprintRoute");
+app.use("/api", carbonFootprintRoutes);
+
+const teamRoutes = require("./routes/TeamRoute");
+app.use("/api", teamRoutes);
+
 module.exports = app;

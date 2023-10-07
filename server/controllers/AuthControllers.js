@@ -16,18 +16,18 @@ module.exports.getAllUsers = async (req, res) => {
     const users = await User.find({ type: { $ne: 'Admin' } }); // Find users whose type is not 'Admin'
     res.status(200).json({ status: "ok", users });
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
 
-// Fetch all users that are not team owners
+// Fetch all users that are not team owners (and not admin)
 module.exports.getAllNonTeamOwners = async (req, res) => {
   try {
     const users = await User.find({ teamOwner: null, type: { $ne: 'Admin' } });
     res.status(200).json({ status: "ok", users });
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -40,7 +40,7 @@ module.exports.sendRegistrationEmails = async (req, res) => {
     if (!Array.isArray(emails)) {
       emails = [emails];
     }
-    console.log(emails)
+
     for (const email of emails) {
       // Create a payload for the JWT token containing email and other data
       const payload = {
@@ -80,7 +80,7 @@ module.exports.sendRegistrationEmails = async (req, res) => {
         html: emailContent,
       });
 
-      console.log(`Registration email sent to ${email}`);
+      //console.log(`Registration email sent to ${email}`);
 
     }
     res.status(200).json({ status: "ok" });
@@ -98,11 +98,11 @@ module.exports.getEmailFromToken = async (req, res) => {
     const decodedToken = jwt.verify(token, JWT_SECRET_FOR_REGISTRATION);
 
     const email = decodedToken.email;
-    console.log(email);
+    //console.log(email);
 
     res.status(200).json({ status: "ok", email });
   } catch (error) {
-    console.error('Error fetching email from token:', error);
+    //console.error('Error fetching email from token:', error);
     res.status(500).json({ status: 'error', error: 'Internal server error' });
   }
 };
@@ -133,7 +133,7 @@ module.exports.registerUser = async (req, res) => {
     res.status(200).json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ status: "error" });
-    console.log(error);
+    //console.log(error);
   }
 };
 
@@ -160,7 +160,7 @@ module.exports.loginUser = async (req, res) => {
 
     res.status(200).json({ status: "ok", token });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(500).json({ status: "error" });
   }
 };

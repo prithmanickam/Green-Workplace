@@ -1,7 +1,7 @@
 const Team = require("../models/TeamModel");
 const User = require("../models/UserModel");
 
-// Register the team to the database
+// Add the team to the database
 module.exports.addTeam = async (req, res) => {
   const {
     teamOwner,
@@ -33,7 +33,7 @@ module.exports.addTeam = async (req, res) => {
       company,
     });
 
-    // Initialize the newTeamMembers array with the team owner
+    // Initialise the newTeamMembers array with the team owner
     const newTeamMembers = [newTeamOwner];
 
     // Loop through the teamMembers email array and add members to the team (if it's not empty)
@@ -64,9 +64,51 @@ module.exports.addTeam = async (req, res) => {
     res.status(200).json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ status: "error" });
-    console.log(error);
+    //console.log(error);
   }
 };
+
+// Register the team to the database
+module.exports.deleteTeam = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Find the team owner by email
+    const teamOwner = await User.findOne({ email });
+
+    // Find the team owned by the team owner
+    const teamToDelete = await Team.findOne({ teamOwner }).populate('teamMembers');
+
+    if (!teamToDelete) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    // Set the team owner's 'teamOwner' status to null
+    teamOwner.teamOwner = null;
+    await teamOwner.save();
+
+    // Remove the team from each team member's 'teams' field
+    for (const member of teamToDelete.teamMembers) {
+
+      const memberUser = await User.findOne({ email: member.email })
+
+      if (memberUser) {
+        memberUser.teams = memberUser.teams.filter((team) => team._id.toString() !== teamToDelete._id.toString());
+        await memberUser.save();
+      }
+    }
+
+    // Delete the team from the 'teams' collection
+    await Team.deleteOne({ _id: teamToDelete._id });
+
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    res.status(500).json({ status: "error" });
+    //console.log(error);
+  }
+};
+
+
 
 // get all teams in the database
 module.exports.getTeams = async (req, res) => {
@@ -76,7 +118,7 @@ module.exports.getTeams = async (req, res) => {
       .populate('teamMembers');
     res.status(200).json({ status: "ok", teams });
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };

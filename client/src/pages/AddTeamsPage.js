@@ -16,14 +16,15 @@ import { toast } from "react-toastify";
 import { Navigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import Autocomplete from '@mui/material/Autocomplete';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function AddTeams() {
   const [emailInput, setEmailInput] = useState('');
 
-  //to select pick team owners
+  //to select employees that can be team owners
   const [nonTeamOwners, setNonTeamOwners] = useState([]);
 
-  //to select pick team members
+  //to select employees that can be team members
   const [registeredAccounts, setRegisteredAccounts] = useState([]);
 
   const [selectedTeamOwner, setSelectedTeamOwner] = useState(null);
@@ -34,12 +35,10 @@ export default function AddTeams() {
 
   const [teams, setTeams] = useState([]);
 
-  //console.log(selectedTeamMembers)
-
   useEffect(() => {
     // to get all teams
     fetch("http://localhost:5000/api/getTeams", {
-      method: "POST",
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
@@ -105,12 +104,6 @@ export default function AddTeams() {
       });
   }, []);
 
-  console.log(teams)
-
-  //console.log(registeredAccounts)
-
-  //console.log(nonTeamOwners)
-
   // to register an account / check if details meet validations
   const handleAddTeam = (event) => {
     event.preventDefault();
@@ -121,8 +114,6 @@ export default function AddTeams() {
     const office = data.get("office");
     const company = "Company1";
     const teamMembers = selectedTeamMembers;
-    console.log(teamOwner, teamName, divisions, office, teamMembers)
-
 
     if (teamOwner === null || teamName === "" || divisions === "" || office === "") {
       toast.error("You must fill all required fields.");
@@ -132,8 +123,6 @@ export default function AddTeams() {
         crossDomain: true,
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
         body: JSON.stringify({
           teamOwner,
@@ -148,11 +137,48 @@ export default function AddTeams() {
         .then((data) => {
           if (data.status === "ok") {
             toast.success("Team has been added");
+            setTeams((prevTeams) => [
+              ...prevTeams,
+              {
+                email: teamOwner,
+                teamName,
+                noOfMembers: teamMembers.length + 1,
+                office,
+              },
+            ]);
+            setNonTeamOwners((prevNonTeamOwners) =>
+              prevNonTeamOwners.filter((email) => email !== teamOwner)
+            );
+            setSelectedTeamOwner(null)
           } else {
             toast.error("Something went wrong");
           }
         });
     }
+  };
+
+  const handleDeleteTeam = (email) => {
+    fetch("http://localhost:5000/api/deleteTeam", {
+      method: "POST",
+      crossDomain: true,
+      headers: {
+        "Content-Type": "application/json",
+
+      },
+      body: JSON.stringify({
+        email,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          toast.success("Team has been deleted and team members relations of it are removed.");
+          setTeams((prevTeams) => prevTeams.filter((team) => team.email !== email));
+          setNonTeamOwners((prevNonTeamOwners) => [...prevNonTeamOwners, email]);
+        } else {
+          toast.error("Something went wrong");
+        }
+      });
   };
 
   if (!userData || (userData.type !== 'Admin')) {
@@ -250,7 +276,7 @@ export default function AddTeams() {
                           label="Add Team Members (Optional)"
                           options={registeredAccounts}
                           value={emailInput}
-                          onChange={handleAddTeamMember} // Handle adding team members
+                          onChange={handleAddTeamMember}
                           renderInput={(params) => (
                             <TextField {...params} label="Add Team Members (Optional)" variant="outlined" />
                           )}
@@ -262,7 +288,7 @@ export default function AddTeams() {
                             <Button
                               variant="outlined"
                               color="secondary"
-                              onClick={() => handleRemoveTeamMember(index)} // Handle removing team members
+                              onClick={() => handleRemoveTeamMember(index)}
                             >
                               X
                             </Button>
@@ -295,6 +321,7 @@ export default function AddTeams() {
                           <TableCell>Team Name</TableCell>
                           <TableCell>No. of Members</TableCell>
                           <TableCell>Office</TableCell>
+                          <TableCell>Delete</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -304,6 +331,15 @@ export default function AddTeams() {
                             <TableCell>{team.teamName}</TableCell>
                             <TableCell>{team.noOfMembers}</TableCell>
                             <TableCell>{team.office}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="outlined"
+                                color="secondary"
+                                onClick={() => handleDeleteTeam(team.email)}
+                              >
+                                <DeleteIcon />
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

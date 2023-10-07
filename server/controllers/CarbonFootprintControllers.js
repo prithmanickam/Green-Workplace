@@ -14,8 +14,8 @@ module.exports.postCarbonFootprint = async (req, res) => {
 
         res.status(200).json({ status: "ok" });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ status: "error" });
+        //console.error(error);
     }
 };
 
@@ -33,7 +33,7 @@ module.exports.resetCarbonFootprint = async (req, res) => {
 
         res.status(200).json({ status: "ok" });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ status: "error" });
+        //console.error(error);
     }
 };

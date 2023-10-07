@@ -79,4 +79,10 @@
 ### 5 Oct 2023
 * *5 hours* Completed Add Team Page & Nearly done Add Team API. Fixed User Schema to allow being in multiple teams. Created team schema.
 
+### 6 Oct 2023
+* *5 hours* Completed Delete Team API (which also changes respective user relations), update Add Team Page UI based on API calls.
+
+### 7 Oct 2023
+* *1 hours* Organised Backend controllers, routes, and tests (created respective files and moved code). Also commented out console logs in apis to remove error messages when testing.
+* *1 hours*  Added tests get all users and get non team owners APIs
 

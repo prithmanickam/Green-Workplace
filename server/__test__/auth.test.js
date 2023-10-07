@@ -416,126 +416,101 @@ describe("Authentication Controller Tests", () => {
       expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
   });
-});
 
-
-// Carbon Footprint Controllers
-describe("Carbon Footprint Controller Tests", () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  describe("postCarbonFootprint", () => {
-    it("should update user's currentWeekStats for a given day", async () => {
-      const req = {
-        body: {
-          email: "test@example.com",
-          day: "Monday",
-          duration: "3 mins",
-          carbonFootprint: 0.21,
-        },
-      };
+  describe("getAllUsers", () => {
+    it("should successfully fetch all users except Admin", async () => {
+      const req = {};
       const res = {
         status: jest.fn(() => res),
         json: jest.fn(),
       };
 
-      const mockUser = {
-        email: "test@example.com",
-        currentWeekStats: {
-          Monday: {
-            duration: "",
-            carbon: 0,
-          },
+      const mockUsers = [
+        {
+          firstname: "John",
+          lastname: "Doe",
+          email: "john@example.com",
+          type: "Team Member",
         },
-        save: jest.fn(),
-      };
+        {
+          firstname: "Jane",
+          lastname: "Smith",
+          email: "jane@example.com",
+          type: "Team Member",
+        },
+      ];
 
-      User.findOne = jest.fn().mockResolvedValue(mockUser);
+      User.find = jest.fn().mockResolvedValue(mockUsers);
 
-      await CarbonFootprintControllers.postCarbonFootprint(req, res);
+      await authControllers.getAllUsers(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(mockUser.currentWeekStats.Monday.duration).toBe("3 mins");
-      expect(mockUser.currentWeekStats.Monday.carbon).toBe(0.21);
-      expect(mockUser.save).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({ status: "ok", users: mockUsers });
     });
 
     it("should return a server error for unexpected exceptions", async () => {
-      const req = {
-        body: {
-          email: "test@example.com",
-          day: "Monday",
-          duration: "3 mins",
-          carbonFootprint: 0.21,
-        },
-      };
+      const req = {};
       const res = {
         status: jest.fn(() => res),
         json: jest.fn(),
       };
 
-      User.findOne = jest.fn().mockRejectedValue(new Error("Test error"));
+      User.find = jest.fn().mockRejectedValue(new Error("Test error"));
 
-      await CarbonFootprintControllers.postCarbonFootprint(req, res);
+      await authControllers.getAllUsers(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
   });
 
-  describe("resetCarbonFootprint", () => {
-    it("should reset user's currentWeekStats for a given day", async () => {
-      const req = {
-        body: {
-          email: "test@example.com",
-          day: "Monday",
-        },
-      };
+  describe("getAllNonTeamOwners", () => {
+    it("should successfully fetch all users who are not team owners and not Admin", async () => {
+      const req = {};
       const res = {
         status: jest.fn(() => res),
         json: jest.fn(),
       };
 
-      const mockUser = {
-        email: "test@example.com",
-        currentWeekStats: {
-          Monday: {
-            duration: "3 mins",
-            carbon: 0.21,
-          },
+      const mockUsers = [
+        {
+          firstname: "John",
+          lastname: "Doe",
+          email: "john@example.com",
+          type: "Team Member",
+          teamOwner: null,
         },
-        save: jest.fn(),
-      };
+        {
+          firstname: "Jane",
+          lastname: "Smith",
+          email: "jane@example.com",
+          type: "Team Member",
+          teamOwner: null,
+        },
+      ];
 
-      User.findOne = jest.fn().mockResolvedValue(mockUser);
+      User.find = jest.fn().mockResolvedValue(mockUsers);
 
-      await CarbonFootprintControllers.resetCarbonFootprint(req, res);
+      await authControllers.getAllNonTeamOwners(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(mockUser.currentWeekStats.Monday.duration).toBe("0 min");
-      expect(mockUser.currentWeekStats.Monday.carbon).toBe(0);
-      expect(mockUser.save).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({ status: "ok", users: mockUsers });
     });
 
     it("should return a server error for unexpected exceptions", async () => {
-      const req = {
-        body: {
-          email: "test@example.com",
-          day: "Monday",
-        },
-      };
+      const req = {};
       const res = {
         status: jest.fn(() => res),
         json: jest.fn(),
       };
 
-      User.findOne = jest.fn().mockRejectedValue(new Error("Test error"));
+      User.find = jest.fn().mockRejectedValue(new Error("Test error"));
 
-      await CarbonFootprintControllers.resetCarbonFootprint(req, res);
+      await authControllers.getAllNonTeamOwners(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
   });
+
 });
