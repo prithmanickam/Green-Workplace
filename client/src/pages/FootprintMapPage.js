@@ -11,6 +11,7 @@ import { ThemeContext } from '../context/ThemeContext';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
+import InputAdornment from '@mui/material/InputAdornment';
 import Select from '@mui/material/Select';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
@@ -28,8 +29,6 @@ const center = { lat: 55.8721, lng: -4.2897 };
 
 function FootprintMapPage() {
 
-
-
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries: ['places'],
@@ -45,6 +44,7 @@ function FootprintMapPage() {
 
   const { userData } = useUser();
   const navigate = useNavigate()
+
   if (!userData || (userData.type !== 'Team Member')) {
     console.log("nav backk")
     navigate('/SetCarbonFootprint');
@@ -61,6 +61,9 @@ function FootprintMapPage() {
   const [departureTime, setDepartureTime] = useState('08:00');
   const [carbonFootprint, setCarbonFootprint] = useState('');
   const [leafIconColour, setLeafIconColour] = useState('#eed202');
+  const [teams, setTeams] = useState([]);
+  const [teamPercentages, setTeamPercentages] = useState({});
+  const [totalPercentage, setTotalPercentage] = useState(0);
 
   const originRef = useRef();
   const destiantionRef = useRef();
@@ -72,10 +75,40 @@ function FootprintMapPage() {
     }
   }, [distance, travelMode]);
 
+  useEffect(() => {
+    fetch("http://localhost:5000/api/getUserTeamsData", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: userData.email,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          console.log("hi")
+          console.log(data.data)
+          const fetchedTeams = data.data;
+          console.log(fetchedTeams)
+          setTeams(fetchedTeams);
+
+        } else {
+          toast.error("Failed to fetch teams data. Please try again.");
+        }
+      })
+      .catch((error) => {
+        toast.error("An error occurred while fetching teams data.");
+      });
+  }, [userData]);
+
   if (!isLoaded) {
     console.log(map)
     return <Typography />;
   }
+  console.log("teams")
+  console.log(teams)
 
   // Calculates the distance and duration
   async function calculateRoute() {
@@ -148,6 +181,50 @@ function FootprintMapPage() {
     }
   }
 
+  // percentage to distribute carbon footprint value to users teams
+  const handleTeamPercentageChange = (event, teamName) => {
+    const newPercentages = { ...teamPercentages };
+    newPercentages[teamName] = event.target.value;
+    setTeamPercentages(newPercentages);
+
+    // Recalculate total percentage
+    const total = Object.values(newPercentages).reduce(
+      (accumulator, percentage) => accumulator + parseFloat(percentage) || 0,
+      0
+    );
+    setTotalPercentage(total);
+  };
+
+  const teamFields = Array.isArray(teams) ? teams.map((team) => (
+    <Box key={team.teamName}>
+      <hr />
+      <Typography>{team.teamName}</Typography>
+      <TextField
+        //label="Percentage"
+        size="small"
+        style={{ width: '100%' }}
+        value={teamPercentages[team.teamName] || ''}
+        InputProps={{
+          endAdornment: <InputAdornment position="end">%</InputAdornment>,
+        }}
+        onChange={(event) => handleTeamPercentageChange(event, team.teamName)}
+      />
+      <Typography sx={{ fontSize: '14px', py: 1 }}>
+        Carbon Footprint:{' '}
+        {teamPercentages[team.teamName]
+          ? (
+            (parseFloat(teamPercentages[team.teamName]) / 100) *
+            parseFloat(carbonFootprint)
+          ).toFixed(2)
+          : 'N/A'}
+        kg CO2
+      </Typography>
+
+    </Box>
+  )) : null;
+
+
+
   function navigateBack() {
     navigate('/SetCarbonFootprint');
   }
@@ -176,8 +253,22 @@ function FootprintMapPage() {
   function handleSubmit(event) {
     if (duration === "" || carbonFootprint === "" || day === "") {
       toast.error("Duration or Carbon Footprint must not be empty.");
+
+      // ensure value percentage inputted for users with teams
+    } else if (totalPercentage !== 100 && (teams.length > 0)) {
+      toast.error("The total percentage given between teams needs to equal 100%");
+
     } else {
-      console.log(day, duration, carbonFootprint);
+
+      const teamData = teams.map((team) => ({
+        team_id: team._id,
+        calculatedCarbonFootprint:
+          (parseFloat(teamPercentages[team.teamName]) / 100) *
+          parseFloat(carbonFootprint),
+      }));
+
+      console.log(day, duration, carbonFootprint, teamData);
+
       //toast.success(`Carbon Stats Saved for ${day}.`);
       fetch("http://localhost:5000/api/postCarbonFootprint", {
         method: "POST",
@@ -192,6 +283,7 @@ function FootprintMapPage() {
           day,
           duration,
           carbonFootprint,
+          teamData,
         }),
       })
         .then((res) => res.json())
@@ -436,10 +528,38 @@ function FootprintMapPage() {
             Back
           </Button>
         </Stack>
-
       </Box>
-    </>
 
+      {Array.isArray(teams) && teams.length > 0 && (
+        <Box
+          sx={{
+            px: 2,
+            py: 2,
+            borderRadius: '10px',
+            mx: 2,
+            my: 9,
+            backgroundColor: sideBarColour,
+            boxShadow: 'base',
+            width: 270,
+            position: 'absolute',
+            top: 0,
+            right: 0,
+
+          }}
+        >
+          <Card>
+            <CardContent>
+              <Typography sx={{ fontSize: '10.7px' }}>For the day you selected, enter the percent of time you spend between your teams in the office.</Typography>
+              <Typography></Typography>
+              <Box flexGrow={1}>
+                {teamFields}
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
+
+    </>
   );
 }
 

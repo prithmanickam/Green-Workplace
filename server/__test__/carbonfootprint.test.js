@@ -1,20 +1,29 @@
 const CarbonFootprintControllers = require("../controllers/CarbonFootprintControllers");
 const User = require("../models/UserModel");
+const Team = require("../models/TeamModel");
 
-// Carbon Footprint Controllers
+jest.mock("../models/UserModel");
+jest.mock("../models/TeamModel");
+
 describe("Carbon Footprint Controller Tests", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   describe("postCarbonFootprint", () => {
-    it("should update user's currentWeekStats for a given day", async () => {
+    it("should update user's carbon footprint and team's dayStats", async () => {
       const req = {
         body: {
           email: "test@example.com",
           day: "Monday",
-          duration: "3 mins",
-          carbonFootprint: 0.21,
+          duration: "60 min",
+          carbonFootprint: 10,
+          teamData: [
+            {
+              team_id: "team1",
+              calculatedCarbonFootprint: 5,
+            },
+          ],
         },
       };
       const res = {
@@ -22,25 +31,32 @@ describe("Carbon Footprint Controller Tests", () => {
         json: jest.fn(),
       };
 
-      const mockUser = {
+      const user = {
         email: "test@example.com",
         currentWeekStats: {
-          Monday: {
-            duration: "",
-            carbon: 0,
-          },
+          Monday: {},
         },
+        teams: [
+          {
+            _id: "team1",
+            dayStats: {
+              Monday: 0,
+            },
+          },
+        ],
         save: jest.fn(),
       };
 
-      User.findOne = jest.fn().mockResolvedValue(mockUser);
+      User.findOne = jest.fn().mockResolvedValue(user);
 
       await CarbonFootprintControllers.postCarbonFootprint(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(mockUser.currentWeekStats.Monday.duration).toBe("3 mins");
-      expect(mockUser.currentWeekStats.Monday.carbon).toBe(0.21);
-      expect(mockUser.save).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({ status: "ok" });
+      expect(user.currentWeekStats.Monday.duration).toEqual("60 min");
+      expect(user.currentWeekStats.Monday.carbon).toEqual(10);
+      expect(user.teams[0].dayStats.Monday).toEqual(5);
+      expect(user.save).toHaveBeenCalled();
     });
 
     it("should return a server error for unexpected exceptions", async () => {
@@ -48,8 +64,9 @@ describe("Carbon Footprint Controller Tests", () => {
         body: {
           email: "test@example.com",
           day: "Monday",
-          duration: "3 mins",
-          carbonFootprint: 0.21,
+          duration: "60 min",
+          carbonFootprint: 10,
+          teamData: [],
         },
       };
       const res = {
@@ -66,12 +83,11 @@ describe("Carbon Footprint Controller Tests", () => {
     });
   });
 
-  describe("resetCarbonFootprint", () => {
-    it("should reset user's currentWeekStats for a given day", async () => {
+  describe("getCarbonFootprint", () => {
+    it("should return user's carbon footprint data for the week", async () => {
       const req = {
         body: {
           email: "test@example.com",
-          day: "Monday",
         },
       };
       const res = {
@@ -79,32 +95,110 @@ describe("Carbon Footprint Controller Tests", () => {
         json: jest.fn(),
       };
 
-      const mockUser = {
+      const user = {
         email: "test@example.com",
-        currentWeekStats: {
-          Monday: {
-            duration: "3 mins",
-            carbon: 0.21,
+        teams: [
+          {
+            _id: "team1",
+            dayStats: {
+              Monday: 5,
+            },
           },
-        },
-        save: jest.fn(),
+        ],
       };
 
-      User.findOne = jest.fn().mockResolvedValue(mockUser);
+      const team = {
+        _id: "team1",
+        teamName: "Team 1",
+      };
 
-      await CarbonFootprintControllers.resetCarbonFootprint(req, res);
+      User.findOne = jest.fn().mockResolvedValue(user);
+      Team.findById = jest.fn().mockResolvedValue(team);
+
+      await CarbonFootprintControllers.getCarbonFootprint(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(mockUser.currentWeekStats.Monday.duration).toBe("0 min");
-      expect(mockUser.currentWeekStats.Monday.carbon).toBe(0);
-      expect(mockUser.save).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({
+        status: "ok",
+        data: {
+          Monday: ["Team 1: 5.00kg CO2"],
+          Tuesday: ["Team 1: 0kg CO2"],
+          Wednesday: ["Team 1: 0kg CO2"],
+          Thursday: ["Team 1: 0kg CO2"],
+          Friday: ["Team 1: 0kg CO2"],
+        },
+      });
     });
 
     it("should return a server error for unexpected exceptions", async () => {
       const req = {
         body: {
           email: "test@example.com",
+        },
+      };
+      const res = {
+        status: jest.fn(() => res),
+        json: jest.fn(),
+      };
+
+      User.findOne = jest.fn().mockRejectedValue(new Error("Test error"));
+
+      await CarbonFootprintControllers.getCarbonFootprint(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error" });
+    });
+  });
+
+  describe("resetCarbonFootprint", () => {
+    it("should reset user's carbon footprint for a specific day", async () => {
+      const req = {
+        body: {
           day: "Monday",
+          email: "test@example.com",
+        },
+      };
+      const res = {
+        status: jest.fn(() => res),
+        json: jest.fn(),
+      };
+
+      const user = {
+        email: "test@example.com",
+        currentWeekStats: {
+          Monday: {
+            duration: "60 min",
+            carbon: 10,
+          },
+        },
+        teams: [
+          {
+            _id: "team1",
+            dayStats: {
+              Monday: 5,
+            },
+          },
+        ],
+        save: jest.fn(),
+      };
+
+      User.findOne = jest.fn().mockResolvedValue(user);
+
+      await CarbonFootprintControllers.resetCarbonFootprint(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: "ok" });
+      expect(user.currentWeekStats.Monday.duration).toEqual("0 min");
+      expect(user.currentWeekStats.Monday.carbon).toEqual(0);
+      expect(user.teams[0].dayStats.Monday).toEqual(0);
+      expect(user.save).toHaveBeenCalled();
+    });
+
+    it("should return a server error for unexpected exceptions", async () => {
+      const req = {
+        body: {
+          day: "Monday",
+          email: "test@example.com",
         },
       };
       const res = {

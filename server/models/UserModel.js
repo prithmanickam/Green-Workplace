@@ -24,6 +24,13 @@ const UserSchema = new mongoose.Schema(
       },
       carbonFootprint: Number,
       waoPreference: [String],
+      dayStats: {
+        Monday: Number,
+        Tuesday: Number,
+        Wednesday: Number,
+        Thursday: Number,
+        Friday: Number,
+      }
     }],
     
     profilePicture: String,

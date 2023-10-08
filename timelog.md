@@ -85,4 +85,8 @@
 ### 7 Oct 2023
 * *1 hours* Organised Backend controllers, routes, and tests (created respective files and moved code). Also commented out console logs in apis to remove error messages when testing.
 * *1 hours*  Added tests get all users and get non team owners APIs
+* *6 hours*  Edited the Footprint Map Page to allow users to enter percentages to distrubute their carbon footprint value to the teams users are in.
 
+### 8 Oct 2023
+* *6 hours*  Edited the Set Carbon Footprint Page to display the distrubuted carbon footprint value to the teams users are in.
+* *1.5 hours*  Updated tests for the post and reset carbon footprint APIs. Created tests for the get carbon footprint API.

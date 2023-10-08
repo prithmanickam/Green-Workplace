@@ -108,8 +108,6 @@ module.exports.deleteTeam = async (req, res) => {
   }
 };
 
-
-
 // get all teams in the database
 module.exports.getTeams = async (req, res) => {
   try {
@@ -119,6 +117,27 @@ module.exports.getTeams = async (req, res) => {
     res.status(200).json({ status: "ok", teams });
   } catch (error) {
     //console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// Get the teams data for the teams the user is in
+module.exports.getUserTeamsData = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    
+    const user = await User.findOne({ email });    
+    
+    const teams = []
+    
+    for (const team of user.teams) {
+      const teamInfo = await Team.findById(team._id);
+      teams.push(teamInfo)
+    }
+
+    res.status(200).json({ status: "ok", data: teams });
+  } catch (error) {
     res.status(500).json({ status: "error" });
   }
 };

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
 import { Card, CardContent, Typography, Box, Button, Stack, Grid } from '@mui/material';
@@ -6,13 +6,44 @@ import { useUser } from '../context/UserContext';
 import { toast } from "react-toastify";
 
 export default function SetCarbonFootprint() {
+
   const { userData } = useUser();
+  const [teams, setTeams] = useState([]);
+
+  const email = userData.email;
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/getCarbonFootprint", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: userData.email,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          console.log("hi")
+          console.log(data.data)
+          const fetchedTeams = data.data;
+          console.log(fetchedTeams)
+          setTeams(fetchedTeams);
+
+        } else {
+          toast.error("Failed to fetch user carbon data for teams.");
+        }
+      })
+      .catch((error) => {
+        toast.error("An error occurred while fetching teams data.");
+      });
+  }, [userData]);
+
 
   if (!userData || (userData.type !== 'Team Member')) {
     return <Navigate to="/homepage" replace />;
   }
-
-  const email = userData.email;
 
   // placeholders before using user data
   const cardsData = [
@@ -44,10 +75,6 @@ export default function SetCarbonFootprint() {
   ];
 
   function handleReset(day) {
-    console.log(day)
-
-    //console.log(day, duration, carbonFootprint);
-    //toast.success(`Carbon Stats Saved for ${day}.`);
     fetch("http://localhost:5000/api/resetCarbonFootprint", {
       method: "POST",
       crossDomain: true,
@@ -71,7 +98,6 @@ export default function SetCarbonFootprint() {
         }
       });
   }
-
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -131,6 +157,16 @@ export default function SetCarbonFootprint() {
                   <Typography variant="body2" color="text.secondary">
                     Carbon Footprint: {card.carbonFootprint}
                   </Typography>
+                  {teams[card.day] && (
+                    <>
+                      <hr /> {/* Divider */}
+                      {teams[card.day].map((teamStats, teamIndex) => (
+                        <Typography key={teamIndex} variant="body2" color="text.secondary">
+                          {teamStats}
+                        </Typography>
+                      ))}
+                    </>
+                  )}
                 </CardContent>
                 <Button variant="outlined" fullWidth onClick={() => handleReset(card.day)}>
                   Reset
@@ -139,7 +175,6 @@ export default function SetCarbonFootprint() {
             </Grid>
           ))}
         </Grid>
-
       </Box>
     </Box>
   );
