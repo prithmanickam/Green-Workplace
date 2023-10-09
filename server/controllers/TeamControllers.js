@@ -126,17 +126,61 @@ module.exports.getUserTeamsData = async (req, res) => {
   const { email } = req.body;
 
   try {
-    
-    const user = await User.findOne({ email });    
-    
+
+    const user = await User.findOne({ email });
+
     const teams = []
-    
+
     for (const team of user.teams) {
       const teamInfo = await Team.findById(team._id);
+
+      // Populate the team owner's details
+      await teamInfo.populate('teamOwner');
+
       teams.push(teamInfo)
     }
 
     res.status(200).json({ status: "ok", data: teams });
+  } catch (error) {
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// Get the users dashboard data
+module.exports.getYourDashboardData = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    const yourDashboardInfo = {
+      name: user.firstname + " " + user.lastname,
+      email: user.email,
+      company: user.company,
+      accountCreated: user.accountCreated,
+      totalCarbonFootprint: 0,
+      teams: [],
+    }
+
+    for (const team of user.teams) {
+      const teamInfo = await Team.findById(team._id);
+
+      // Populate the team owner's details
+      await teamInfo.populate('teamOwner');
+
+      yourDashboardInfo.teams.push([teamInfo, team.carbonFootprint])
+    }
+
+    // Calculate the total carbon footprint
+    const totalCarbonFootprint = Object.values(user.currentWeekStats).reduce(
+      (total, dayStats) => total + parseFloat(dayStats.carbon || 0),
+      0
+    ).toFixed(2);
+
+    // Update the totalCarbonFootprint field in yourDashboardInfo
+    yourDashboardInfo.totalCarbonFootprint = totalCarbonFootprint;
+
+    res.status(200).json({ status: "ok", data: yourDashboardInfo });
   } catch (error) {
     res.status(500).json({ status: "error" });
   }

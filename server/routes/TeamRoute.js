@@ -5,6 +5,7 @@ const {
     getTeams,
     deleteTeam,
     getUserTeamsData,
+    getYourDashboardData
 } = require("../controllers/TeamControllers");
 
 const router = Router();
@@ -20,5 +21,8 @@ router.post("/deleteTeam", deleteTeam);
 
 //to get the users teams data from the database
 router.post("/getUserTeamsData", getUserTeamsData);
+
+//to get the users dashboard data including info on their teams from the database
+router.post("/getYourDashboardData", getYourDashboardData);
 
 module.exports = router;

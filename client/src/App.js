@@ -11,6 +11,7 @@ import SetCarbonFootprintPage from './pages/SetCarbonFootprintPage';
 import FootprintMapPage from './pages/FootprintMapPage';
 import CompanyDashboardPage from './pages/CompanyDashboardPage';
 import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
+import YourDashboardPage from './pages/YourDashboardPage';
 import { ThemeContextProvider } from './context/ThemeContext';
 import { UserContextProvider } from './context/UserContext';
 import { ToastContainer } from "react-toastify";
@@ -95,6 +96,11 @@ const App = () => {
                 path="/SetCarbonFootprint/UseMap"
                 element={<ProtectedRoute element={<FootprintMapPage />} isLoggedIn={isLoggedIn} />}
               />
+              <Route
+                path="/YourDashboard"
+                element={<ProtectedRoute element={<YourDashboardPage />} isLoggedIn={isLoggedIn} />}
+              />
+              
             </Routes>
             <ToastContainer
               position="top-right"

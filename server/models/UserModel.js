@@ -22,7 +22,7 @@ const UserSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'teams', 
       },
-      carbonFootprint: Number,
+      carbonFootprint: { type: Number, default: 0 },
       waoPreference: [String],
       dayStats: {
         Monday: Number,

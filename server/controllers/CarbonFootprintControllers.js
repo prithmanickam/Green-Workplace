@@ -22,6 +22,20 @@ module.exports.postCarbonFootprint = async (req, res) => {
             if (teamIndex !== -1) {
                 // Update the dayStats for the specified day for this team
                 user.teams[teamIndex].dayStats[day] = calculatedCarbonFootprint;
+
+                teamDayStats = user.teams[teamIndex].dayStats;
+
+                let sum = 0;
+                for (const day in teamDayStats) {
+                    if (teamDayStats.hasOwnProperty(day)) {
+                        const value = teamDayStats[day];
+                        if (typeof value === 'number') {
+                            sum += value;
+                        }
+                    }
+                }
+
+                user.teams[teamIndex].carbonFootprint = sum.toFixed(2)
             }
         }
 
@@ -29,8 +43,9 @@ module.exports.postCarbonFootprint = async (req, res) => {
 
         res.status(200).json({ status: "ok" });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ status: "error" });
-        //console.error(error);
+
     }
 };
 
@@ -60,7 +75,6 @@ module.exports.getCarbonFootprint = async (req, res) => {
             stats.Thursday.push(teamName + ': ' + (team.dayStats.Thursday ? team.dayStats.Thursday.toFixed(2) + 'kg CO2' : '0kg CO2'));
             stats.Friday.push(teamName + ': ' + (team.dayStats.Friday ? team.dayStats.Friday.toFixed(2) + 'kg CO2' : '0kg CO2'));
         }
-        //console.log(stats)
 
         res.status(200).json({ status: "ok", data: stats });
     } catch (error) {

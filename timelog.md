@@ -90,3 +90,11 @@
 ### 8 Oct 2023
 * *6 hours*  Edited the Set Carbon Footprint Page to display the distrubuted carbon footprint value to the teams users are in.
 * *1.5 hours*  Updated tests for the post and reset carbon footprint APIs. Created tests for the get carbon footprint API.
+
+### 9 Oct 2023
+* *1 hours*  Deploy backend to 'render' and deployed frontend to 'vercel'. Performed functionality and worked fine.
+* *1 hours*  Created User Acceptance Testing (UAT) Instructions.
+* *1 hours*  Created Your Dashboard Page UI
+* *2 hours*  Created API to fetch your Dashboard information.
+
+
