@@ -10,7 +10,7 @@
 * This timelog should be filled out honestly, regularly (daily) and accurately. It is for *your* benefit.
 * Follow the structure provided, grouping time by weeks.  Quantise time to the half hour.
 
-## Week 1
+## Week 0
 
 ### 14-21 Sep 2023
 * *1.5 hours* Research on existing solutions (solutions for main functions: Carbon Footprint Calculator, Team Chat, Team & Data Management System).
@@ -19,6 +19,8 @@
 * *0.5 hour* Created MOSCOW requirements.
 * *4 hours* Created initial Figma wireframes.
 * *2 hours* Attended the lvl4 project session / read the project guidance slides.
+
+## Week 1
 
 ### 22 Sep 2023
 * *0.5 hour* First meeting with supervisor
@@ -36,8 +38,13 @@
 * *2 hours* Testing for login and getUserData apis
 * *0.5 hour* Added ci-cd pipeline
 
+## Week 2
+
 ### 25 Sep 2023
 * *2 hours* Homepage for Admins and Private Routing
+
+### 26 Sep 2023
+* *0.5 hour*  Meeting with Supervisor
 
 ### 27 Sep 2023
 * *5 hours* Created dynamic side navbar and padding so contents aren't hidden underneath
@@ -66,11 +73,14 @@
 * *1 hours* Created Set Carbon Footprint Page (Navigation for Use Map and Manual)
 * *6 hours* Started Creating the Use Map function for Set Carbon Footprint Page (UI Completed and used Google Maps API for operations e.g. displaying route and calculating distance and time)
 
+## Week 3
+
 ### 2 Oct 2023
 * *6 hours* Finished creating the Use Map function for Set Carbon Footprint Page (Can calculate carbon footprint for all travel modes, created APIs for posting and reseting user's current Week carbon stats, passing tests for all APIs)
 
 ### 3 Oct 2023
 * *0.5 hours* Fixed Bug in accessing unauthorised pages by modifying URL
+* *0.5 hour*  Meeting with Supervisor
 
 ### 4 Oct 2023
 * *1 hours* Fetched all employees and displayed them in a table
@@ -91,10 +101,23 @@
 * *6 hours*  Edited the Set Carbon Footprint Page to display the distrubuted carbon footprint value to the teams users are in.
 * *1.5 hours*  Updated tests for the post and reset carbon footprint APIs. Created tests for the get carbon footprint API.
 
+## Week 4
+
 ### 9 Oct 2023
 * *1 hours*  Deploy backend to 'render' and deployed frontend to 'vercel'. Performed functionality and worked fine.
 * *1 hours*  Created User Acceptance Testing (UAT) Instructions.
 * *1 hours*  Created Your Dashboard Page UI
 * *2 hours*  Created API to fetch your Dashboard information.
 
+### 10 Oct 2023
+* *0.5 hour*  Meeting with Supervisor
+* *2 hours*  Planning database schemas with the added requirement of user can be team owners of multiple teams.
 
+### 11 Oct 2023
+* *1 hour*  Planning database schemas with the added requirement of user can be team owners of multiple teams.
+  
+### 12 Oct 2023
+* *1 hour*  Planning database schema with the added requirement of user can be team owners of multiple teams.
+
+### 13 Oct 2023
+* *1 hour*  Planning database schema with the added requirement of user can be team owners of multiple teams.
