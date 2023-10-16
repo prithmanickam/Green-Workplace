@@ -64,7 +64,7 @@ export default function AddTeams() {
 
 
     //for selecting team owners
-    fetch("http://localhost:5000/api/getAllNonTeamOwners", {
+    fetch(`${baseURL}/getAllNonTeamOwners`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -85,7 +85,7 @@ export default function AddTeams() {
       });
 
     // Get all users (not admins) - for selecting team members
-    fetch("http://localhost:5000/api/getAllUsers", {
+    fetch(`${baseURL}/getAllUsers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -119,7 +119,7 @@ export default function AddTeams() {
     if (teamOwner === null || teamName === "" || divisions === "" || office === "") {
       toast.error("You must fill all required fields.");
     } else {
-      fetch("http://localhost:5000/api/addTeam", {
+      fetch(`${baseURL}/addTeam`, {
         method: "POST",
         crossDomain: true,
         headers: {
@@ -159,7 +159,7 @@ export default function AddTeams() {
   };
 
   const handleDeleteTeam = (email) => {
-    fetch("http://localhost:5000/api/deleteTeam", {
+    fetch(`${baseURL}/deleteTeam`, {
       method: "POST",
       crossDomain: true,
       headers: {
