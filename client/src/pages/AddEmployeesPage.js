@@ -15,6 +15,7 @@ import TableCell from '@mui/material/TableCell';
 import { toast } from "react-toastify";
 import { Navigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { baseURL } from "../utils/constant";
 //import axios from "axios";
 
 export default function AddEmployees() {
@@ -23,7 +24,7 @@ export default function AddEmployees() {
   const { userData } = useUser();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/getAllUsers", {
+    fetch(`${baseURL}/getAllUsers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -61,7 +62,7 @@ export default function AddEmployees() {
   const handleAddEmails = () => {
     const emails = emailInput.split(',').map((email) => email.trim());
 
-    fetch("http://localhost:5000/api/sendRegistrationEmails", {
+    fetch(`${baseURL}/sendRegistrationEmails`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

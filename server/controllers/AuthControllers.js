@@ -67,7 +67,7 @@ module.exports.sendRegistrationEmails = async (req, res) => {
             <p>Hello,</p>
             <p>Your company has signed you up to Green-Workplace, a site to track your teams hybrid working patterns and carbon footprint.</p>
             <p>Click the following link to complete your registration:</p>
-            <a href="http://localhost:3000/register/${registrationToken}">Register</a>
+            <a href="https://green-workplace.vercel.app/register/${registrationToken}">Register</a>
           </body>
         </html>
       `;

@@ -4,6 +4,7 @@ import SideNavbar from '../components/SideNavbar';
 import { Card, CardContent, Typography, Box, Button, Stack, Grid } from '@mui/material';
 import { useUser } from '../context/UserContext';
 import { toast } from "react-toastify";
+import { baseURL } from "../utils/constant";
 
 export default function SetCarbonFootprint() {
 
@@ -13,7 +14,7 @@ export default function SetCarbonFootprint() {
   const email = userData.email;
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/getCarbonFootprint", {
+    fetch(`${baseURL}/getCarbonFootprint`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -75,7 +76,7 @@ export default function SetCarbonFootprint() {
   ];
 
   function handleReset(day) {
-    fetch("http://localhost:5000/api/resetCarbonFootprint", {
+    fetch(`${baseURL}/resetCarbonFootprint`, {
       method: "POST",
       crossDomain: true,
       headers: {

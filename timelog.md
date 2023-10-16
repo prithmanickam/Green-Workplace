@@ -121,3 +121,12 @@
 
 ### 13 Oct 2023
 * *1 hour*  Planning database schema with the added requirement of user can be team owners of multiple teams.
+
+### 14 Oct 2023
+* *1 hour*  Created Tables on Supabase (Postgres database)
+
+### 15 Oct 2023
+* *1 hour*  Started migrating Auth APIs to Supabase instead of MongoDB
+
+### 16 Oct 2023
+* *1 hour*  Changed all API calls to work for development and production

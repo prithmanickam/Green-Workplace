@@ -1,1 +1,10 @@
-export const baseURL = "http://localhost:5000/api";
+export let baseURL;
+
+if (process.env.NODE_ENV === 'development') {
+  // Development environment
+  baseURL = 'http://localhost:5000/api';
+} else {
+  // Production environment
+  baseURL = 'https://green-workplace.onrender.com/api';
+}
+

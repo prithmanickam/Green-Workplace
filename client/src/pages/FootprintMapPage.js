@@ -15,6 +15,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Select from '@mui/material/Select';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
+import { baseURL } from "../utils/constant";
 
 import {
   useJsApiLoader,
@@ -76,7 +77,7 @@ function FootprintMapPage() {
   }, [distance, travelMode]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/getUserTeamsData", {
+    fetch(`${baseURL}/getUserTeamsData`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -270,7 +271,7 @@ function FootprintMapPage() {
       console.log(day, duration, carbonFootprint, teamData);
 
       //toast.success(`Carbon Stats Saved for ${day}.`);
-      fetch("http://localhost:5000/api/postCarbonFootprint", {
+      fetch(`${baseURL}/postCarbonFootprint`, {
         method: "POST",
         crossDomain: true,
         headers: {

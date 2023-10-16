@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import Card from "@mui/material/Card";
 import { useParams } from "react-router-dom";
 import TopNavbar from '../components/TopNavbar';
+import { baseURL } from "../utils/constant";
 
 export default function Registration() {
     const { registrationtoken } = useParams(); // Get registration token from URL
@@ -19,7 +20,7 @@ export default function Registration() {
     useEffect(() => {
         // Fetch the user's email using the registration token
         if (registrationtoken) {
-            fetch(`http://localhost:5000/api/getEmail?token=${registrationtoken}`, { method: "POST" })
+            fetch(`${baseURL}/getEmail?token=${registrationtoken}`, { method: "POST" })
                 .then((res) => res.json())
                 .then((data) => {
                     if (data.status === "ok" && data.email) {
@@ -56,7 +57,7 @@ export default function Registration() {
         } else if (password !== confirmPassword) {
             toast.error("Password and Confirm Password do not match.");
         } else {
-            fetch("http://localhost:5000/api/register", {
+            fetch(`${baseURL}/register`, {
                 method: "POST",
                 crossDomain: true,
                 headers: {

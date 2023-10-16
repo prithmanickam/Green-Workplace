@@ -3,13 +3,14 @@ import SideNavbar from '../components/SideNavbar';
 import { Box, Typography, Button, Card, CardContent, Grid } from '@mui/material';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
+import { baseURL } from "../utils/constant";
 
 export default function YourDashboard() {
   const { userData } = useUser();
   const [dashboardData, setDashboardData] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/getYourDashboardData", {
+    fetch(`${baseURL}/getYourDashboardData`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

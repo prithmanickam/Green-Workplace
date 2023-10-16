@@ -17,6 +17,7 @@ import { Navigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import Autocomplete from '@mui/material/Autocomplete';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { baseURL } from "../utils/constant";
 
 export default function AddTeams() {
   const [emailInput, setEmailInput] = useState('');
@@ -37,7 +38,7 @@ export default function AddTeams() {
 
   useEffect(() => {
     // to get all teams
-    fetch("http://localhost:5000/api/getTeams", {
+    fetch(`${baseURL}/getTeams`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
