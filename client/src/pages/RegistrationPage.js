@@ -16,6 +16,7 @@ import { baseURL } from "../utils/constant";
 export default function Registration() {
     const { registrationtoken } = useParams(); // Get registration token from URL
     const [email, setEmail] = useState("");
+    const [company, setCompany] = useState("");
 
     useEffect(() => {
         // Fetch the user's email using the registration token
@@ -25,6 +26,7 @@ export default function Registration() {
                 .then((data) => {
                     if (data.status === "ok" && data.email) {
                         setEmail(data.email);
+                        setCompany(data.company);
                         toast.success("Fetched email address from URL Token.");
                     } else {
                         console.log("invalid registration token");
@@ -70,6 +72,7 @@ export default function Registration() {
                     lastname,
                     email,
                     password,
+                    company
                 }),
             })
                 .then((res) => res.json())

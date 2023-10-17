@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+//const mongoose = require("mongoose");
+const supabase = require("../config/supabaseConfig");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = "asf23rjkafass35";
@@ -13,10 +14,19 @@ const JWT_SECRET_FOR_REGISTRATION = 'asbfi3e5asf36n2';
 // Fetch all users (that is not admin)
 module.exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({ type: { $ne: 'Admin' } }); // Find users whose type is not 'Admin'
-    res.status(200).json({ status: "ok", users });
+    const { data, error } = await supabase
+      .from("User")
+      .select("*")
+      .neq("type", "Admin");
+
+    if (error) {
+      console.error("Error fetching users:", error);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok", users: data });
   } catch (error) {
-    //console.error(error);
+    console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -24,10 +34,19 @@ module.exports.getAllUsers = async (req, res) => {
 // Fetch all users that are not team owners (and not admin)
 module.exports.getAllNonTeamOwners = async (req, res) => {
   try {
-    const users = await User.find({ teamOwner: null, type: { $ne: 'Admin' } });
-    res.status(200).json({ status: "ok", users });
+    const { data, error } = await supabase
+      .from("User")
+      .select("*")
+      .neq("type", "Admin");
+
+    if (error) {
+      console.error("Error fetching non-team owners:", error);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok", users: data });
   } catch (error) {
-    //console.error(error);
+    console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -45,6 +64,7 @@ module.exports.sendRegistrationEmails = async (req, res) => {
       // Create a payload for the JWT token containing email and other data
       const payload = {
         email,
+        company,
         registrationToken: uuid.v4(), // You can still include a unique token
       };
 
@@ -108,32 +128,34 @@ module.exports.getEmailFromToken = async (req, res) => {
 };
 
 // Register the user to the database
+
 module.exports.registerUser = async (req, res) => {
-  const { firstname, lastname, email, password } = req.body;
+  const { firstname, lastname, email, password, company } = req.body;
+
+  console.log(firstname, lastname, email, password)
+
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
-    const existingUser = await User.findOne({ email });
+    const { data, error } = await supabase.from("User").upsert([
+      {
+        firstname,
+        lastname,
+        email,
+        password: hashedPassword,
+        company_id: company,
+      },
+    ]);
 
-    if (existingUser) {
-      return res.status(409).json({ error: "User already exists" });
+    if (error) {
+      console.error("Error registering user:", error);
+      return res.status(500).json({ status: "error" });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({
-      firstname,
-      lastname,
-      email,
-      password: hashedPassword,
-      company: "Company1"
-    });
-
-    await newUser.save();
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ status: "error" });
-    //console.log(error);
   }
 };
 
@@ -141,26 +163,42 @@ module.exports.registerUser = async (req, res) => {
 module.exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    const user = await User.findOne({ email });
+  console.log(email, password)
 
-    if (!user) {
+  try {
+    const { data, error } = await supabase
+      .from("User")
+      .select()
+      .eq("email", email)
+      //.eq("password", password)
+      .single();
+
+    if (error) {
+      console.error("Error logging in user:", error);
+      return res.status(500).json({ status: "error" });
+    }
+
+    console.log(data)
+
+    if (!data) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, data.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
-    const token = jwt.sign({ email: user.email }, JWT_SECRET, {
+    const token = jwt.sign({ email: email }, JWT_SECRET, {
       expiresIn: "1m",
     });
 
+    // You can generate a token or session here for user authentication
+
     res.status(200).json({ status: "ok", token });
   } catch (error) {
-    //console.log(error);
+    console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -174,19 +212,27 @@ module.exports.getUserData = async (req, res) => {
       ignoreExpiration: true,
     });
 
-    const user = await User.findOne({ email: decodedToken.email });
+    console.log(decodedToken.email)
 
-    if (!user) {
-      return res.status(404).json({ error: "User Not found" });
+    const { data, error } = await supabase
+      .from("User")
+      .select()
+      .eq("email", decodedToken.email)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user data:", error);
+      return res.status(500).json({ status: "error" });
     }
 
-    res.status(200).json({ status: "ok", data: user });
+    if (!data) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+
+    res.status(200).json({ status: "ok", data });
   } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ error: "Token expired" });
-    } else if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({ error: "Invalid token" });
-    }
+    console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
