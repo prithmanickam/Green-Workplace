@@ -46,7 +46,7 @@ export default function AddTeams() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({company: userData.company_id}),
+      body: JSON.stringify({ company: userData.company_id }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -67,14 +67,14 @@ export default function AddTeams() {
         toast.error("An error occurred while fetching teams data.");
       });
 
-    
+
     // to get all offices in the company
     fetch(`${baseURL}/getOffices`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({company: userData.company_id}),
+      body: JSON.stringify({ company: userData.company_id }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -122,8 +122,26 @@ export default function AddTeams() {
     const company = userData.company_id;
     const teamMembers = selectedTeamMembers;
 
+    // Check for duplicates
+    const emailSet = new Set();
+    let hasDuplicates = false;
+
+    if (teamOwner) {
+      emailSet.add(teamOwner);
+    }
+
+    teamMembers.forEach((member) => {
+      if (emailSet.has(member)) {
+        hasDuplicates = true;
+      } else {
+        emailSet.add(member);
+      }
+    });
+
     if (teamOwner === null || teamName === "" || divisions === "" || office === null) {
       toast.error("You must fill all required fields.");
+    } else if (hasDuplicates){
+      toast.error("Duplicate email addresses detected. Please remove duplicates.");
     } else {
       fetch(`${baseURL}/addTeam`, {
         method: "POST",
@@ -153,7 +171,7 @@ export default function AddTeams() {
                 office: office.name,
               },
             ]);
-            
+
           } else {
             toast.error("Something went wrong");
           }
@@ -178,7 +196,7 @@ export default function AddTeams() {
         if (data.status === "ok") {
           toast.success("Team has been deleted and team members relations of it are removed.");
           setTeams((prevTeams) => prevTeams.filter((team) => team.teamId !== teamId));
-          
+
         } else {
           toast.error("Something went wrong");
         }
