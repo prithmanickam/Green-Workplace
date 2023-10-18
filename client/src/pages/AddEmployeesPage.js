@@ -29,6 +29,7 @@ export default function AddEmployees() {
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({company: userData.company_id}),
     })
       .then((res) => res.json())
       .then((data) => {

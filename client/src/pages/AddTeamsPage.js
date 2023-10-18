@@ -22,9 +22,6 @@ import { baseURL } from "../utils/constant";
 export default function AddTeams() {
   const [emailInput, setEmailInput] = useState('');
 
-  //to select employees that can be team owners
-  const [nonTeamOwners, setNonTeamOwners] = useState([]);
-
   //to select employees that can be team members
   const [registeredAccounts, setRegisteredAccounts] = useState([]);
 
@@ -36,22 +33,30 @@ export default function AddTeams() {
 
   const [teams, setTeams] = useState([]);
 
+  const [offices, setOffices] = useState([]);
+
+  const [selectedOffice, setSelectedOffice] = useState(null);
+
+  console.log(selectedOffice)
+
   useEffect(() => {
     // to get all teams
     fetch(`${baseURL}/getTeams`, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({company: userData.company_id}),
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "ok") {
           const allTeams = data.teams.map((team) => ({
-            email: team.teamOwner.email,
-            teamName: team.teamName,
-            office: team.office,
-            noOfMembers: team.teamMembers.length,
+            teamId: team.team_id,
+            email: team.team_owner_email,
+            teamName: team.name,
+            office: team.office_name,
+            noOfMembers: team.team_members_count,
           }));
           setTeams(allTeams);
         } else {
@@ -62,27 +67,28 @@ export default function AddTeams() {
         toast.error("An error occurred while fetching teams data.");
       });
 
-
-    //for selecting team owners
-    fetch(`${baseURL}/getAllNonTeamOwners`, {
+    
+    // to get all offices in the company
+    fetch(`${baseURL}/getOffices`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({company: userData.company_id}),
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "ok") {
-          // Extract user emails
-          const allEmails = data.users.map((user) => user.email);
-          setNonTeamOwners(allEmails);
+          console.log("offices: ", data.data)
+          setOffices(data.data);
         } else {
-          toast.error("Failed to fetch user data. Please try again.");
+          toast.error("Failed to fetch office data. Please try again.");
         }
       })
       .catch((error) => {
-        toast.error("An error occurred while fetching user data.");
+        toast.error("An error occurred while fetching teams data.");
       });
+
 
     // Get all users (not admins) - for selecting team members
     fetch(`${baseURL}/getAllUsers`, {
@@ -112,11 +118,11 @@ export default function AddTeams() {
     const teamOwner = selectedTeamOwner; // Use the selected team owner
     const teamName = data.get("teamName");
     const divisions = data.get("divisions");
-    const office = data.get("office");
-    const company = "Company1";
+    const office = selectedOffice.id;
+    const company = userData.company_id;
     const teamMembers = selectedTeamMembers;
 
-    if (teamOwner === null || teamName === "" || divisions === "" || office === "") {
+    if (teamOwner === null || teamName === "" || divisions === "" || office === null) {
       toast.error("You must fill all required fields.");
     } else {
       fetch(`${baseURL}/addTeam`, {
@@ -144,13 +150,10 @@ export default function AddTeams() {
                 email: teamOwner,
                 teamName,
                 noOfMembers: teamMembers.length + 1,
-                office,
+                office: office.name,
               },
             ]);
-            setNonTeamOwners((prevNonTeamOwners) =>
-              prevNonTeamOwners.filter((email) => email !== teamOwner)
-            );
-            setSelectedTeamOwner(null)
+            
           } else {
             toast.error("Something went wrong");
           }
@@ -158,7 +161,7 @@ export default function AddTeams() {
     }
   };
 
-  const handleDeleteTeam = (email) => {
+  const handleDeleteTeam = (teamId) => {
     fetch(`${baseURL}/deleteTeam`, {
       method: "POST",
       crossDomain: true,
@@ -167,15 +170,15 @@ export default function AddTeams() {
 
       },
       body: JSON.stringify({
-        email,
+        teamId,
       }),
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "ok") {
           toast.success("Team has been deleted and team members relations of it are removed.");
-          setTeams((prevTeams) => prevTeams.filter((team) => team.email !== email));
-          setNonTeamOwners((prevNonTeamOwners) => [...prevNonTeamOwners, email]);
+          setTeams((prevTeams) => prevTeams.filter((team) => team.teamId !== teamId));
+          
         } else {
           toast.error("Something went wrong");
         }
@@ -223,7 +226,7 @@ export default function AddTeams() {
                           required
                           id="teamOwner"
                           label="Team Owner"
-                          options={nonTeamOwners}
+                          options={registeredAccounts}
                           value={selectedTeamOwner}
                           onChange={(event, newValue) => {
                             setSelectedTeamOwner(newValue);
@@ -245,20 +248,27 @@ export default function AddTeams() {
                       <Grid item xs={4}>
                         <TextField
                           name="company"
-                          label="Company"
+                          label="Company ID"
                           variant="outlined"
                           fullWidth
-                          value="Company1"
+                          value={userData.company_id}
                           disabled
                         />
                       </Grid>
                       <Grid item xs={4}>
-                        <TextField
+                        <Autocomplete
                           required
-                          name="office"
+                          id="office"
                           label="Office"
-                          variant="outlined"
-                          fullWidth
+                          options={offices}
+                          value={selectedOffice}
+                          onChange={(event, newValue) => {
+                            setSelectedOffice(newValue);
+                          }}
+                          getOptionLabel={(option) => option.name} // Display the office name
+                          renderInput={(params) => (
+                            <TextField {...params} label="Office" variant="outlined" />
+                          )}
                         />
                       </Grid>
                       <Grid item xs={8}>
@@ -336,7 +346,7 @@ export default function AddTeams() {
                               <Button
                                 variant="outlined"
                                 color="secondary"
-                                onClick={() => handleDeleteTeam(team.email)}
+                                onClick={() => handleDeleteTeam(team.teamId)}
                               >
                                 <DeleteIcon />
                               </Button>

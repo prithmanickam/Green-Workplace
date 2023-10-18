@@ -11,16 +11,19 @@ const nodemailer = require('nodemailer');
 
 const JWT_SECRET_FOR_REGISTRATION = 'asbfi3e5asf36n2';
 
-// Fetch all users (that is not admin)
+// Fetch all users that are in a specific company (and not admin)
 module.exports.getAllUsers = async (req, res) => {
+  const { company } = req.body;
+
   try {
     const { data, error } = await supabase
       .from("User")
       .select("*")
+      //.eq("company_id", company)
       .neq("type", "Admin");
 
     if (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching users in the company:", error);
       return res.status(500).json({ status: "error" });
     }
 
@@ -30,6 +33,7 @@ module.exports.getAllUsers = async (req, res) => {
     res.status(500).json({ status: "error" });
   }
 };
+
 
 // Fetch all users that are not team owners (and not admin)
 module.exports.getAllNonTeamOwners = async (req, res) => {
@@ -55,6 +59,9 @@ module.exports.getAllNonTeamOwners = async (req, res) => {
 module.exports.sendRegistrationEmails = async (req, res) => {
   try {
     const emails = req.body.emails;
+    const company = req.body.company;
+
+    console.log("in here")
 
     if (!Array.isArray(emails)) {
       emails = [emails];
@@ -80,6 +87,8 @@ module.exports.sendRegistrationEmails = async (req, res) => {
         },
       });
 
+      console.log("in here2")
+
       // Email content
       const emailContent = `
         <html>
@@ -103,6 +112,7 @@ module.exports.sendRegistrationEmails = async (req, res) => {
       //console.log(`Registration email sent to ${email}`);
 
     }
+    console.log("in here3")
     res.status(200).json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ status: "error" });
@@ -118,9 +128,10 @@ module.exports.getEmailFromToken = async (req, res) => {
     const decodedToken = jwt.verify(token, JWT_SECRET_FOR_REGISTRATION);
 
     const email = decodedToken.email;
+    const company = decodedToken.company;
     //console.log(email);
 
-    res.status(200).json({ status: "ok", email });
+    res.status(200).json({ status: "ok", email, company });
   } catch (error) {
     //console.error('Error fetching email from token:', error);
     res.status(500).json({ status: 'error', error: 'Internal server error' });

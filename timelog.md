@@ -128,5 +128,15 @@
 ### 15 Oct 2023
 * *1 hour*  Started migrating Auth APIs to Supabase instead of MongoDB
 
+## Week 5
+
 ### 16 Oct 2023
 * *1 hour*  Changed all API calls to work for development and production
+* *3 hours*  Migrated Auth APIs to supabase (Login, Register GetUserData, AddEmployees)
+
+### 17 Oct 2023
+* *5 hours*  Started migrating Team APIs to supabase (Add Team, Get Team, Delete Team)
+
+### 18 Oct 2023
+* *1 hour*  Completed migrating Team APIs to supabase (Add Team, Get Team, Delete Team)
+
