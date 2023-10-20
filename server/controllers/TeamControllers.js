@@ -2,7 +2,7 @@ const Team = require("../models/TeamModel");
 const User = require("../models/UserModel");
 const supabase = require("../config/supabaseConfig");
 
-// Add the team to the database
+// Add the team to the database (for admin)
 module.exports.addTeam = async (req, res) => {
   const {
     teamOwner,
@@ -48,26 +48,17 @@ module.exports.addTeam = async (req, res) => {
         team_identifier,
 
       },
-    ]);
+    ]).select();
+
+    console.log(createdTeam[0].id)
 
     if (createTeamError) {
       console.error("Error creating team:", error);
       return res.status(500).json({ status: "error" });
     }
 
-    const { data: team, error: teamError } = await supabase
-      .from("Team")
-      .select("id")
-      .eq("team_identifier", team_identifier)
-      .single();
-
-    if (teamError) {
-      console.error("Error fetching team:", error);
-      return res.status(500).json({ status: "error" });
-    }
-
     // Find the team ID
-    const team_id = team.id;
+    const team_id = createdTeam[0].id;
 
     // Add the team owner to the "Team_Member" table
 
@@ -117,7 +108,7 @@ module.exports.addTeam = async (req, res) => {
   }
 };
 
-// get all teams in the database
+// get all teams in the database (for admin)
 module.exports.getTeams = async (req, res) => {
   const { company } = req.body;
 
@@ -193,7 +184,7 @@ module.exports.getTeams = async (req, res) => {
   }
 };
 
-// Register the team to the database
+// Delete the team in the database (for Admin)
 module.exports.deleteTeam = async (req, res) => {
   const { teamId } = req.body;
 
@@ -229,21 +220,41 @@ module.exports.deleteTeam = async (req, res) => {
 
 // Get the teams data for the teams the user is in
 module.exports.getUserTeamsData = async (req, res) => {
-  const { email } = req.body;
+  const { user_id } = req.body;
 
   try {
 
-    const user = await User.findOne({ email });
+    // find teams user is in
+    const { data: user_teams, getUserTeamsError } = await supabase
+      .from("Team_Member")
+      .select("team_id")
+      .eq("user_id", user_id);
+
+    if (getUserTeamsError) {
+      console.error("Error finding user teams:", getUserTeamsError);
+      return res.status(500).json({ status: "error" });
+    }
 
     const teams = []
 
-    for (const team of user.teams) {
-      const teamInfo = await Team.findById(team._id);
+    for (const team of user_teams) {
 
-      // Populate the team owner's details
-      await teamInfo.populate('teamOwner');
+      const { data: teamName, getTeamNameError } = await supabase
+        .from("Team")
+        .select("name")
+        .eq("id", team.team_id);
 
-      teams.push(teamInfo)
+      if (getTeamNameError) {
+        console.error("Error finding team name:", getTeamNameError);
+        return res.status(500).json({ status: "error" });
+      }
+
+      const teamData = {
+        teamId: team.team_id,
+        teamName: teamName[0].name,
+      };
+
+      teams.push(teamData);
     }
 
     res.status(200).json({ status: "ok", data: teams });
@@ -278,37 +289,52 @@ module.exports.getOffices = async (req, res) => {
 
 // Get the users dashboard data
 module.exports.getYourDashboardData = async (req, res) => {
-  const { email } = req.body;
+  const { user_id } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const { data: user_details, getUserTeamsError } = await supabase
+      .from("User")
+      .select("firstname, lastname, email, company, account_created")
+      .eq("user_id", user_id);
 
     const yourDashboardInfo = {
-      name: user.firstname + " " + user.lastname,
-      email: user.email,
-      company: user.company,
-      accountCreated: user.accountCreated,
+      name: user_details[0].firstname + " " + user_details[0].lastname,
+      email: user_details[0].email,
+      company: user_details[0].company,
+      accountCreated: user_details[0].account_created,
       totalCarbonFootprint: 0,
       teams: [],
     }
 
-    for (const team of user.teams) {
-      const teamInfo = await Team.findById(team._id);
+    // Team Name: Dans Team
+    // Team Owner: Dan Johnson
+    // Your Carbon Footprint: 6.96 kg CO2
+    // Your Work At Office Preference:
 
-      // Populate the team owner's details
-      await teamInfo.populate('teamOwner');
+    const { data: user_teams } = await supabase
+      .from("Team_Member")
+      .select("monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf")
+      .eq("user_id", user_id);
+      //get teamid - go to teams table get the teams name - get team_owner_id from teams table - go to user table and get their name
 
-      yourDashboardInfo.teams.push([teamInfo, team.carbonFootprint])
-    }
+    // for (const team of user_teams) {
 
-    // Calculate the total carbon footprint
-    const totalCarbonFootprint = Object.values(user.currentWeekStats).reduce(
-      (total, dayStats) => total + parseFloat(dayStats.carbon || 0),
-      0
-    ).toFixed(2);
+    //   const teamInfo = await Team.findById(team._id);
 
-    // Update the totalCarbonFootprint field in yourDashboardInfo
-    yourDashboardInfo.totalCarbonFootprint = totalCarbonFootprint;
+    //   // Populate the team owner's details
+    //   await teamInfo.populate('teamOwner');
+
+    //   yourDashboardInfo.teams.push([teamInfo, team.carbonFootprint])
+    // }
+
+    // // Calculate the total carbon footprint
+    // const totalCarbonFootprint = Object.values(user.currentWeekStats).reduce(
+    //   (total, dayStats) => total + parseFloat(dayStats.carbon || 0),
+    //   0
+    // ).toFixed(2);
+
+    // // Update the totalCarbonFootprint field in yourDashboardInfo
+    // yourDashboardInfo.totalCarbonFootprint = totalCarbonFootprint;
 
     res.status(200).json({ status: "ok", data: yourDashboardInfo });
   } catch (error) {

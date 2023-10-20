@@ -16,7 +16,7 @@ export default function YourDashboard() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: userData.email,
+        user_id: userData.id,
       }),
     })
       .then((res) => res.json())

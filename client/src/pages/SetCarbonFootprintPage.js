@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
 import { Card, CardContent, Typography, Box, Button, Stack, Grid } from '@mui/material';
+import LinearProgress from '@mui/material/LinearProgress';
 import { useUser } from '../context/UserContext';
 import { toast } from "react-toastify";
 import { baseURL } from "../utils/constant";
@@ -10,6 +11,8 @@ export default function SetCarbonFootprint() {
 
   const { userData } = useUser();
   const [teams, setTeams] = useState([]);
+  const [totalStats, setTotalStats] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const email = userData.email;
 
@@ -20,17 +23,16 @@ export default function SetCarbonFootprint() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: userData.email,
+        user_id: userData.id,
       }),
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "ok") {
-          console.log("hi")
-          console.log(data.data)
-          const fetchedTeams = data.data;
-          console.log(fetchedTeams)
-          setTeams(fetchedTeams);
+          const teamStats = data.stats;
+          setTeams(teamStats);
+          const totalStats = data.totalStats;
+          setTotalStats(totalStats);
 
         } else {
           toast.error("Failed to fetch user carbon data for teams.");
@@ -38,11 +40,14 @@ export default function SetCarbonFootprint() {
       })
       .catch((error) => {
         toast.error("An error occurred while fetching teams data.");
+      })
+      .finally(() => {
+        setLoading(false); // Set loading to false when data fetching is complete
       });
   }, [userData]);
 
 
-  if (!userData || (userData.type !== 'Team Member')) {
+  if (!userData || (userData.type !== 'Employee')) {
     return <Navigate to="/homepage" replace />;
   }
 
@@ -50,28 +55,18 @@ export default function SetCarbonFootprint() {
   const cardsData = [
     {
       day: "Monday",
-      duration: userData.currentWeekStats?.Monday?.duration || "0 min",
-      carbonFootprint: `${userData.currentWeekStats?.Monday?.carbon || 0} kg`,
     },
     {
       day: "Tuesday",
-      duration: userData.currentWeekStats?.Tuesday?.duration || "0 min",
-      carbonFootprint: `${userData.currentWeekStats?.Tuesday?.carbon || 0} kg`,
     },
     {
       day: "Wednesday",
-      duration: userData.currentWeekStats?.Wednesday?.duration || "0 min",
-      carbonFootprint: `${userData.currentWeekStats?.Wednesday?.carbon || 0} kg`,
     },
     {
       day: "Thursday",
-      duration: userData.currentWeekStats?.Thursday?.duration || "0 min",
-      carbonFootprint: `${userData.currentWeekStats?.Thursday?.carbon || 0} kg`,
     },
     {
       day: "Friday",
-      duration: userData.currentWeekStats?.Friday?.duration || "0 min",
-      carbonFootprint: `${userData.currentWeekStats?.Friday?.carbon || 0} kg`,
     },
   ];
 
@@ -152,22 +147,36 @@ export default function SetCarbonFootprint() {
                   <Typography variant="h5" component="div">
                     {card.day}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Duration: {card.duration}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Carbon Footprint: {card.carbonFootprint}
-                  </Typography>
-                  {teams[card.day] && (
+
+                  {loading ? ( 
+                    <Box py={2}>
+                      <LinearProgress />
+                    </Box>
+                  ) : (
                     <>
-                      <hr /> {/* Divider */}
-                      {teams[card.day].map((teamStats, teamIndex) => (
-                        <Typography key={teamIndex} variant="body2" color="text.secondary">
-                          {teamStats}
-                        </Typography>
-                      ))}
+                      {totalStats[card.day] && (
+                        <>
+                          {totalStats[card.day].map((userStats, teamIndex) => (
+                            <Typography key={teamIndex} variant="body2" color="text.secondary">
+                              {userStats}
+                            </Typography>
+                          ))}
+                        </>
+                      )}
+
+                      {teams[card.day] && (
+                        <>
+                          <hr />
+                          {teams[card.day].map((teamStats, teamIndex) => (
+                            <Typography key={teamIndex} variant="body2" color="text.secondary">
+                              {teamStats}
+                            </Typography>
+                          ))}
+                        </>
+                      )}
                     </>
                   )}
+
                 </CardContent>
                 <Button variant="outlined" fullWidth onClick={() => handleReset(card.day)}>
                   Reset

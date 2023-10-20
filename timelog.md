@@ -140,3 +140,5 @@
 ### 18 Oct 2023
 * *1 hour*  Completed migrating Team APIs to supabase (Add Team, Get Team, Delete Team)
 
+### 19 Oct 2023
+* *6 hours*  Completed migrating Carbon Footprint APIs to supabase (post/get/reset carbon footprint). Also added a loading animation in set carbon footprint page when waiting for data.
