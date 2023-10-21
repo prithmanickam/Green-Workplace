@@ -50,8 +50,6 @@ module.exports.addTeam = async (req, res) => {
       },
     ]).select();
 
-    console.log(createdTeam[0].id)
-
     if (createTeamError) {
       console.error("Error creating team:", error);
       return res.status(500).json({ status: "error" });
@@ -292,52 +290,72 @@ module.exports.getYourDashboardData = async (req, res) => {
   const { user_id } = req.body;
 
   try {
-    const { data: user_details, getUserTeamsError } = await supabase
+    const { data: user_details, getUserDetailsError } = await supabase
       .from("User")
-      .select("firstname, lastname, email, company, account_created")
-      .eq("user_id", user_id);
+      .select(`
+        firstname,
+        lastname, 
+        email, 
+        account_created,
+        Company(name), 
+        User_Monday_Stats(carbon_footprint),
+        User_Tuesday_Stats(carbon_footprint),
+        User_Wednesday_Stats(carbon_footprint),
+        User_Thursday_Stats(carbon_footprint),
+        User_Friday_Stats(carbon_footprint)
+      `)
+      .eq("id", user_id);
+
+    if (getUserDetailsError) {
+      console.error("Error finding team name:", getUserDetailsError);
+      return res.status(500).json({ status: "error" });
+    }
 
     const yourDashboardInfo = {
       name: user_details[0].firstname + " " + user_details[0].lastname,
       email: user_details[0].email,
-      company: user_details[0].company,
+      company: user_details[0].Company.name,
       accountCreated: user_details[0].account_created,
-      totalCarbonFootprint: 0,
+      totalCarbonFootprint:
+        (user_details[0].User_Monday_Stats?.carbon_footprint || 0) +
+        (user_details[0].User_Tuesday_Stats?.carbon_footprint || 0) +
+        (user_details[0].User_Wednesday_Stats?.carbon_footprint || 0) +
+        (user_details[0].User_Thursday_Stats?.carbon_footprint || 0) +
+        (user_details[0].User_Friday_Stats?.carbon_footprint || 0),
       teams: [],
     }
 
-    // Team Name: Dans Team
-    // Team Owner: Dan Johnson
-    // Your Carbon Footprint: 6.96 kg CO2
-    // Your Work At Office Preference:
-
     const { data: user_teams } = await supabase
       .from("Team_Member")
-      .select("monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf")
+      .select(`
+        monday_cf,
+        tuesday_cf,
+        wednesday_cf,
+        thursday_cf,
+        friday_cf,
+        Team(name, User(firstname, lastname))
+      `)
       .eq("user_id", user_id);
-      //get teamid - go to teams table get the teams name - get team_owner_id from teams table - go to user table and get their name
 
-    // for (const team of user_teams) {
+    for (const team of user_teams) {
+      const teamInfo = {
+        firstname: team.Team.User.firstname,
+        lastname: team.Team.User.lastname,
+        teamName: team.Team.name,
+      }
 
-    //   const teamInfo = await Team.findById(team._id);
+      //const teamId = team.team_id;
+      const carbonFootprints = [team.monday_cf, team.tuesday_cf, team.wednesday_cf, team.thursday_cf, team.friday_cf];
 
-    //   // Populate the team owner's details
-    //   await teamInfo.populate('teamOwner');
+      // Use reduce to calculate the sum, handling null values with || 0
+      const totalCarbonFootprint = carbonFootprints.reduce((acc, value) => (acc + (value || 0)), 0);
 
-    //   yourDashboardInfo.teams.push([teamInfo, team.carbonFootprint])
-    // }
-
-    // // Calculate the total carbon footprint
-    // const totalCarbonFootprint = Object.values(user.currentWeekStats).reduce(
-    //   (total, dayStats) => total + parseFloat(dayStats.carbon || 0),
-    //   0
-    // ).toFixed(2);
-
-    // // Update the totalCarbonFootprint field in yourDashboardInfo
-    // yourDashboardInfo.totalCarbonFootprint = totalCarbonFootprint;
+      yourDashboardInfo.teams.push([teamInfo, totalCarbonFootprint]);
+    }
 
     res.status(200).json({ status: "ok", data: yourDashboardInfo });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ status: "error" });
   }
 };

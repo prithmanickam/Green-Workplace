@@ -88,7 +88,7 @@ export default function YourDashboard() {
                           Team Name: {team.teamName}
                         </Typography>
                         <Typography variant="body1" style={{ marginBottom: '8px' }}>
-                          Team Owner: {team.teamOwner.firstname} {team.teamOwner.lastname}
+                          Team Owner: {team.firstname} {team.lastname}
                         </Typography>
                         <Typography variant="body1" style={{ marginBottom: '8px' }}>
                           Your Carbon Footprint: {carbonFootprint} kg CO2

@@ -142,3 +142,6 @@
 
 ### 19 Oct 2023
 * *6 hours*  Completed migrating Carbon Footprint APIs to supabase (post/get/reset carbon footprint). Also added a loading animation in set carbon footprint page when waiting for data.
+
+### 20 Oct 2023
+* *3 hours*  Completed Get User Dashboard Info API.

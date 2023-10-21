@@ -264,8 +264,8 @@ function FootprintMapPage() {
       const teamData = teams.map((team) => ({
         team_id: team.teamId,
         calculatedCarbonFootprint:
-        ((parseFloat(teamPercentages[team.teamName]) / 100) *
-          parseFloat(carbonFootprint)).toFixed(2),
+          ((parseFloat(teamPercentages[team.teamName]) / 100) *
+            parseFloat(carbonFootprint)).toFixed(2),
       }));
 
       console.log(day, duration, carbonFootprint, teamData);

@@ -98,7 +98,7 @@ module.exports.getCarbonFootprint = async (req, res) => {
 
         totalStats[day].push(`Duration: ${duration}`);
         totalStats[day].push(`Carbon Footprint: ${carbon_footprint}kg CO2`);
-      } else{
+      } else {
         totalStats[day].push(`Duration: 0 min`);
         totalStats[day].push(`Carbon Footprint: 0kg CO2`);
       }
@@ -140,21 +140,34 @@ module.exports.getCarbonFootprint = async (req, res) => {
 };
 
 module.exports.resetCarbonFootprint = async (req, res) => {
-  const { day, email } = req.body;
+  const { day, user_id } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const tableName = `User_${day}_Stats`;
+    const dayColumnName = day.toLowerCase() + '_cf';
 
-    // reset 'duration' and 'carbon' for the specified day 
-    user.currentWeekStats[day]["duration"] = "0 min";
-    user.currentWeekStats[day]["carbon"] = 0;
+    const { error: teamCFError } = await supabase
+      .from("Team_Member")
+      .update(
+        {
+          [dayColumnName]: 0,
+        },
+      ).eq("user_id", user_id);
 
-    // reset the users carbon footprint for all their teams on the specified day 
-    for (const team of user.teams) {
-      team.dayStats[day] = 0;
+    if (teamCFError) {
+      console.error("Error adding team carbon footprint:", teamCFError);
+      return res.status(500).json({ status: "error" });
     }
 
-    await user.save();
+    const { error: userCFError } = await supabase
+      .from(tableName)
+      .delete()
+      .eq("user_id", user_id);
+
+    if (userCFError) {
+      console.error("Error adding user carbon footprint:", userCFError);
+      return res.status(500).json({ status: "error" });
+    }
 
     res.status(200).json({ status: "ok" });
   } catch (error) {

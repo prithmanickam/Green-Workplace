@@ -81,7 +81,7 @@ export default function SetCarbonFootprint() {
       },
       body: JSON.stringify({
         day,
-        email,
+        user_id: userData.id,
       }),
     })
       .then((res) => res.json())
@@ -148,7 +148,7 @@ export default function SetCarbonFootprint() {
                     {card.day}
                   </Typography>
 
-                  {loading ? ( 
+                  {loading ? (
                     <Box py={2}>
                       <LinearProgress />
                     </Box>
