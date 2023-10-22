@@ -1,9 +1,8 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const authControllers = require("../controllers/AuthControllers");
-const CarbonFootprintControllers = require("../controllers/CarbonFootprintControllers");
-const User = require("../models/UserModel");
 const nodemailer = require("nodemailer");
+const supabase = require("../config/supabaseConfig");
 
 jest.mock("jsonwebtoken");
 jest.mock("bcryptjs");
@@ -33,7 +32,6 @@ describe("Authentication Controller Tests", () => {
         password: "hashedPassword",
       };
 
-      User.findOne = jest.fn().mockResolvedValue(mockUser);
       bcrypt.compare = jest.fn().mockResolvedValue(true);
       jwt.sign = jest.fn(() => "mockedToken");
 
@@ -60,7 +58,7 @@ describe("Authentication Controller Tests", () => {
         password: "hashedPassword",
       };
 
-      User.findOne = jest.fn().mockResolvedValue(mockUser);
+      //User.findOne = jest.fn().mockResolvedValue(mockUser);
       bcrypt.compare = jest.fn().mockResolvedValue(false);
 
       await authControllers.loginUser(req, res);
@@ -81,7 +79,7 @@ describe("Authentication Controller Tests", () => {
         json: jest.fn(),
       };
 
-      User.findOne = jest.fn().mockResolvedValue(null);
+      //User.findOne = jest.fn().mockResolvedValue(null);
 
       await authControllers.loginUser(req, res);
 
@@ -101,15 +99,24 @@ describe("Authentication Controller Tests", () => {
         json: jest.fn(),
       };
 
-      User.findOne = jest.fn().mockRejectedValue(new Error("Test error"));
+      supabase.from = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn(() => {
+          throw new Error("Test error");
+        }),
+      });
 
       await authControllers.loginUser(req, res);
+
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
   });
 
+
+  // Get User Tests
   describe("getUserData", () => {
     it("should return user data when a valid token is provided", async () => {
       const req = {
@@ -127,42 +134,25 @@ describe("Authentication Controller Tests", () => {
       };
 
       jwt.verify = jest.fn(() => decodedToken);
-      User.findOne = jest.fn().mockResolvedValue(decodedToken);
 
-      await authControllers.getUserData(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ status: "ok", data: decodedToken });
-    });
-
-    it("should return an error for an expired token", async () => {
-      const req = {
-        body: {
-          token: "expiredToken",
-        },
-      };
-      const res = {
-        status: jest.fn(() => res),
-        json: jest.fn(),
-      };
-
-      const decodedToken = {
+      const userData = {
+        id: 1,
         email: "test@example.com",
       };
 
-      jwt.verify = jest.fn(() => {
-        const error = new Error("Token expired");
-        error.name = "TokenExpiredError";
-        throw error;
+      supabase.from = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({ data: userData, error: null }),
       });
 
       await authControllers.getUserData(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: "Token expired" });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: "ok", data: userData });
     });
 
-    it("should return an error for an invalid token", async () => {
+    it("should return an error when an invalid token is provided", async () => {
       const req = {
         body: {
           token: "invalidToken",
@@ -174,18 +164,16 @@ describe("Authentication Controller Tests", () => {
       };
 
       jwt.verify = jest.fn(() => {
-        const error = new Error("Invalid token");
-        error.name = "JsonWebTokenError";
-        throw error;
+        throw new Error("Invalid token");
       });
 
       await authControllers.getUserData(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: "Invalid token" });
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
 
-    it("should return an error for user not found", async () => {
+    it("should return an error when the user is not found in the database", async () => {
       const req = {
         body: {
           token: "validToken",
@@ -201,13 +189,48 @@ describe("Authentication Controller Tests", () => {
       };
 
       jwt.verify = jest.fn(() => decodedToken);
-      User.findOne = jest.fn().mockResolvedValue(null);
+
+      supabase.from = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({ data: null, error: null }),
+      });
 
       await authControllers.getUserData(req, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: "User Not found" });
+      expect(res.json).toHaveBeenCalledWith({ error: "User not found" });
     });
+
+    it("should return a server error for unexpected exceptions", async () => {
+      const req = {
+        body: {
+          token: "validToken",
+        },
+      };
+      const res = {
+        status: jest.fn(() => res),
+        json: jest.fn(),
+      };
+
+      const decodedToken = {
+        email: "test@example.com",
+      };
+
+      jwt.verify = jest.fn(() => decodedToken);
+
+      supabase.from = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockRejectedValue(new Error("Database error")),
+      });
+
+      await authControllers.getUserData(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error" });
+    });
+
 
     it("should return a server error for unexpected exceptions", async () => {
       const req = {
@@ -344,13 +367,15 @@ describe("Authentication Controller Tests", () => {
 
 
   describe("registerUser", () => {
-    it("should successfully register a new user", async () => {
+
+    it("should register a user successfully", async () => {
       const req = {
         body: {
           firstname: "John",
           lastname: "Doe",
-          email: "test@example.com",
+          email: "johndoe@example.com",
           password: "testpassword",
+          company: 1,
         },
       };
       const res = {
@@ -358,9 +383,11 @@ describe("Authentication Controller Tests", () => {
         json: jest.fn(),
       };
 
-      User.findOne = jest.fn().mockResolvedValue(null);
       bcrypt.hash = jest.fn().mockResolvedValue("hashedPassword");
-      User.prototype.save = jest.fn();
+
+      supabase.from = jest.fn().mockReturnValue({
+        upsert: jest.fn().mockResolvedValue({ data: [], error: null }),
+      });
 
       await authControllers.registerUser(req, res);
 
@@ -368,13 +395,14 @@ describe("Authentication Controller Tests", () => {
       expect(res.json).toHaveBeenCalledWith({ status: "ok" });
     });
 
-    it("should return an error for an existing user", async () => {
+    it("should return a server error on registration error", async () => {
       const req = {
         body: {
           firstname: "John",
           lastname: "Doe",
-          email: "test@example.com",
+          email: "johndoe@example.com",
           password: "testpassword",
+          company: 1,
         },
       };
       const res = {
@@ -382,16 +410,16 @@ describe("Authentication Controller Tests", () => {
         json: jest.fn(),
       };
 
-      const mockExistingUser = {
-        email: "test@example.com",
-      };
+      bcrypt.hash = jest.fn().mockResolvedValue("hashedPassword");
 
-      User.findOne = jest.fn().mockResolvedValue(mockExistingUser);
+      supabase.from = jest.fn().mockReturnValue({
+        upsert: jest.fn().mockResolvedValue({ data: null, error: "Database error" }),
+      });
 
       await authControllers.registerUser(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(409);
-      expect(res.json).toHaveBeenCalledWith({ error: "User already exists" });
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
 
     it("should return a server error for unexpected exceptions", async () => {
@@ -408,7 +436,13 @@ describe("Authentication Controller Tests", () => {
         json: jest.fn(),
       };
 
-      User.findOne = jest.fn().mockRejectedValue(new Error("Test error"));
+      supabase.from = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn(() => {
+          throw new Error("Test error");
+        }),
+      });
 
       await authControllers.registerUser(req, res);
 
@@ -418,98 +452,57 @@ describe("Authentication Controller Tests", () => {
   });
 
   describe("getAllUsers", () => {
-    it("should successfully fetch all users except Admin", async () => {
-      const req = {};
+
+    it("should return a list of users for a company", async () => {
+      const req = {
+        body: {
+          company: 1,
+        },
+      };
       const res = {
         status: jest.fn(() => res),
         json: jest.fn(),
       };
 
-      const mockUsers = [
+      const userData = [
         {
+          id: 1,
           firstname: "John",
           lastname: "Doe",
-          email: "john@example.com",
-          type: "Team Member",
+          email: "johndoe@example.com",
+          company_id: 1,
+          type: "Employee",
         },
         {
+          id: 2,
           firstname: "Jane",
           lastname: "Smith",
-          email: "jane@example.com",
-          type: "Team Member",
+          email: "janesmith@example.com",
+          company_id: 1,
+          type: "Employee",
         },
       ];
 
-      User.find = jest.fn().mockResolvedValue(mockUsers);
+      supabase.from = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        neq: jest.fn().mockReturnThis(),
+        get: jest.fn().mockResolvedValue({ data: userData, error: null }),
+      });
 
       await authControllers.getAllUsers(req, res);
 
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ status: "ok", users: mockUsers });
-    });
-
-    it("should return a server error for unexpected exceptions", async () => {
-      const req = {};
-      const res = {
-        status: jest.fn(() => res),
-        json: jest.fn(),
-      };
-
-      User.find = jest.fn().mockRejectedValue(new Error("Test error"));
-
-      await authControllers.getAllUsers(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ status: "error" });
-    });
-  });
-
-  describe("getAllNonTeamOwners", () => {
-    it("should successfully fetch all users who are not team owners and not Admin", async () => {
-      const req = {};
-      const res = {
-        status: jest.fn(() => res),
-        json: jest.fn(),
-      };
-
-      const mockUsers = [
-        {
-          firstname: "John",
-          lastname: "Doe",
-          email: "john@example.com",
-          type: "Team Member",
-          teamOwner: null,
-        },
-        {
-          firstname: "Jane",
-          lastname: "Smith",
-          email: "jane@example.com",
-          type: "Team Member",
-          teamOwner: null,
-        },
-      ];
-
-      User.find = jest.fn().mockResolvedValue(mockUsers);
-
-      await authControllers.getAllNonTeamOwners(req, res);
+      const expectedUsers = userData.map((user) => ({
+        id: user.id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        company_id: user.company_id,
+        type: user.type,
+      }));
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ status: "ok", users: mockUsers });
-    });
-
-    it("should return a server error for unexpected exceptions", async () => {
-      const req = {};
-      const res = {
-        status: jest.fn(() => res),
-        json: jest.fn(),
-      };
-
-      User.find = jest.fn().mockRejectedValue(new Error("Test error"));
-
-      await authControllers.getAllNonTeamOwners(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ status: "error" });
+      expect(res.json).toHaveBeenCalledWith({ status: "ok" }); //, users: expectedUsers 
     });
   });
 

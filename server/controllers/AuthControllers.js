@@ -1,4 +1,3 @@
-//const mongoose = require("mongoose");
 const supabase = require("../config/supabaseConfig");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -6,7 +5,6 @@ const JWT_SECRET = "asf23rjkafass35";
 const uuid = require('uuid');
 const COMPANY_EMAIL = process.env.COMPANY_EMAIL;
 const APP_PASSWORD = process.env.APP_PASSWORD;
-const User = require("../models/UserModel");
 const nodemailer = require('nodemailer');
 
 const JWT_SECRET_FOR_REGISTRATION = 'asbfi3e5asf36n2';
@@ -19,38 +17,17 @@ module.exports.getAllUsers = async (req, res) => {
     const { data, error } = await supabase
       .from("User")
       .select("*")
-      //.eq("company_id", company)
-      .neq("type", "Admin");
+      .neq("type", "Admin")
+      .eq("company_id", company);
 
     if (error) {
-      console.error("Error fetching users in the company:", error);
+      //console.error("Error fetching users in the company:", error);
       return res.status(500).json({ status: "error" });
     }
 
     res.status(200).json({ status: "ok", users: data });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ status: "error" });
-  }
-};
-
-
-// Fetch all users that are not team owners (and not admin)
-module.exports.getAllNonTeamOwners = async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from("User")
-      .select("*")
-      .neq("type", "Admin");
-
-    if (error) {
-      console.error("Error fetching non-team owners:", error);
-      return res.status(500).json({ status: "error" });
-    }
-
-    res.status(200).json({ status: "ok", users: data });
-  } catch (error) {
-    console.error(error);
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -60,8 +37,6 @@ module.exports.sendRegistrationEmails = async (req, res) => {
   try {
     const emails = req.body.emails;
     const company = req.body.company;
-
-    console.log("in here")
 
     if (!Array.isArray(emails)) {
       emails = [emails];
@@ -87,8 +62,6 @@ module.exports.sendRegistrationEmails = async (req, res) => {
         },
       });
 
-      console.log("in here2")
-
       // Email content
       const emailContent = `
         <html>
@@ -112,7 +85,6 @@ module.exports.sendRegistrationEmails = async (req, res) => {
       //console.log(`Registration email sent to ${email}`);
 
     }
-    console.log("in here3")
     res.status(200).json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ status: "error" });
@@ -129,7 +101,6 @@ module.exports.getEmailFromToken = async (req, res) => {
 
     const email = decodedToken.email;
     const company = decodedToken.company;
-    //console.log(email);
 
     res.status(200).json({ status: "ok", email, company });
   } catch (error) {
@@ -142,8 +113,6 @@ module.exports.getEmailFromToken = async (req, res) => {
 
 module.exports.registerUser = async (req, res) => {
   const { firstname, lastname, email, password, company } = req.body;
-
-  console.log(firstname, lastname, email, password)
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -159,13 +128,13 @@ module.exports.registerUser = async (req, res) => {
     ]);
 
     if (error) {
-      console.error("Error registering user:", error);
+      //console.error("Error registering user:", error);
       return res.status(500).json({ status: "error" });
     }
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -174,24 +143,15 @@ module.exports.registerUser = async (req, res) => {
 module.exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  console.log(email, password)
-
   try {
     const { data, error } = await supabase
       .from("User")
       .select()
       .eq("email", email)
-      //.eq("password", password)
       .single();
 
     if (error) {
-      console.error("Error logging in user:", error);
-      return res.status(500).json({ status: "error" });
-    }
-
-    console.log(data)
-
-    if (!data) {
+      //console.error("Error logging in user:", error);
       return res.status(404).json({ error: "User not found" });
     }
 
@@ -209,12 +169,12 @@ module.exports.loginUser = async (req, res) => {
 
     res.status(200).json({ status: "ok", token });
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
 
-// Get the user data that logged in
+//Get the user data that logged in
 module.exports.getUserData = async (req, res) => {
   const { token } = req.body;
 
@@ -223,8 +183,6 @@ module.exports.getUserData = async (req, res) => {
       ignoreExpiration: true,
     });
 
-    console.log(decodedToken.email)
-
     const { data, error } = await supabase
       .from("User")
       .select()
@@ -232,18 +190,18 @@ module.exports.getUserData = async (req, res) => {
       .single();
 
     if (error) {
-      console.error("Error fetching user data:", error);
+      //console.error("Error fetching user data:", error);
       return res.status(500).json({ status: "error" });
     }
 
     if (!data) {
       return res.status(404).json({ error: "User not found" });
     }
-    
+
 
     res.status(200).json({ status: "ok", data });
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };

@@ -96,6 +96,7 @@ export default function AddTeams() {
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({company: userData.company_id}),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -109,7 +110,7 @@ export default function AddTeams() {
       .catch((error) => {
         toast.error("An error occurred while fetching user data.");
       });
-  }, []);
+  }, [userData]);
 
   // to register an account / check if details meet validations
   const handleAddTeam = (event) => {

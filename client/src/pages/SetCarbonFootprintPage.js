@@ -14,8 +14,6 @@ export default function SetCarbonFootprint() {
   const [totalStats, setTotalStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const email = userData.email;
-
   useEffect(() => {
     fetch(`${baseURL}/getCarbonFootprint`, {
       method: "POST",

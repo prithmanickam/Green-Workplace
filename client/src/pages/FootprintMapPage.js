@@ -50,7 +50,6 @@ function FootprintMapPage() {
     console.log("nav backk")
     navigate('/SetCarbonFootprint');
   }
-  const email = userData.email;
 
   // use states constants
   const [day, setDay] = React.useState('');

@@ -1,7 +1,3 @@
-const mongoose = require("mongoose");
-const User = require("../models/UserModel");
-const Team = require("../models/TeamModel");
-
 const supabase = require("../config/supabaseConfig");
 
 module.exports.postCarbonFootprint = async (req, res) => {
@@ -20,7 +16,7 @@ module.exports.postCarbonFootprint = async (req, res) => {
     );
 
     if (userCFError) {
-      console.error("Error adding user carbon footprint:", userCFError);
+      //console.error("Error adding user carbon footprint:", userCFError);
       return res.status(500).json({ status: "error" });
     }
 
@@ -38,14 +34,14 @@ module.exports.postCarbonFootprint = async (req, res) => {
         ).eq("user_id", user_id).eq("team_id", team_id);
 
       if (teamCFError) {
-        console.error("Error adding team carbon footprint:", teamCFError);
+        //console.error("Error adding team carbon footprint:", teamCFError);
         return res.status(500).json({ status: "error" });
       }
     }
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
-    console.error(error);
+    //console.error(error);
     res.status(500).json({ status: "error" });
 
   }
@@ -79,7 +75,7 @@ module.exports.getCarbonFootprint = async (req, res) => {
       .eq("user_id", user_id);
 
     if (getUserTeamsError) {
-      console.error("Error finding user teams:", getUserTeamsError);
+      //console.error("Error finding user teams:", getUserTeamsError);
       return res.status(500).json({ status: "error" });
     }
 
@@ -112,7 +108,7 @@ module.exports.getCarbonFootprint = async (req, res) => {
         .eq("user_id", user_id)
 
       if (getTeamDaysError) {
-        console.error("Error finding team name:", getTeamDaysError);
+        //console.error("Error finding team name:", getTeamDaysError);
         return res.status(500).json({ status: "error" });
       }
 
@@ -122,7 +118,7 @@ module.exports.getCarbonFootprint = async (req, res) => {
         .eq("id", team.team_id);
 
       if (getTeamNameError) {
-        console.error("Error finding team name:", getTeamNameError);
+        //console.error("Error finding team name:", getTeamNameError);
         return res.status(500).json({ status: "error" });
       }
 
@@ -155,7 +151,7 @@ module.exports.resetCarbonFootprint = async (req, res) => {
       ).eq("user_id", user_id);
 
     if (teamCFError) {
-      console.error("Error adding team carbon footprint:", teamCFError);
+      //console.error("Error adding team carbon footprint:", teamCFError);
       return res.status(500).json({ status: "error" });
     }
 
@@ -165,7 +161,7 @@ module.exports.resetCarbonFootprint = async (req, res) => {
       .eq("user_id", user_id);
 
     if (userCFError) {
-      console.error("Error adding user carbon footprint:", userCFError);
+      //console.error("Error adding user carbon footprint:", userCFError);
       return res.status(500).json({ status: "error" });
     }
 

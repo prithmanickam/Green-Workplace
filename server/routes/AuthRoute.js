@@ -7,7 +7,6 @@ const {
   getEmailFromToken,
   registerUser,
   getAllUsers,
-  getAllNonTeamOwners,
 } = require("../controllers/AuthControllers");
 
 const router = Router();
@@ -24,10 +23,7 @@ router.post("/getEmail", getEmailFromToken);
 //to create an account and add the user to the database
 router.post("/register", registerUser);
 
-//to retrive all users that are not admins 
+//to retrive all users that are not admins in that company
 router.post("/getAllUsers", getAllUsers);
-
-//to retrive all users that are not admins or team owners
-router.post("/getAllNonTeamOwners", getAllNonTeamOwners);
 
 module.exports = router;
