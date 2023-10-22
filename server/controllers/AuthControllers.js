@@ -1,31 +1,31 @@
-const mongoose = require("mongoose");
+const supabase = require("../config/supabaseConfig");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = "asf23rjkafass35";
 const uuid = require('uuid');
 const COMPANY_EMAIL = process.env.COMPANY_EMAIL;
 const APP_PASSWORD = process.env.APP_PASSWORD;
-const User = require("../models/UserModel");
 const nodemailer = require('nodemailer');
 
 const JWT_SECRET_FOR_REGISTRATION = 'asbfi3e5asf36n2';
 
-// Fetch all users (that is not admin)
+// Fetch all users that are in a specific company (and not admin)
 module.exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find({ type: { $ne: 'Admin' } }); // Find users whose type is not 'Admin'
-    res.status(200).json({ status: "ok", users });
-  } catch (error) {
-    //console.error(error);
-    res.status(500).json({ status: "error" });
-  }
-};
+  const { company } = req.body;
 
-// Fetch all users that are not team owners (and not admin)
-module.exports.getAllNonTeamOwners = async (req, res) => {
   try {
-    const users = await User.find({ teamOwner: null, type: { $ne: 'Admin' } });
-    res.status(200).json({ status: "ok", users });
+    const { data, error } = await supabase
+      .from("User")
+      .select("*")
+      .neq("type", "Admin")
+      .eq("company_id", company);
+
+    if (error) {
+      //console.error("Error fetching users in the company:", error);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok", users: data });
   } catch (error) {
     //console.error(error);
     res.status(500).json({ status: "error" });
@@ -36,6 +36,7 @@ module.exports.getAllNonTeamOwners = async (req, res) => {
 module.exports.sendRegistrationEmails = async (req, res) => {
   try {
     const emails = req.body.emails;
+    const company = req.body.company;
 
     if (!Array.isArray(emails)) {
       emails = [emails];
@@ -45,6 +46,7 @@ module.exports.sendRegistrationEmails = async (req, res) => {
       // Create a payload for the JWT token containing email and other data
       const payload = {
         email,
+        company,
         registrationToken: uuid.v4(), // You can still include a unique token
       };
 
@@ -98,9 +100,9 @@ module.exports.getEmailFromToken = async (req, res) => {
     const decodedToken = jwt.verify(token, JWT_SECRET_FOR_REGISTRATION);
 
     const email = decodedToken.email;
-    //console.log(email);
+    const company = decodedToken.company;
 
-    res.status(200).json({ status: "ok", email });
+    res.status(200).json({ status: "ok", email, company });
   } catch (error) {
     //console.error('Error fetching email from token:', error);
     res.status(500).json({ status: 'error', error: 'Internal server error' });
@@ -108,32 +110,32 @@ module.exports.getEmailFromToken = async (req, res) => {
 };
 
 // Register the user to the database
+
 module.exports.registerUser = async (req, res) => {
-  const { firstname, lastname, email, password } = req.body;
+  const { firstname, lastname, email, password, company } = req.body;
+
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
-    const existingUser = await User.findOne({ email });
+    const { data, error } = await supabase.from("User").upsert([
+      {
+        firstname,
+        lastname,
+        email,
+        password: hashedPassword,
+        company_id: company,
+      },
+    ]);
 
-    if (existingUser) {
-      return res.status(409).json({ error: "User already exists" });
+    if (error) {
+      //console.error("Error registering user:", error);
+      return res.status(500).json({ status: "error" });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({
-      firstname,
-      lastname,
-      email,
-      password: hashedPassword,
-      company: "Company1"
-    });
-
-    await newUser.save();
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
+    //console.error(error);
     res.status(500).json({ status: "error" });
-    //console.log(error);
   }
 };
 
@@ -142,30 +144,37 @@ module.exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const { data, error } = await supabase
+      .from("User")
+      .select()
+      .eq("email", email)
+      .single();
 
-    if (!user) {
+    if (error) {
+      //console.error("Error logging in user:", error);
       return res.status(404).json({ error: "User not found" });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, data.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
-    const token = jwt.sign({ email: user.email }, JWT_SECRET, {
+    const token = jwt.sign({ email: email }, JWT_SECRET, {
       expiresIn: "1m",
     });
 
+    // You can generate a token or session here for user authentication
+
     res.status(200).json({ status: "ok", token });
   } catch (error) {
-    //console.log(error);
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
 
-// Get the user data that logged in
+//Get the user data that logged in
 module.exports.getUserData = async (req, res) => {
   const { token } = req.body;
 
@@ -174,19 +183,25 @@ module.exports.getUserData = async (req, res) => {
       ignoreExpiration: true,
     });
 
-    const user = await User.findOne({ email: decodedToken.email });
+    const { data, error } = await supabase
+      .from("User")
+      .select()
+      .eq("email", decodedToken.email)
+      .single();
 
-    if (!user) {
-      return res.status(404).json({ error: "User Not found" });
+    if (error) {
+      //console.error("Error fetching user data:", error);
+      return res.status(500).json({ status: "error" });
     }
 
-    res.status(200).json({ status: "ok", data: user });
+    if (!data) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+
+    res.status(200).json({ status: "ok", data });
   } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ error: "Token expired" });
-    } else if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({ error: "Invalid token" });
-    }
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };

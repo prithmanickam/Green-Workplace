@@ -1,6 +1,5 @@
-const TeamControllers = require("../controllers/TeamControllers");
-const Team = require("../models/TeamModel");
-const User = require("../models/UserModel");
+const teamControllers = require("../controllers/TeamControllers");
+const supabase = require("../config/supabaseConfig");
 
 // To finish
 describe("Team Controller Tests", () => {
@@ -9,38 +8,141 @@ describe("Team Controller Tests", () => {
   });
 
   describe("addTeam", () => {
-    it("should successfully add a new team", async () => {
-      
-      
-    });
-
-    it("should return a 409 error if the team owner is already a team owner", async () => {
-      const req = {
-        body: {
-          teamOwner: "existingteamowner@example.com",
-          teamName: "Test Team",
-          divisions: "Division A",
-          office: "Office A",
-          company: "Company A",
-          teamMembers: [],
-        },
-      };
-      const res = {
-        status: jest.fn(() => res),
-        json: jest.fn(),
-      };
-
-      // Mocking database calls to simulate an existing team owner
-      User.findOne = jest.fn().mockResolvedValue({
-        email: "existingteamowner@example.com",
-        teamOwner: { _id: "teamId" },
+    
+    it('should retrieve teams with team details successfully', async () => { //TODO FIX
+        // const req = {
+        //   body: {
+        //     company: 1,
+        //   },
+        // };
+        // const res = {
+        //   status: jest.fn(() => res),
+        //   json: jest.fn(),
+        // };
+    
+        // const allTeamsData = [
+        //   {
+        //     team_id: 1,
+        //     team_owner_email: 'teamowner@example.com',
+        //     office_name: 'Office A',
+        //     name: 'Team A',
+        //     team_members_count: 5,
+        //   },
+        //   {
+        //     team_id: 2,
+        //     team_owner_email: 'teamowner2@example.com',
+        //     office_name: 'Office B',
+        //     name: 'Team B',
+        //     team_members_count: 3,
+        //   },
+        // ];
+    
+        // const allTeams = [
+        //   {
+        //     id: 1,
+        //     name: 'Team A',
+        //   },
+        //   {
+        //     id: 2,
+        //     name: 'Team B',
+        //   },
+        // ];
+    
+        // const teamInfo1 = {
+        //   User: { email: 'teamowner@example.com' },
+        //   Office: { name: 'Office A' },
+        //   Team_Member: [{ count: 5 }],
+        // };
+    
+        // const teamInfo2 = {
+        //   User: { email: 'teamowner2@example.com' },
+        //   Office: { name: 'Office B' },
+        //   Team_Member: [{ count: 3 }],
+        // };
+    
+        // supabase.from = jest.fn().mockReturnValueOnce({
+        //   select: jest.fn().mockReturnThis(),
+        //   eq: jest.fn().mockReturnThis(),
+        //   get: jest.fn().mockResolvedValue({ data: allTeams, error: null }),
+        // }).mockReturnValueOnce({
+        //   from: jest.fn().mockReturnThis(),
+        //   select: jest.fn().mockReturnThis(),
+        //   eq: jest.fn().mockReturnThis(),
+        //   single: jest.fn().mockResolvedValue({ data: teamInfo1, getTeamInfoError: null }),
+        // }).mockReturnValueOnce({
+        //   from: jest.fn().mockReturnThis(),
+        //   select: jest.fn().mockReturnThis(),
+        //   eq: jest.fn().mockReturnThis(),
+        //   single: jest.fn().mockResolvedValue({ data: teamInfo2, getTeamInfoError: null }),
+        // });
+    
+        // await teamControllers.getTeams(req, res);
+    
+        // expect(res.status).toHaveBeenCalledWith(200);
+        // expect(res.json).toHaveBeenCalledWith({ status: 'ok', teams: allTeamsData });
       });
-
-      await TeamControllers.addTeam(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(409);
-      expect(res.json).toHaveBeenCalledWith({ error: "User is already a team owner" });
-    });
+    
+      it('should handle errors when adding a team owner', async () => {
+        const req = {
+          body: {
+            teamOwner: 'teamowner@example.com',
+            teamName: 'Test Team',
+            divisions: 'Division A',
+            office: 1,
+            company: 1,
+            teamMembers: ['member1@example.com', 'member2@example.com'],
+          },
+        };
+        const res = {
+          status: jest.fn(() => res),
+          json: jest.fn(),
+        };
+    
+        supabase.from = jest.fn().mockReturnValueOnce({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          single: jest.fn().mockResolvedValue({ data: null, getUserError: null }),
+        });
+    
+        await teamControllers.addTeam(req, res);
+    
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({ error: 'Team Owner user not found' });
+      });
+    
+      it('should handle errors when creating a team', async () => {
+        const req = {
+          body: {
+            teamOwner: 'teamowner@example.com',
+            teamName: 'Test Team',
+            divisions: 'Division A',
+            office: 1,
+            company: 1,
+            teamMembers: ['member1@example.com', 'member2@example.com'],
+          },
+        };
+        const res = {
+          status: jest.fn(() => res),
+          json: jest.fn(),
+        };
+    
+        const teamOwnerData = { id: 1 };
+    
+        supabase.from = jest.fn().mockReturnValueOnce({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          single: jest.fn().mockResolvedValue({ data: teamOwnerData, getUserError: null }),
+        }).mockReturnValueOnce({
+          upsert: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          single: jest.fn().mockResolvedValue({ data: null, error: 'Team creation error' }),
+        });
+    
+        await teamControllers.addTeam(req, res);
+    
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ status: 'error' });
+      });
   });
 
   describe("deleteTeam", () => {

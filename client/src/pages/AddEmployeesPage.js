@@ -29,6 +29,7 @@ export default function AddEmployees() {
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({company: userData.company_id}),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -67,7 +68,7 @@ export default function AddEmployees() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ emails }), // Send the list of emails to the server
+      body: JSON.stringify({ emails, company: userData.company_id }), // Send the list of emails to the server
     })
       .then((res) => res.json())
       .then((data) => {

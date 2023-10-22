@@ -11,7 +11,6 @@ export default function UserDetails() {
   const { oppositeThemeColour } = getThemeColors(mode);
   const { userData } = useUser();
 
-
   const logout = () => {
     window.localStorage.clear();
     window.location.href = "/login";

@@ -46,11 +46,10 @@ function FootprintMapPage() {
   const { userData } = useUser();
   const navigate = useNavigate()
 
-  if (!userData || (userData.type !== 'Team Member')) {
+  if (!userData || (userData.type !== 'Employee')) {
     console.log("nav backk")
     navigate('/SetCarbonFootprint');
   }
-  const email = userData.email;
 
   // use states constants
   const [day, setDay] = React.useState('');
@@ -83,7 +82,7 @@ function FootprintMapPage() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: userData.email,
+        user_id: userData.id,
       }),
     })
       .then((res) => res.json())
@@ -262,10 +261,10 @@ function FootprintMapPage() {
     } else {
 
       const teamData = teams.map((team) => ({
-        team_id: team._id,
+        team_id: team.teamId,
         calculatedCarbonFootprint:
-          (parseFloat(teamPercentages[team.teamName]) / 100) *
-          parseFloat(carbonFootprint),
+          ((parseFloat(teamPercentages[team.teamName]) / 100) *
+            parseFloat(carbonFootprint)).toFixed(2),
       }));
 
       console.log(day, duration, carbonFootprint, teamData);
@@ -280,10 +279,10 @@ function FootprintMapPage() {
           "Access-Control-Allow-Origin": "*",
         },
         body: JSON.stringify({
-          email,
+          user_id: userData.id,
           day,
           duration,
-          carbonFootprint,
+          carbonFootprint: parseFloat(carbonFootprint),
           teamData,
         }),
       })
