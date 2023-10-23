@@ -12,6 +12,7 @@ import FootprintMapPage from './pages/FootprintMapPage';
 import CompanyDashboardPage from './pages/CompanyDashboardPage';
 import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
 import YourDashboardPage from './pages/YourDashboardPage';
+import TeamDashboardPage from './pages/TeamDashboardPage';
 import { ThemeContextProvider } from './context/ThemeContext';
 import { UserContextProvider } from './context/UserContext';
 import { ToastContainer } from "react-toastify";
@@ -100,7 +101,10 @@ const App = () => {
                 path="/YourDashboard"
                 element={<ProtectedRoute element={<YourDashboardPage />} isLoggedIn={isLoggedIn} />}
               />
-              
+              <Route
+                path="/TeamDashboard"
+                element={<ProtectedRoute element={<TeamDashboardPage />} isLoggedIn={isLoggedIn} />}
+              />
             </Routes>
             <ToastContainer
               position="top-right"

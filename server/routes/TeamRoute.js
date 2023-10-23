@@ -7,6 +7,7 @@ const {
     getUserTeamsData,
     getOffices,
     getYourDashboardData,
+    postWorkAtOfficePreference
 } = require("../controllers/TeamControllers");
 
 const router = Router();
@@ -28,5 +29,8 @@ router.post("/getOffices", getOffices);
 
 //to get the users dashboard data including info on their teams from the database
 router.post("/getYourDashboardData", getYourDashboardData);
+
+//post users work at office preference to a specific team
+router.post("/postWorkAtOfficePreference", postWorkAtOfficePreference);
 
 module.exports = router;

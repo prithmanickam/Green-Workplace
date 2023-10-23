@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
 import { Box, Typography, Button, Card, CardContent, Grid } from '@mui/material';
 import { toast } from "react-toastify";
@@ -8,6 +9,8 @@ import { baseURL } from "../utils/constant";
 export default function YourDashboard() {
   const { userData } = useUser();
   const [dashboardData, setDashboardData] = useState([]);
+  const [teamPreferences, setTeamPreferences] = useState({});
+  const [confirmedPreferences, setConfirmedPreferences] = useState({});
 
   useEffect(() => {
     fetch(`${baseURL}/getYourDashboardData`, {
@@ -23,6 +26,13 @@ export default function YourDashboard() {
       .then((data) => {
         if (data.status === "ok") {
           setDashboardData(data.data);
+          data.data.teams.forEach((team) => {
+            const confirmedPrefs = {};
+            data.data.teams.forEach((team) => {
+              confirmedPrefs[team[0].teamId] = team[0].wao_preference;
+            });
+            setConfirmedPreferences(confirmedPrefs);
+          });
         } else {
           toast.error("Failed to fetch your dashboard data. Please try again.");
         }
@@ -30,7 +40,52 @@ export default function YourDashboard() {
       .catch((error) => {
         toast.error("An error occurred while fetching teams data.");
       });
-  }, [userData]);
+  }, [userData, confirmedPreferences]);
+
+  if (!userData || (userData.type !== 'Employee')) {
+    return <Navigate to="/homepage" replace />;
+  }
+
+  const handleDayToggle = (teamId, day) => {
+    setTeamPreferences((prevPreferences) => {
+      const teamPreference = prevPreferences[teamId] || [];
+      const updatedPreferences = teamPreference.includes(day)
+        ? teamPreference.filter((d) => d !== day)
+        : [...teamPreference, day];
+
+      return { ...prevPreferences, [teamId]: updatedPreferences };
+    });
+  };
+
+  const handleSavePreferences = (teamId) => {
+    const selectedDays = teamPreferences[teamId] || [];
+    fetch(`${baseURL}/postWorkAtOfficePreference`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: userData.id,
+        team_id: teamId,
+        selected_days: selectedDays,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          toast.success("Preferences saved successfully");
+          setConfirmedPreferences({
+            ...confirmedPreferences,
+            [teamId]: selectedDays
+          });
+        } else {
+          toast.error("Failed to save preferences. Please try again.");
+        }
+      })
+      .catch((error) => {
+        toast.error("An error occurred while saving preferences.");
+      });
+  };
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -80,8 +135,9 @@ export default function YourDashboard() {
                 Your Teams:
               </Typography>
               <Grid container direction="column" spacing={2}>
-                {dashboardData.teams && dashboardData.teams.map(([team, carbonFootprint]) => (
-                  <Grid item key={team._id}>
+                {dashboardData.teams && dashboardData.teams.sort((a, b) => a[0].teamId - b[0].teamId).map(([team, carbonFootprint]) => (
+                  <Grid item key={team.teamId}>
+
                     <Card sx={{ height: 'auto' }}>
                       <CardContent>
                         <Typography variant="h6" paragraph>
@@ -94,26 +150,38 @@ export default function YourDashboard() {
                           Your Carbon Footprint: {carbonFootprint} kg CO2
                         </Typography>
                         <Typography variant="body1" style={{ marginBottom: '8px' }}>
-                          Your Work At Office Preference:
+                          Your Work At Office Preference: {confirmedPreferences[team.teamId] ? confirmedPreferences[team.teamId].join(', ') : 'None selected'}
+
                         </Typography>
-                        <Button variant="outlined" color="primary" style={{ marginRight: '8px' }}>
-                          Monday
-                        </Button>
-                        <Button variant="outlined" color="primary" style={{ marginRight: '8px' }}>
-                          Tuesday
-                        </Button>
-                        <Button variant="outlined" color="primary" style={{ marginRight: '8px' }}>
-                          Wednesday
-                        </Button>
-                        <Button variant="outlined" color="primary" style={{ marginRight: '8px' }}>
-                          Thursday
-                        </Button>
-                        <Button variant="outlined" color="primary" style={{ marginRight: '30px' }}>
-                          Friday
-                        </Button>
-                        <Button variant="outlined" color="secondary" style={{ marginRight: '8px' }}>
-                          Save
-                        </Button>
+                        <div>
+                          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
+                            <Button
+                              key={day}
+                              variant="outlined"
+                              onClick={() => handleDayToggle(team.teamId, day)}
+                              sx={{
+                                backgroundColor: teamPreferences[team.teamId] && teamPreferences[team.teamId].includes(day) ? '#eed202' : 'primary',
+                                color: teamPreferences[team.teamId] && teamPreferences[team.teamId].includes(day) ? 'black' : 'primary',
+                                border: teamPreferences[team.teamId] && teamPreferences[team.teamId].includes(day) ? '1px solid black' : 'primary',
+                                marginRight: '8px',
+                              }}
+                            >
+                              {day}
+                            </Button>
+                          ))}
+                          <Button
+                            variant="outlined"
+                            color={'success'}
+                            style={{ marginRight: '8px' }}
+                            onClick={() => handleSavePreferences(team.teamId)}
+                            sx={{
+                              backgroundColor: '#1ED760',
+                              color: 'black'
+                            }}
+                          >
+                            Save
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   </Grid>

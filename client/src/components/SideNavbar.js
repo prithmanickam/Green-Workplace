@@ -48,10 +48,10 @@ const employeeMenuItems = [
   { text: 'Your Dashboard', route: '/YourDashboard', icon: <DashboardIcon /> },
   { text: 'Team Chat', route: '/TeamChat', icon: <ChatIcon /> },
   { text: 'Team Dashboard', route: '/TeamDashboard', icon: <AppsIcon /> },
-  { text: 'Team Owner Functions', route: '/TeamDashboard', icon: <SettingsIcon /> },
-  { text: 'Join or Leave a Team', route: '/TeamDashboard', icon: <GroupIcon /> },
+  { text: 'Team Owner Functions', route: '/Team Owner Functions', icon: <SettingsIcon /> },
+  { text: 'Join or Leave a Team', route: '/Join or Leave a Team', icon: <GroupIcon /> },
   { text: 'Company Dashboard', route: '/CompanyDashboard', icon: <BusinessIcon /> },
-  { text: 'Book Floors', route: '/TeamDashboard', icon: <EventSeatIcon /> },
+  { text: 'Book Floors', route: '/Book Floors', icon: <EventSeatIcon /> },
   { text: 'View Events', route: '/ViewEvents', icon: <EventIcon /> },
 ];
 
@@ -108,12 +108,6 @@ export default function SideNavbar() {
 
   if (userData && userData.type === 'Admin') {
     menuItems = adminMenuItems;
-  }
-  if (userData && userData.type === 'Team Member') {
-    menuItems = employeeMenuItems.filter(card => card.text !== "Team Owner Functions");
-  }
-  if (userData && userData.type === 'Team Owner') {
-    menuItems = employeeMenuItems.filter(card => card.text !== "Join or Leave a Team");
   }
 
   const handleMenuItemClick = (route) => {

@@ -131,7 +131,6 @@ export default function HomePage() {
       picture: greyBackground,
       link: "ViewEvents"
     },
-
   ];
 
   //display the right cards for the type of user logged in
@@ -139,12 +138,6 @@ export default function HomePage() {
 
   if (userData && userData.type === 'Admin') {
     cardData = cardDataforAdmin;
-  }
-  if (userData && userData.type === 'Team Member') {
-    cardData = cardDataForEmployee.filter(card => card.id !== 5);
-  }
-  if (userData && userData.type === 'Team Owner') {
-    cardData = cardDataForEmployee.filter(card => card.id !== 6);
   }
 
   return (

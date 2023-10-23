@@ -135,6 +135,7 @@
 * *3 hours*  Migrated Auth APIs to supabase (Login, Register GetUserData, AddEmployees)
 
 ### 17 Oct 2023
+* *0.5 hour*  Meeting with Supervisor
 * *5 hours*  Started migrating Team APIs to supabase (Add Team, Get Team, Delete Team)
 
 ### 18 Oct 2023
@@ -149,3 +150,6 @@
 ### 21 Oct 2023
 * *7 hours*  Updating all Backend API Tests. 
 * *1 hour*   Optimised getTeams API by fetching info using one query instead of three.
+
+### 22 Oct 2023
+* *3 hours*  Create API to set users Work At Office preference for each team in Your Dashboard Page

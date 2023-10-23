@@ -307,16 +307,20 @@ module.exports.getYourDashboardData = async (req, res) => {
         wednesday_cf,
         thursday_cf,
         friday_cf,
-        Team(name, User(firstname, lastname))
+        wao_preference,
+        Team(id, name, User(firstname, lastname))
       `)
       .eq("user_id", user_id);
 
     for (const team of user_teams) {
       const teamInfo = {
+        teamId: team.Team.id,
         firstname: team.Team.User.firstname,
         lastname: team.Team.User.lastname,
         teamName: team.Team.name,
+        wao_preference: team.wao_preference,
       }
+      console.log(teamInfo)
 
       //const teamId = team.team_id;
       const carbonFootprints = [team.monday_cf, team.tuesday_cf, team.wednesday_cf, team.thursday_cf, team.friday_cf];
@@ -327,9 +331,40 @@ module.exports.getYourDashboardData = async (req, res) => {
       yourDashboardInfo.teams.push([teamInfo, totalCarbonFootprint]);
     }
 
+    //console.log(yourDashboardInfo)
+
     res.status(200).json({ status: "ok", data: yourDashboardInfo });
   } catch (error) {
     //console.log(error)
+    res.status(500).json({ status: "error" });
+  }
+};
+
+
+//post users work at office preference to a specific team
+module.exports.postWorkAtOfficePreference = async (req, res) => {
+  const { user_id, team_id, selected_days } = req.body;
+
+  console.log(user_id, team_id, selected_days)
+
+  try {
+
+    const { error: postPreferenceError } = await supabase
+        .from("Team_Member")
+        .update(
+          {
+            wao_preference: selected_days,
+          },
+        ).eq("user_id", user_id).eq("team_id", team_id);
+
+    if (postPreferenceError) {
+      //console.error("Error posting preference:", postPreferenceError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };

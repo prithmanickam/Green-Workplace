@@ -176,7 +176,7 @@ export default function SetCarbonFootprint() {
                   )}
 
                 </CardContent>
-                <Button variant="outlined" fullWidth onClick={() => handleReset(card.day)}>
+                <Button variant="outlined" color="secondary" fullWidth onClick={() => handleReset(card.day)}>
                   Reset
                 </Button>
               </Card>
