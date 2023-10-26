@@ -131,7 +131,7 @@ module.exports.getTeams = async (req, res) => {
         .select(`User(email), Office(name), Team_Member(count) `)
         .eq("id", team.id)
         .single();
-      
+
       //console.log(team_info)
 
       if (getTeamInfoError) {
@@ -320,18 +320,14 @@ module.exports.getYourDashboardData = async (req, res) => {
         teamName: team.Team.name,
         wao_preference: team.wao_preference,
       }
-      console.log(teamInfo)
 
-      //const teamId = team.team_id;
       const carbonFootprints = [team.monday_cf, team.tuesday_cf, team.wednesday_cf, team.thursday_cf, team.friday_cf];
 
-      // Use reduce to calculate the sum, handling null values with || 0
+      // calculate the carbon footprint sum, handling null values with 0
       const totalCarbonFootprint = carbonFootprints.reduce((acc, value) => (acc + (value || 0)), 0);
 
       yourDashboardInfo.teams.push([teamInfo, totalCarbonFootprint]);
     }
-
-    //console.log(yourDashboardInfo)
 
     res.status(200).json({ status: "ok", data: yourDashboardInfo });
   } catch (error) {
@@ -345,17 +341,15 @@ module.exports.getYourDashboardData = async (req, res) => {
 module.exports.postWorkAtOfficePreference = async (req, res) => {
   const { user_id, team_id, selected_days } = req.body;
 
-  console.log(user_id, team_id, selected_days)
-
   try {
 
     const { error: postPreferenceError } = await supabase
-        .from("Team_Member")
-        .update(
-          {
-            wao_preference: selected_days,
-          },
-        ).eq("user_id", user_id).eq("team_id", team_id);
+      .from("Team_Member")
+      .update(
+        {
+          wao_preference: selected_days,
+        },
+      ).eq("user_id", user_id).eq("team_id", team_id);
 
     if (postPreferenceError) {
       //console.error("Error posting preference:", postPreferenceError);
@@ -365,6 +359,117 @@ module.exports.postWorkAtOfficePreference = async (req, res) => {
     res.status(200).json({ status: "ok" });
   } catch (error) {
     //console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+
+// Get offices in the company from the database
+module.exports.getUserTeams = async (req, res) => {
+  const { user_id } = req.body;
+
+  try {
+
+    const { data: user_teams, getUserTeamsError } = await supabase
+      .from("Team_Member")
+      .select(`
+      team_id,
+      Team(name)
+    `)
+      .eq("user_id", user_id);
+
+    if (getUserTeamsError) {
+      console.error("Error finding team:", getUserTeamsError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok", user_teams });
+  } catch (error) {
+    //console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// Get the team dashboard data
+module.exports.getTeamDashboardData = async (req, res) => {
+  const { user_id, team_id } = req.body;
+
+  try {
+    const { data: team, getTeamError } = await supabase
+      .from("Team")
+      .select(`
+        id,
+        name, 
+        divisions, 
+        team_created, 
+        Company(name), 
+        User(email)
+      `)
+      .eq("id", team_id);
+
+    if (getTeamError) {
+      console.error("Error finding team name:", getTeamError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    const teamInfo = {
+      id: team[0].id,
+      name: team[0].name,
+      email: team[0].User.email,
+      company: team[0].Company.name,
+      divisions: team[0].divisions,
+      team_created: team[0].team_created,
+      carbon_footprint_total: 0, 
+      carbon_footprint_metric: 0, 
+      team_members: [],
+    }
+
+    const { data: team_members_info, getTeamMemberError } = await supabase
+      .from("Team_Member")
+      .select(`
+        monday_cf,
+        tuesday_cf,
+        wednesday_cf,
+        thursday_cf,
+        friday_cf,
+        wao_preference,
+        User(firstname, lastname, email)
+      `)
+      .eq("team_id", team_id);
+
+    if (getTeamMemberError) {
+      console.error("Error finding team name:", getTeamDetailsError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    for (const member of team_members_info) {
+      const carbonFootprintSum =
+        member.monday_cf +
+        member.tuesday_cf +
+        member.wednesday_cf +
+        member.thursday_cf +
+        member.friday_cf;
+
+      const teamMemberInfo = {
+        firstname: member.User.firstname,
+        lastname: member.User.lastname,
+        email: member.User.email,
+        wao_preference: member.wao_preference,
+        carbon_footprint: carbonFootprintSum,
+      };
+
+      teamInfo.team_members.push(teamMemberInfo);
+      teamInfo.carbon_footprint_total += carbonFootprintSum;
+    }
+
+    if (teamInfo.team_members.length > 0) {
+      teamInfo.carbon_footprint_metric = (teamInfo.carbon_footprint_total / teamInfo.team_members.length).toFixed(2);
+      teamInfo.carbon_footprint_total = teamInfo.carbon_footprint_total.toFixed(2);
+    }
+
+    res.status(200).json({ status: "ok", data: teamInfo });
+  } catch (error) {
+    //console.log(error)
     res.status(500).json({ status: "error" });
   }
 };

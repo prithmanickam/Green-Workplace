@@ -49,7 +49,7 @@ export default function AddEmployees() {
       .catch((error) => {
         toast.error("An error occurred while fetching user data.");
       });
-  }, []);
+  }, [userData]);
 
   if (!userData || (userData.type !== 'Admin')) {
     return <Navigate to="/homepage" replace />;

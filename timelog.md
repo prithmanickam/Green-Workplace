@@ -153,3 +153,9 @@
 
 ### 22 Oct 2023
 * *3 hours*  Create API to set users Work At Office preference for each team in Your Dashboard Page
+
+### 24 Oct 2023
+* *0.5 hour*  Meeting with Supervisor.
+
+### 25 Oct 2023
+* *8 hours*  Created Team Dashboard page and created APIs to fetch relevent data. Users can switch between team dashboard if they're in mulitple teams.
