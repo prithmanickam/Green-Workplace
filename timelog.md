@@ -159,3 +159,6 @@
 
 ### 25 Oct 2023
 * *8 hours*  Created Team Dashboard page and created APIs to fetch relevent data. Users can switch between team dashboard if they're in mulitple teams.
+
+### 26 Oct 2023
+* *1 hour*  Pipeline Fix and Changes due to database stubbing. Fixed fetching team dashboard data bug by first check if team has been selected. 

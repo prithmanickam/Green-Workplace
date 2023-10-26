@@ -392,7 +392,7 @@ module.exports.getUserTeams = async (req, res) => {
 
 // Get the team dashboard data
 module.exports.getTeamDashboardData = async (req, res) => {
-  const { user_id, team_id } = req.body;
+  const { team_id } = req.body;
 
   try {
     const { data: team, getTeamError } = await supabase
@@ -410,7 +410,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
     if (getTeamError) {
       console.error("Error finding team name:", getTeamError);
       return res.status(500).json({ status: "error" });
-    }
+    }    
 
     const teamInfo = {
       id: team[0].id,
@@ -469,7 +469,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
 
     res.status(200).json({ status: "ok", data: teamInfo });
   } catch (error) {
-    //console.log(error)
+    console.log(error)
     res.status(500).json({ status: "error" });
   }
 };

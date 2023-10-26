@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
-import { Box, Typography, Button, Card, CardContent, Grid, Select, MenuItem, Stack } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack } from '@mui/material';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
 import Avatar from '@mui/material/Avatar';
-
 import InputLabel from '@mui/material/InputLabel';
 
 export default function TeamDashboard() {
   const { userData } = useUser();
-  const [dashboardData, setDashboardData] = useState([]);
-  const [teamDashboardData, setTeamDashboardData] = useState([]);
-  const [teamPreferences, setTeamPreferences] = useState({});
-  const [confirmedPreferences, setConfirmedPreferences] = useState({});
-  const [selectedTeam, setSelectedTeam] = useState(''); 
-  const [selectedTeamId, setSelectedTeamId] = useState(''); 
+  const [teamDashboardData, setTeamDashboardData] = useState({
+    name: '',
+    email: '',
+    company: '',
+    team_created: '',
+    carbon_footprint_total: 0,
+    carbon_footprint_metric: 0,
+    team_members: [],
+  });
+  const [selectedTeam, setSelectedTeam] = useState('');
+  const [selectedTeamId, setSelectedTeamId] = useState('');
   const [userTeams, setUserTeams] = useState([]);
 
   const teamOptions = userTeams.map(team => ({
@@ -38,78 +42,45 @@ export default function TeamDashboard() {
       .then((data) => {
         if (data.status === "ok") {
           setUserTeams(data.user_teams);
-          console.log(selectedTeamId)
           if (data.user_teams.length > 0 && selectedTeam === '') {
             // Set the initial selected team to the first team only if it's not already set
-            setSelectedTeam(data.user_teams[0].Team.name); 
+            setSelectedTeam(data.user_teams[0].Team.name);
             setSelectedTeamId(data.user_teams[0].team_id);
           }
-
         } else {
-          toast.error("Failed to fetch your dashboard data. Please try again.");
+          toast.error("Failed to fetch user's teams.");
         }
       })
       .catch((error) => {
         toast.error("An error occurred while fetching teams data.");
       });
-  }, [userData, confirmedPreferences]);
+  }, [userData, selectedTeam]);
 
   useEffect(() => {
-    fetch(`${baseURL}/getTeamDashboardData`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-        team_id: selectedTeamId,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          console.log(data.data)
-          setTeamDashboardData(data.data);
-
-        } else {
-          toast.error("Failed to fetch team dashboard data. Please try again.");
-        }
+    if (selectedTeamId) {
+      fetch(`${baseURL}/getTeamDashboardData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          team_id: selectedTeamId,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
-  }, [userData, confirmedPreferences]);
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setTeamDashboardData(data.data);
+          } else {
+            toast.error("Failed to fetch team dashboard data.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching team dashboard data.");
+        });
+    }
+  }, [selectedTeamId]);
 
-
-  useEffect(() => {
-    fetch(`${baseURL}/getYourDashboardData`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setDashboardData(data.data);
-          data.data.teams.forEach((team) => {
-            const confirmedPrefs = {};
-            data.data.teams.forEach((team) => {
-              confirmedPrefs[team[0].teamId] = team[0].wao_preference;
-            });
-            setConfirmedPreferences(confirmedPrefs);
-          });
-        } else {
-          toast.error("Failed to fetch your dashboard data. Please try again.");
-        }
-      })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
-  }, [userData, confirmedPreferences]);
 
   if (!userData || (userData.type !== 'Employee')) {
     return <Navigate to="/homepage" replace />;
