@@ -364,7 +364,7 @@ module.exports.postWorkAtOfficePreference = async (req, res) => {
 };
 
 
-// Get offices in the company from the database
+// Get teams the user is in from the database
 module.exports.getUserTeams = async (req, res) => {
   const { user_id } = req.body;
 

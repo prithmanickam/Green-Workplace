@@ -13,6 +13,7 @@ import CompanyDashboardPage from './pages/CompanyDashboardPage';
 import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
 import YourDashboardPage from './pages/YourDashboardPage';
 import TeamDashboardPage from './pages/TeamDashboardPage';
+import TeamChatPage from './pages/TeamChatPage';
 import { ThemeContextProvider } from './context/ThemeContext';
 import { UserContextProvider } from './context/UserContext';
 import { ToastContainer } from "react-toastify";
@@ -31,7 +32,7 @@ const App = () => {
       return <LoginPage />;
     }
   };
-  
+
   // If the user is logged in, log them out and redirect to the registration page
   const RegistrationPageLoggedOut = () => {
     if (isLoggedIn) {
@@ -104,6 +105,10 @@ const App = () => {
               <Route
                 path="/TeamDashboard"
                 element={<ProtectedRoute element={<TeamDashboardPage />} isLoggedIn={isLoggedIn} />}
+              />
+              <Route
+                path="/TeamChat"
+                element={<ProtectedRoute element={<TeamChatPage />} isLoggedIn={isLoggedIn} />}
               />
             </Routes>
             <ToastContainer

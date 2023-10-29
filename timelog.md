@@ -154,6 +154,8 @@
 ### 22 Oct 2023
 * *3 hours*  Create API to set users Work At Office preference for each team in Your Dashboard Page
 
+## Week 6
+
 ### 24 Oct 2023
 * *0.5 hour*  Meeting with Supervisor.
 
@@ -162,3 +164,9 @@
 
 ### 26 Oct 2023
 * *1 hour*  Pipeline Fix and Changes due to database stubbing. Fixed fetching team dashboard data bug by first check if team has been selected. 
+
+### 27 Oct 2023
+* *6 hour*  Started working on the Team Chat Page. 
+
+### 28 Oct 2023
+* *8 hour*  Team Chat page has an improved layout, now displays name and date of message, and can scroll through past messages. Real-time connection been established. Can switch between chats from the team dropdown.
