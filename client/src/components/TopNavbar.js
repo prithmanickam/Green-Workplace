@@ -80,10 +80,13 @@ function TopNavbar() {
             </IconButton>
             {isLoggedIn ? (
               <>
-
                 <Link to="/account" style={{ textDecoration: 'none' }}>
                   <IconButton sx={{ mr: 1 }}>
-                    <Avatar alt={userData.firstname} src="/static/images/avatar/2.jpg" />
+                    {userData ? (
+                      <Avatar alt={userData.firstname} src="/static/images/avatar/2.jpg" />
+                    ) : (
+                      <Avatar src="/static/images/avatar/2.jpg" />
+                    )}
                   </IconButton>
                 </Link>
                 <Button onClick={handleLogout}>
