@@ -13,8 +13,10 @@ import { ThemeContext } from '../context/ThemeContext';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { getThemeColors } from '../utils/themeUtils';
+import { useUser } from '../context/UserContext';
 
 function TopNavbar() {
+  const { userData } = useUser();
   const navigate = useNavigate();
   const isLoggedIn = window.localStorage.getItem('loggedIn') === 'true';
 
@@ -81,7 +83,7 @@ function TopNavbar() {
 
                 <Link to="/account" style={{ textDecoration: 'none' }}>
                   <IconButton sx={{ mr: 1 }}>
-                    <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                    <Avatar alt={userData.firstname} src="/static/images/avatar/2.jpg" />
                   </IconButton>
                 </Link>
                 <Button onClick={handleLogout}>

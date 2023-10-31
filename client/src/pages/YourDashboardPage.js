@@ -11,6 +11,7 @@ export default function YourDashboard() {
   const [dashboardData, setDashboardData] = useState([]);
   const [teamPreferences, setTeamPreferences] = useState({});
   const [confirmedPreferences, setConfirmedPreferences] = useState({});
+  const [firstLoad, setFirstLoad] = useState(true);
 
   useEffect(() => {
     fetch(`${baseURL}/getYourDashboardData`, {
@@ -32,6 +33,10 @@ export default function YourDashboard() {
               confirmedPrefs[team[0].teamId] = team[0].wao_preference;
             });
             setConfirmedPreferences(confirmedPrefs);
+            if (firstLoad === true) {
+              setTeamPreferences(confirmedPrefs);
+              setFirstLoad(false)
+            }
           });
         } else {
           toast.error("Failed to fetch your dashboard data. Please try again.");
@@ -40,7 +45,7 @@ export default function YourDashboard() {
       .catch((error) => {
         toast.error("An error occurred while fetching teams data.");
       });
-  }, [userData, confirmedPreferences]);
+  }, [userData, confirmedPreferences, firstLoad]);
 
   if (!userData || (userData.type !== 'Employee')) {
     return <Navigate to="/homepage" replace />;
@@ -59,6 +64,8 @@ export default function YourDashboard() {
 
   const handleSavePreferences = (teamId) => {
     const selectedDays = teamPreferences[teamId] || [];
+    const orderedDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].filter(day => selectedDays.includes(day));
+
     fetch(`${baseURL}/postWorkAtOfficePreference`, {
       method: "POST",
       headers: {
@@ -67,7 +74,7 @@ export default function YourDashboard() {
       body: JSON.stringify({
         user_id: userData.id,
         team_id: teamId,
-        selected_days: selectedDays,
+        selected_days: orderedDays,
       }),
     })
       .then((res) => res.json())
@@ -76,7 +83,7 @@ export default function YourDashboard() {
           toast.success("Preferences saved successfully");
           setConfirmedPreferences({
             ...confirmedPreferences,
-            [teamId]: selectedDays
+            [teamId]: orderedDays
           });
         } else {
           toast.error("Failed to save preferences. Please try again.");

@@ -178,3 +178,4 @@
 
 ### 31 Oct 2023
 * *0.5 hour*  Meeting with Supervisor.
+* *2 hours*  UAT bug fixes: Keep buttons for Work at Office days highlighted in Your Dashboard Page, Made days ordered (Mon - Fri) in Your Dashboard Page, Fix the Avatar icon in Navbar to show letter of the users firstname.
