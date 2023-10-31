@@ -170,3 +170,11 @@
 
 ### 28 Oct 2023
 * *8 hour*  Team Chat page has an improved layout, now displays name and date of message, and can scroll through past messages. Real-time connection been established. Can switch between chats from the team dropdown.
+
+## Week 7
+
+### 30 Oct 2023
+* *1 hour*  Fixed bug for real-time communication in different teams.
+
+### 31 Oct 2023
+* *0.5 hour*  Meeting with Supervisor.

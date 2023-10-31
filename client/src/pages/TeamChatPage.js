@@ -155,10 +155,12 @@ export default function TeamChat() {
 
     const teamChannel = supabase.channel(`team-channel-${selectedTeamId}`);
 
+    console.log(selectedTeamId)
+
     teamChannel
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'Message', 'team_id': { "$eq": selectedTeamId } },
+        { event: '*', schema: 'public', table: 'Message', filter: `team_id=eq.${selectedTeamId}` },
         (payload) => {
           console.log('Change received!', payload)
           setMessages((prevMessages) => [...prevMessages, payload.new]);
@@ -251,7 +253,11 @@ export default function TeamChat() {
         >
           {messages.map((message, index) => {
             const isMyMessage = message.user_id === userData.id;
-            const userName = isMyMessage ? 'You' : message.User.firstname + " " + message.User.lastname; // Replace with user name logic
+            const userName = isMyMessage
+              ? 'You'
+              : message.User
+                ? `${message.User.firstname} ${message.User.lastname}`
+                : 'Team Member';
             const messageDate = new Date(message.date).toLocaleString(); // Format the date
 
             return isMyMessage ? (
