@@ -271,12 +271,7 @@ module.exports.getYourDashboardData = async (req, res) => {
         lastname, 
         email, 
         account_created,
-        Company(name), 
-        User_Monday_Stats(carbon_footprint),
-        User_Tuesday_Stats(carbon_footprint),
-        User_Wednesday_Stats(carbon_footprint),
-        User_Thursday_Stats(carbon_footprint),
-        User_Friday_Stats(carbon_footprint)
+        Company(name)
       `)
       .eq("id", user_id);
 
@@ -290,12 +285,7 @@ module.exports.getYourDashboardData = async (req, res) => {
       email: user_details[0].email,
       company: user_details[0].Company.name,
       accountCreated: user_details[0].account_created,
-      totalCarbonFootprint:
-        (user_details[0].User_Monday_Stats?.carbon_footprint || 0) +
-        (user_details[0].User_Tuesday_Stats?.carbon_footprint || 0) +
-        (user_details[0].User_Wednesday_Stats?.carbon_footprint || 0) +
-        (user_details[0].User_Thursday_Stats?.carbon_footprint || 0) +
-        (user_details[0].User_Friday_Stats?.carbon_footprint || 0),
+      totalCarbonFootprint:0,
       teams: [],
     }
 
@@ -324,9 +314,13 @@ module.exports.getYourDashboardData = async (req, res) => {
       const carbonFootprints = [team.monday_cf, team.tuesday_cf, team.wednesday_cf, team.thursday_cf, team.friday_cf];
 
       // calculate the carbon footprint sum, handling null values with 0
-      const totalCarbonFootprint = carbonFootprints.reduce((acc, value) => (acc + (value || 0)), 0);
+      let teamCarbonFootprint = carbonFootprints.reduce((acc, value) => (acc + (value || 0)), 0);
 
-      yourDashboardInfo.teams.push([teamInfo, totalCarbonFootprint]);
+      yourDashboardInfo.totalCarbonFootprint += teamCarbonFootprint; 
+
+      teamCarbonFootprint = teamCarbonFootprint.toFixed(2);
+
+      yourDashboardInfo.teams.push([teamInfo, teamCarbonFootprint]);
     }
 
     res.status(200).json({ status: "ok", data: yourDashboardInfo });
@@ -455,16 +449,16 @@ module.exports.getTeamDashboardData = async (req, res) => {
         lastname: member.User.lastname,
         email: member.User.email,
         wao_preference: member.wao_preference,
-        carbon_footprint: carbonFootprintSum,
+        carbon_footprint: carbonFootprintSum.toFixed(2),
       };
 
       teamInfo.team_members.push(teamMemberInfo);
       teamInfo.carbon_footprint_total += carbonFootprintSum;
     }
 
-    if (teamInfo.team_members.length > 0) {
+    if (!isNaN(teamInfo.carbon_footprint_total) && teamInfo.team_members.length > 0) {
       teamInfo.carbon_footprint_metric = (teamInfo.carbon_footprint_total / teamInfo.team_members.length).toFixed(2);
-      teamInfo.carbon_footprint_total = teamInfo.carbon_footprint_total.toFixed(2);
+      teamInfo.carbon_footprint_total = (teamInfo.carbon_footprint_total).toFixed(2);
     }
 
     res.status(200).json({ status: "ok", data: teamInfo });

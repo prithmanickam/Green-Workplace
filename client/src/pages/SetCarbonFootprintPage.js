@@ -154,13 +154,15 @@ export default function SetCarbonFootprint() {
                     <>
                       {totalStats[card.day] && (
                         <>
-                          {totalStats[card.day].map((userStats, teamIndex) => (
-                            <Typography key={teamIndex} variant="body2" color="text.secondary">
-                              {userStats}
-                            </Typography>
-                          ))}
+                          <Typography variant="body2" color="text.secondary">
+                            Duration: {totalStats[card.day].duration}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Carbon Footprint: {totalStats[card.day].carbon_footprint} kg CO2
+                          </Typography>
                         </>
                       )}
+
 
                       {teams[card.day] && (
                         <>

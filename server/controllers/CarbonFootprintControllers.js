@@ -9,7 +9,6 @@ module.exports.postCarbonFootprint = async (req, res) => {
     const { error: userCFError } = await supabase.from(tableName).upsert([
       {
         user_id,
-        carbon_footprint: carbonFootprint,
         duration,
       },
     ], { onConflict: "user_id" }
@@ -60,16 +59,31 @@ module.exports.getCarbonFootprint = async (req, res) => {
   };
 
   const totalStats = {
-    Monday: [],
-    Tuesday: [],
-    Wednesday: [],
-    Thursday: [],
-    Friday: []
+    Monday: {
+      duration: `Duration: 0 min`,
+      carbon_footprint: 0,
+    },
+    Tuesday: {
+      duration: `Duration: 0 min`,
+      carbon_footprint: 0,
+    },
+    Wednesday: {
+      duration: `Duration: 0 min`,
+      carbon_footprint: 0,
+    },
+    Thursday: {
+      duration: `Duration: 0 min`,
+      carbon_footprint: 0,
+    },
+    Friday: {
+      duration: `Duration: 0 min`,
+      carbon_footprint: 0,
+    }
   };
 
   try {
     // find teams user us in
-    const { data: user_teams, getUserTeamsError } = await supabase
+    const { data: user_teams, error:getUserTeamsError } = await supabase
       .from("Team_Member")
       .select("team_id")
       .eq("user_id", user_id);
@@ -79,58 +93,59 @@ module.exports.getCarbonFootprint = async (req, res) => {
       return res.status(500).json({ status: "error" });
     }
 
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const { data:userDuration, error:getUserDurationError } = await supabase
+      .from("User")
+      .select(`User_Monday_Stats(duration), User_Tuesday_Stats(duration), User_Wednesday_Stats(duration), User_Thursday_Stats(duration), User_Friday_Stats(duration)`)
+      .eq('id', user_id);
 
-    for (const day of days) {
-      const tableName = `User_${day}_Stats`;
-
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('duration, carbon_footprint')
-        .eq('user_id', user_id);
-
-      if (data && data.length > 0) {
-        const { carbon_footprint, duration } = data[0];
-
-        totalStats[day].push(`Duration: ${duration}`);
-        totalStats[day].push(`Carbon Footprint: ${carbon_footprint}kg CO2`);
-      } else {
-        totalStats[day].push(`Duration: 0 min`);
-        totalStats[day].push(`Carbon Footprint: 0kg CO2`);
-      }
+    if (getUserDurationError) {
+      console.error("Error finding user teams:", getUserDurationError);
+      return res.status(500).json({ status: "error" });
     }
 
-    for (const team of user_teams) {
-      const { data: teamDays, getTeamDaysError } = await supabase
+    totalStats["Monday"]["duration"] = `${userDuration[0].User_Monday_Stats ? userDuration[0].User_Monday_Stats.duration : `0 min`}`;
+    totalStats["Tuesday"]["duration"] = `${userDuration[0].User_Tuesday_Stats ? userDuration[0].User_Tuesday_Stats.duration : `0 min`}`;
+    totalStats["Wednesday"]["duration"] = `${userDuration[0].User_Wednesday_Stats ? userDuration[0].User_Wednesday_Stats.duration : `0 min`}`;
+    totalStats["Thursday"]["duration"] = `${userDuration[0].User_Thursday_Stats ? userDuration[0].User_Thursday_Stats.duration : `0 min`}`;
+    totalStats["Friday"]["duration"] = `${userDuration[0].User_Friday_Stats ? userDuration[0].User_Friday_Stats.duration : `0 min`}`;
+
+    for (const team of user_teams) { 
+      const { data: teamInfo, getTeamInfoError } = await supabase
         .from("Team_Member")
-        .select("monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf")
+        .select(`monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf, Team(name)`)
         .eq("team_id", team.team_id)
         .eq("user_id", user_id)
 
-      if (getTeamDaysError) {
-        //console.error("Error finding team name:", getTeamDaysError);
+      if (getTeamInfoError) {
+        console.error("Error finding team mem days cf:", getTeamInfoError);
         return res.status(500).json({ status: "error" });
       }
-
-      const { data: team_name, getTeamNameError } = await supabase
-        .from("Team")
-        .select("name")
-        .eq("id", team.team_id);
-
-      if (getTeamNameError) {
-        //console.error("Error finding team name:", getTeamNameError);
-        return res.status(500).json({ status: "error" });
+      
+      if (teamInfo[0].monday_cf){
+        stats.Monday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].monday_cf + 'kg CO2'));
+        totalStats["Monday"]["carbon_footprint"] += teamInfo[0].monday_cf;
       }
-
-      stats.Monday.push(team_name[0].name + ': ' + (teamDays[0].monday_cf ? teamDays[0].monday_cf + 'kg CO2' : '0kg CO2'));
-      stats.Tuesday.push(team_name[0].name + ': ' + (teamDays[0].tuesday_cf ? teamDays[0].tuesday_cf + 'kg CO2' : '0kg CO2'));
-      stats.Wednesday.push(team_name[0].name + ': ' + (teamDays[0].wednesday_cf ? teamDays[0].wednesday_cf + 'kg CO2' : '0kg CO2'));
-      stats.Thursday.push(team_name[0].name + ': ' + (teamDays[0].thursday_cf ? teamDays[0].thursday_cf + 'kg CO2' : '0kg CO2'));
-      stats.Friday.push(team_name[0].name + ': ' + (teamDays[0].friday_cf ? teamDays[0].friday_cf + 'kg CO2' : '0kg CO2'));
+      if (teamInfo[0].tuesday_cf){
+        stats.Tuesday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].tuesday_cf + 'kg CO2'));
+        totalStats["Tuesday"]["carbon_footprint"] += teamInfo[0].tuesday_cf;
+      }
+      if (teamInfo[0].wednesday_cf){
+        stats.Wednesday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].wednesday_cf + 'kg CO2'));
+        totalStats["Wednesday"]["carbon_footprint"] += teamInfo[0].wednesday_cf;
+      }
+      if (teamInfo[0].thursday_cf){
+        stats.Thursday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].thursday_cf + 'kg CO2'));
+        totalStats["Thursday"]["carbon_footprint"] += teamInfo[0].thursday_cf;
+      }
+      if (teamInfo[0].friday_cf){
+        stats.Friday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].friday_cf + 'kg CO2'));
+        totalStats["Friday"]["carbon_footprint"] += teamInfo[0].friday_cf;
+      }
     }
 
     res.status(200).json({ status: "ok", stats, totalStats });
   } catch (error) {
+    //console.log(error)
     res.status(500).json({ status: "error" });
   }
 };
