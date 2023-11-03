@@ -94,9 +94,12 @@ export default function TeamChat() {
   }));
 
   useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
+    setTimeout(() => {
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
+
+    }, 800);
   }, [messagesContainerRef]);
 
   useEffect(() => {
@@ -192,9 +195,12 @@ export default function TeamChat() {
 
     setNewMessage('');
 
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
+    setTimeout(() => {
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
+
+    }, 100);
   };
 
   if (!userData || (userData.type !== 'Employee')) {
@@ -228,6 +234,12 @@ export default function TeamChat() {
               );
               if (selectedTeamObject) {
                 setSelectedTeam(selectedTeamObject.team_name);
+                setTimeout(() => {
+                  if (messagesContainerRef.current) {
+                    messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+                  }
+
+                }, 500);
               }
             }}
             style={{ marginBottom: '16px' }}

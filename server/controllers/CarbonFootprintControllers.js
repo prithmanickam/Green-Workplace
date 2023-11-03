@@ -83,7 +83,7 @@ module.exports.getCarbonFootprint = async (req, res) => {
 
   try {
     // find teams user us in
-    const { data: user_teams, error:getUserTeamsError } = await supabase
+    const { data: user_teams, error: getUserTeamsError } = await supabase
       .from("Team_Member")
       .select("team_id")
       .eq("user_id", user_id);
@@ -93,7 +93,7 @@ module.exports.getCarbonFootprint = async (req, res) => {
       return res.status(500).json({ status: "error" });
     }
 
-    const { data:userDuration, error:getUserDurationError } = await supabase
+    const { data: userDuration, error: getUserDurationError } = await supabase
       .from("User")
       .select(`User_Monday_Stats(duration), User_Tuesday_Stats(duration), User_Wednesday_Stats(duration), User_Thursday_Stats(duration), User_Friday_Stats(duration)`)
       .eq('id', user_id);
@@ -109,7 +109,7 @@ module.exports.getCarbonFootprint = async (req, res) => {
     totalStats["Thursday"]["duration"] = `${userDuration[0].User_Thursday_Stats ? userDuration[0].User_Thursday_Stats.duration : `0 min`}`;
     totalStats["Friday"]["duration"] = `${userDuration[0].User_Friday_Stats ? userDuration[0].User_Friday_Stats.duration : `0 min`}`;
 
-    for (const team of user_teams) { 
+    for (const team of user_teams) {
       const { data: teamInfo, getTeamInfoError } = await supabase
         .from("Team_Member")
         .select(`monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf, Team(name)`)
@@ -120,26 +120,40 @@ module.exports.getCarbonFootprint = async (req, res) => {
         console.error("Error finding team mem days cf:", getTeamInfoError);
         return res.status(500).json({ status: "error" });
       }
-      
-      if (teamInfo[0].monday_cf){
+
+      if (teamInfo[0].monday_cf) {
         stats.Monday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].monday_cf + 'kg CO2'));
         totalStats["Monday"]["carbon_footprint"] += teamInfo[0].monday_cf;
+      } else {
+        stats.Monday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
       }
-      if (teamInfo[0].tuesday_cf){
+
+      if (teamInfo[0].tuesday_cf) {
         stats.Tuesday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].tuesday_cf + 'kg CO2'));
         totalStats["Tuesday"]["carbon_footprint"] += teamInfo[0].tuesday_cf;
+      } else {
+        stats.Tuesday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
       }
-      if (teamInfo[0].wednesday_cf){
+
+      if (teamInfo[0].wednesday_cf) {
         stats.Wednesday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].wednesday_cf + 'kg CO2'));
         totalStats["Wednesday"]["carbon_footprint"] += teamInfo[0].wednesday_cf;
+      } else {
+        stats.Wednesday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
       }
-      if (teamInfo[0].thursday_cf){
+
+      if (teamInfo[0].thursday_cf) {
         stats.Thursday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].thursday_cf + 'kg CO2'));
         totalStats["Thursday"]["carbon_footprint"] += teamInfo[0].thursday_cf;
+      } else {
+        stats.Thursday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
       }
-      if (teamInfo[0].friday_cf){
+
+      if (teamInfo[0].friday_cf) {
         stats.Friday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].friday_cf + 'kg CO2'));
         totalStats["Friday"]["carbon_footprint"] += teamInfo[0].friday_cf;
+      } else {
+        stats.Friday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
       }
     }
 
