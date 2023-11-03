@@ -183,3 +183,6 @@
 
 ### 1 Nov 2023
 * *2 hour*  Updated Set Carbon Footprint and get User Dashboard apis following improving Database schema by removing users total calculated carbon footprint, so it follows data integrity.
+
+### 2 Nov 2023
+* *7 hour*  Created Company Dashboard Page and the API to fetch the information. Can sort and search teams in the company by carbon footprint, team name, and division name.

@@ -285,7 +285,7 @@ module.exports.getYourDashboardData = async (req, res) => {
       email: user_details[0].email,
       company: user_details[0].Company.name,
       accountCreated: user_details[0].account_created,
-      totalCarbonFootprint:0,
+      totalCarbonFootprint: 0,
       teams: [],
     }
 
@@ -316,7 +316,7 @@ module.exports.getYourDashboardData = async (req, res) => {
       // calculate the carbon footprint sum, handling null values with 0
       let teamCarbonFootprint = carbonFootprints.reduce((acc, value) => (acc + (value || 0)), 0);
 
-      yourDashboardInfo.totalCarbonFootprint += teamCarbonFootprint; 
+      yourDashboardInfo.totalCarbonFootprint += teamCarbonFootprint;
 
       teamCarbonFootprint = teamCarbonFootprint.toFixed(2);
 
@@ -404,7 +404,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
     if (getTeamError) {
       console.error("Error finding team name:", getTeamError);
       return res.status(500).json({ status: "error" });
-    }    
+    }
 
     const teamInfo = {
       id: team[0].id,
@@ -413,8 +413,8 @@ module.exports.getTeamDashboardData = async (req, res) => {
       company: team[0].Company.name,
       divisions: team[0].divisions,
       team_created: team[0].team_created,
-      carbon_footprint_total: 0, 
-      carbon_footprint_metric: 0, 
+      carbon_footprint_total: 0,
+      carbon_footprint_metric: 0,
       team_members: [],
     }
 
@@ -464,6 +464,92 @@ module.exports.getTeamDashboardData = async (req, res) => {
     res.status(200).json({ status: "ok", data: teamInfo });
   } catch (error) {
     console.log(error)
+    res.status(500).json({ status: "error" });
+  }
+};
+
+
+module.exports.getCompanyDashboardData = async (req, res) => {
+  const { company_id } = req.body;
+
+  try {
+    const { data: teams, getTeamsError } = await supabase
+      .from("Team")
+      .select(`
+        id,
+        name, 
+        divisions,
+        User(email),
+        Team_Member(monday_cf,
+          tuesday_cf,
+          wednesday_cf,
+          thursday_cf,
+          friday_cf)
+      `)
+      .eq("company_id", company_id);
+
+    if (getTeamsError) {
+      console.error("Error finding teams:", getTeamsError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    const teamsInfo = [];
+    let totalCompanyCarbonFootprint = 0;
+    let totalCompanyMembers = 0;
+
+    for (const team of teams) {
+      // Calculate the carbon footprint sum for this team
+      const carbonFootprintSum = team.Team_Member.reduce((sum, member) => {
+        const daySum = member.monday_cf + member.tuesday_cf + member.wednesday_cf + member.thursday_cf + member.friday_cf;
+        return sum + daySum;
+      }, 0);
+
+      // Calculate the carbon footprint average
+      const totalMembers = team.Team_Member.length;
+      const carbonFootprintAverage = totalMembers > 0 ? (carbonFootprintSum / totalMembers).toFixed(2) : 'N/A';
+
+      // Team information object
+      const teamInfo = {
+        id: team.id,
+        name: team.name,
+        ownerEmail: team.User.email,
+        division: team.divisions,
+        carbonFootprintAverage: carbonFootprintAverage,
+        numberOfMembers: totalMembers,
+        carbonFootprintTotal: carbonFootprintSum.toFixed(2),
+      };
+
+      teamsInfo.push(teamInfo);
+
+      // Update company-wide totals
+      totalCompanyCarbonFootprint += carbonFootprintSum;
+      totalCompanyMembers += totalMembers;
+    }
+
+    // Calculate the average and total carbon footprint for the entire company
+    const averageCompanyCarbonFootprint = totalCompanyMembers > 0 ? (totalCompanyCarbonFootprint / totalCompanyMembers).toFixed(2) : 'N/A';
+
+    const companyInfo = {
+      name: 'No Name', 
+      averageCarbonFootprint: averageCompanyCarbonFootprint,
+      totalCarbonFootprint: totalCompanyCarbonFootprint.toFixed(2),
+    };
+
+    const { data: companyName, getCompanyNameError } = await supabase
+      .from("Company")
+      .select("name")
+      .eq("id", company_id);
+
+    if (getCompanyNameError) {
+      console.error("Error finding teams:", getCompanyNameError);
+      return res.status(500).json({ status: "error" });
+    }
+    
+    companyInfo.name = companyName[0].name
+
+    res.status(200).json({ status: "ok", teamsInfo, companyInfo });
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ status: "error" });
   }
 };

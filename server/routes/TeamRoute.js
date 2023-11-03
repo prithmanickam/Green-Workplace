@@ -9,7 +9,8 @@ const {
     getYourDashboardData,
     postWorkAtOfficePreference,
     getUserTeams,
-    getTeamDashboardData
+    getTeamDashboardData,
+    getCompanyDashboardData
 } = require("../controllers/TeamControllers");
 
 const router = Router();
@@ -40,5 +41,8 @@ router.post("/getUserTeams", getUserTeams);
 
 //to get the users team dashboard data from the database
 router.post("/getTeamDashboardData", getTeamDashboardData);
+
+//to get the users company dashboard data from the database
+router.post("/getCompanyDashboardData", getCompanyDashboardData);
 
 module.exports = router;
