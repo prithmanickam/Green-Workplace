@@ -10,7 +10,11 @@ const {
     postWorkAtOfficePreference,
     getUserTeams,
     getTeamDashboardData,
-    getCompanyDashboardData
+    getCompanyDashboardData,
+    getUserTeamOwnerTeams,
+    getTeamOwnerFunctionsData,
+    editTeamName,
+    editTeamWAODays,
 } = require("../controllers/TeamControllers");
 
 const router = Router();
@@ -38,6 +42,18 @@ router.post("/postWorkAtOfficePreference", postWorkAtOfficePreference);
 
 //to get the offices from the database
 router.post("/getUserTeams", getUserTeams);
+
+//to get the offices from the database
+router.post("/getUserTeamOwnerTeams", getUserTeamOwnerTeams);
+
+//to get the users team dashboard data from the database
+router.post("/getTeamOwnerFunctionsData", getTeamOwnerFunctionsData);
+
+//to edit team name the offices from the database
+router.post("/editTeamName", editTeamName);
+
+//to edit team WAO days
+router.post("/editTeamWAODays", editTeamWAODays);
 
 //to get the users team dashboard data from the database
 router.post("/getTeamDashboardData", getTeamDashboardData);

@@ -188,4 +188,7 @@
 * *7 hours*  Created Company Dashboard Page and the API to fetch the information. Can sort and search teams in the company by carbon footprint, team name, and division name.
 
 ### 3 Nov 2023
-* *1 hour*  Fixed Team Chat Scroll Bug - Team chat now scrolls down by default and once sent a message
+* *1 hour*  Fixed Team Chat Scroll Bug - Team chat now scrolls down by default and once sent a message.
+
+### 4 Nov 2023
+* *8 hours*  Started Team Owner Functions Page which fetches all relevent data. Current working functions are edit team page and set Work At Office Days.

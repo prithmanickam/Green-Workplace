@@ -14,6 +14,7 @@ import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
 import YourDashboardPage from './pages/YourDashboardPage';
 import TeamDashboardPage from './pages/TeamDashboardPage';
 import TeamChatPage from './pages/TeamChatPage';
+import TeamOwnerFunctionsPage from './pages/TeamOwnerFunctionsPage';
 import { ThemeContextProvider } from './context/ThemeContext';
 import { UserContextProvider } from './context/UserContext';
 import { ToastContainer } from "react-toastify";
@@ -109,6 +110,10 @@ const App = () => {
               <Route
                 path="/TeamChat"
                 element={<ProtectedRoute element={<TeamChatPage />} isLoggedIn={isLoggedIn} />}
+              />
+              <Route
+                path="/TeamOwnerFunctions"
+                element={<ProtectedRoute element={<TeamOwnerFunctionsPage />} isLoggedIn={isLoggedIn} />}
               />
             </Routes>
             <ToastContainer

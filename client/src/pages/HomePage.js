@@ -101,7 +101,7 @@ export default function HomePage() {
       name: "Team Owner Functions",
       description: "Team owner functions i.e. Add/delete team members, set the teams WAO days, and edit team name.",
       picture: greyBackground,
-      link: "TeamOwnershipFunctions"
+      link: "TeamOwnerFunctions"
     },
     {
       id: 6,

@@ -384,6 +384,133 @@ module.exports.getUserTeams = async (req, res) => {
   }
 };
 
+// Get teams the user is in from the database
+module.exports.getUserTeamOwnerTeams = async (req, res) => {
+  const { user_id } = req.body;
+
+  try {
+    const { data: user_teams, error:getUserTeamsError } = await supabase
+      .from("Team")
+      .select(`
+         id,
+         name
+    `)
+      .eq("team_owner_id", user_id);
+
+    if (getUserTeamsError) {
+      console.error("Error finding team:", getUserTeamsError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok", user_teams });
+  } catch (error) {
+    //console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// Get teams the user is in from the database
+module.exports.getTeamOwnerFunctionsData = async (req, res) => {
+  const { user_email, team_id } = req.body;
+
+  try {
+    const { data: teamInfo, error: getTeamInfoError } = await supabase
+      .from("Team")
+      .select(`
+         wao_days,
+         name
+    `)
+      .eq("id", team_id);
+
+    if (getTeamInfoError) {
+      console.error("Error finding team:", getTeamInfoError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    const { data: teamMembersToRemove, error: getMembersToRemoveError } = await supabase
+      .from("Team_Member")
+      .select("User(email)")
+      .eq("team_id", team_id);
+
+    if (getMembersToRemoveError) {
+      console.error("Error finding team members to remove:", getMembersToRemoveError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    const { data: teamMembersToAdd, error: getMembersToAddError } = await supabase
+      .from("Team_Member")
+      .select("User(email)")
+      .neq("team_id", team_id);
+
+    if (getMembersToAddError) {
+      console.error("Error finding team members to add:", getMembersToAddError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    const emailsToRemove = teamMembersToRemove.map(item => item.User.email);
+    const teamMembersToAddEmails = teamMembersToAdd.map(item => item.User.email);
+
+    const teamMembersToAddUnique = Array.from(
+      new Set(teamMembersToAddEmails.filter(email => !emailsToRemove.includes(email)))
+    );
+    
+    const emailsToRemoveWithoutOwner = emailsToRemove.filter(email => email !== user_email);
+
+    res.status(200).json({ status: "ok", teamInfo, teamMembersToAdd: teamMembersToAddUnique, teamMembersToRemove: emailsToRemoveWithoutOwner });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// Edit team name as a team owner
+module.exports.editTeamName = async (req, res) => {
+  const { team_id, new_team_name } = req.body;
+  
+  console.log("hi")
+  try {
+
+    const { editTeamNameError } = await supabase
+      .from("Team")
+      .update({ name: new_team_name })
+      .eq("id", team_id);
+
+    if (editTeamNameError) {
+      console.error("Error finding team:", editTeamNameError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// Edit team WAO days as a team owner
+module.exports.editTeamWAODays = async (req, res) => {
+  const { team_id, selected_days} = req.body;
+  
+  console.log("hi")
+  try {
+
+    const { editTeamWAODaysError } = await supabase
+      .from("Team")
+      .update({ wao_days: selected_days })
+      .eq("id", team_id);
+
+    if (editTeamWAODaysError) {
+      console.error("Error finding team:", editTeamWAODaysError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
 // Get the team dashboard data
 module.exports.getTeamDashboardData = async (req, res) => {
   const { team_id } = req.body;

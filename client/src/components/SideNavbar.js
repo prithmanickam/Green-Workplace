@@ -48,7 +48,7 @@ const employeeMenuItems = [
   { text: 'Your Dashboard', route: '/YourDashboard', icon: <DashboardIcon /> },
   { text: 'Team Chat', route: '/TeamChat', icon: <ChatIcon /> },
   { text: 'Team Dashboard', route: '/TeamDashboard', icon: <AppsIcon /> },
-  { text: 'Team Owner Functions', route: '/Team Owner Functions', icon: <SettingsIcon /> },
+  { text: 'Team Owner Functions', route: '/TeamOwnerFunctions', icon: <SettingsIcon /> },
   { text: 'Join or Leave a Team', route: '/Join or Leave a Team', icon: <GroupIcon /> },
   { text: 'Company Dashboard', route: '/CompanyDashboard', icon: <BusinessIcon /> },
   { text: 'Book Floors', route: '/Book Floors', icon: <EventSeatIcon /> },
