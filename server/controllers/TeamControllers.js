@@ -389,7 +389,7 @@ module.exports.getUserTeamOwnerTeams = async (req, res) => {
   const { user_id } = req.body;
 
   try {
-    const { data: user_teams, error:getUserTeamsError } = await supabase
+    const { data: user_teams, error: getUserTeamsError } = await supabase
       .from("Team")
       .select(`
          id,
@@ -409,9 +409,9 @@ module.exports.getUserTeamOwnerTeams = async (req, res) => {
   }
 };
 
-// Get teams the user is in from the database
+// Get data needed in the team owner functions page from the database
 module.exports.getTeamOwnerFunctionsData = async (req, res) => {
-  const { user_email, team_id } = req.body;
+  const { company_id, user_email, team_id } = req.body;
 
   try {
     const { data: teamInfo, error: getTeamInfoError } = await supabase
@@ -438,9 +438,10 @@ module.exports.getTeamOwnerFunctionsData = async (req, res) => {
     }
 
     const { data: teamMembersToAdd, error: getMembersToAddError } = await supabase
-      .from("Team_Member")
-      .select("User(email)")
-      .neq("team_id", team_id);
+      .from("User")
+      .select(`email`)
+      .eq("company_id", company_id)
+      .eq("type", 'Employee');
 
     if (getMembersToAddError) {
       console.error("Error finding team members to add:", getMembersToAddError);
@@ -448,12 +449,12 @@ module.exports.getTeamOwnerFunctionsData = async (req, res) => {
     }
 
     const emailsToRemove = teamMembersToRemove.map(item => item.User.email);
-    const teamMembersToAddEmails = teamMembersToAdd.map(item => item.User.email);
+    const teamMembersToAddEmails = teamMembersToAdd.map(item => item.email);
 
     const teamMembersToAddUnique = Array.from(
       new Set(teamMembersToAddEmails.filter(email => !emailsToRemove.includes(email)))
     );
-    
+
     const emailsToRemoveWithoutOwner = emailsToRemove.filter(email => email !== user_email);
 
     res.status(200).json({ status: "ok", teamInfo, teamMembersToAdd: teamMembersToAddUnique, teamMembersToRemove: emailsToRemoveWithoutOwner });
@@ -466,7 +467,7 @@ module.exports.getTeamOwnerFunctionsData = async (req, res) => {
 // Edit team name as a team owner
 module.exports.editTeamName = async (req, res) => {
   const { team_id, new_team_name } = req.body;
-  
+
   console.log("hi")
   try {
 
@@ -489,8 +490,8 @@ module.exports.editTeamName = async (req, res) => {
 
 // Edit team WAO days as a team owner
 module.exports.editTeamWAODays = async (req, res) => {
-  const { team_id, selected_days} = req.body;
-  
+  const { team_id, selected_days } = req.body;
+
   console.log("hi")
   try {
 
@@ -501,6 +502,78 @@ module.exports.editTeamWAODays = async (req, res) => {
 
     if (editTeamWAODaysError) {
       console.error("Error finding team:", editTeamWAODaysError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// Add team members to a team 
+module.exports.addTeamMember = async (req, res) => {
+  const { team_id, new_team_member } = req.body;
+
+  try {
+
+    const { data: user_id, error: getUserIdError } = await supabase
+      .from("User")
+      .select(`
+         id
+    `)
+      .eq("email", new_team_member);
+
+    if (getUserIdError) {
+      console.error("Error finding team:", getUserIdError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    const { error: addTeamMemberError } = await supabase
+      .from("Team_Member")
+      .insert([
+        { "user_id": user_id[0].id, "team_id": team_id },
+      ]);
+
+    if (addTeamMemberError) {
+      console.error("Error finding team:", addTeamMemberError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// Remove team members to a team 
+module.exports.removeTeamMember = async (req, res) => {
+  const { team_id, team_member } = req.body;
+
+  try {
+
+    const { data: user_id, error: getUserIdError } = await supabase
+      .from("User")
+      .select(`
+         id
+    `)
+      .eq("email", team_member);
+
+    if (getUserIdError) {
+      console.error("Error finding team:", getUserIdError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    const { error: removeTeamMemberError } = await supabase
+      .from("Team_Member")
+      .delete()
+      .eq('user_id', user_id[0].id)
+      .eq('team_id', team_id)
+
+    if (removeTeamMemberError) {
+      console.error("Error finding team:", removeTeamMemberError);
       return res.status(500).json({ status: "error" });
     }
 
@@ -657,7 +730,7 @@ module.exports.getCompanyDashboardData = async (req, res) => {
     const averageCompanyCarbonFootprint = totalCompanyMembers > 0 ? (totalCompanyCarbonFootprint / totalCompanyMembers).toFixed(2) : 'N/A';
 
     const companyInfo = {
-      name: 'No Name', 
+      name: 'No Name',
       averageCarbonFootprint: averageCompanyCarbonFootprint,
       totalCarbonFootprint: totalCompanyCarbonFootprint.toFixed(2),
     };
@@ -671,7 +744,7 @@ module.exports.getCompanyDashboardData = async (req, res) => {
       console.error("Error finding teams:", getCompanyNameError);
       return res.status(500).json({ status: "error" });
     }
-    
+
     companyInfo.name = companyName[0].name
 
     res.status(200).json({ status: "ok", teamsInfo, companyInfo });

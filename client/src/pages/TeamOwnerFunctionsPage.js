@@ -65,6 +65,7 @@ export default function TeamOwnerFunctions() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          company_id: userData.company_id,
           user_email: userData.email,
           team_id: selectedTeamId,
         }),
@@ -124,14 +125,62 @@ export default function TeamOwnerFunctions() {
 
   // Add the added team member
   const handleAddTeamMember = () => {
-    // and remove the selected member from the dropdown.
+    fetch(`${baseURL}/addTeamMember`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        team_id: selectedTeamId,
+        new_team_member: selectedMemberToAdd,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          toast.success("Team Member has been added to the team.");
+          // Remove the added member from the dropdown
+          setTeamMembersToAdd((prevMembers) => prevMembers.filter(member => member !== selectedMemberToAdd));
+          // Add the added member to the "remove" list
+          setTeamMembersToRemove((prevMembers) => [...prevMembers, selectedMemberToAdd]);
+        } else {
+          toast.error("Failed to add team member.");
+        }
+      })
+      .catch((error) => {
+        toast.error("An error occurred while adding team member.");
+      });
+    // remove the selected member from the dropdown.
     setSelectedMemberToAdd(null);
   };
 
   // remove the team member
   const handleRemoveTeamMember = () => {
-    // Update the local state after successfully removing the member
-    // and remove the selected member from the dropdown.
+    fetch(`${baseURL}/removeTeamMember`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        team_id: selectedTeamId,
+        team_member: selectedMemberToRemove,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          toast.success("Team Member has been removed from the team.");
+          // Remove the removed member from the dropdown
+          setTeamMembersToRemove((prevMembers) => prevMembers.filter(member => member !== selectedMemberToRemove));
+          // Add the removed member to the "add" list
+          setTeamMembersToAdd((prevMembers) => [...prevMembers, selectedMemberToRemove]);
+        } else {
+          toast.error("Failed to remove team member.");
+        }
+      })
+      .catch((error) => {
+        toast.error("An error occurred while removing team member.");
+      });
     setSelectedMemberToRemove(null);
   };
 
@@ -236,81 +285,81 @@ export default function TeamOwnerFunctions() {
         <Divider variant="middle" sx={{ py: 2 }} />
         <Stack direction="row" py={1} spacing={5} alignItems="center">
           <InputLabel>Current Set Teams Work At Office Days: </InputLabel>
-          {confirmedPreferences ? confirmedPreferences.join(', ') : 'None selected'} 
-      </Stack>
+          {confirmedPreferences ? confirmedPreferences.join(', ') : 'None selected'}
+        </Stack>
 
-      <Stack direction="row" py={1} spacing={5} alignItems="center">
-        <InputLabel>Select WAO Days:</InputLabel>
-        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
+        <Stack direction="row" py={1} spacing={5} alignItems="center">
+          <InputLabel>Select WAO Days:</InputLabel>
+          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
+            <Button
+              key={day}
+              variant="outlined"
+              onClick={() => handleDayToggle(day)}
+              sx={{
+                backgroundColor: teamPreferences.includes(day) ? '#eed202' : 'primary',
+                color: teamPreferences.includes(day) ? 'black' : 'primary',
+                border: teamPreferences.includes(day) ? '1px solid black' : 'primary',
+                marginRight: '8px',
+              }}
+            >
+              {day}
+            </Button>
+          ))}
           <Button
-            key={day}
             variant="outlined"
-            onClick={() => handleDayToggle(day)}
+            color="success"
+            style={{ marginRight: '8px' }}
+            onClick={handleSavePreferences}
             sx={{
-              backgroundColor: teamPreferences.includes(day) ? '#eed202' : 'primary',
-              color: teamPreferences.includes(day) ? 'black' : 'primary',
-              border: teamPreferences.includes(day) ? '1px solid black' : 'primary',
-              marginRight: '8px',
+              backgroundColor: '#1ED760',
+              color: 'black',
             }}
           >
-            {day}
+            Save
           </Button>
-        ))}
-        <Button
-          variant="outlined"
-          color="success"
-          style={{ marginRight: '8px' }}
-          onClick={handleSavePreferences}
-          sx={{
-            backgroundColor: '#1ED760',
-            color: 'black',
-          }}
-        >
-          Save
-        </Button>
-      </Stack>
+        </Stack>
 
-      <Divider variant="middle" sx={{ py: 2 }} />
+        <Divider variant="middle" sx={{ py: 2 }} />
 
-      <Stack direction="row" py={1} spacing={5} alignItems="center">
-        <InputLabel>Add Team Member:</InputLabel>
-        <Autocomplete
-          value={selectedMemberToAdd}
-          onChange={(event, newValue) => {
-            setSelectedMemberToAdd(newValue);
-          }}
-          options={teamMembersToAdd}
-          sx={{ width: 300 }}
-          isOptionEqualToValue={(option, value) => option === value}
-          renderInput={(params) => (
-            <TextField {...params} label="Search/Add Team Member" variant="outlined" />
-          )}
-        />
-        <Button variant="contained" color="primary" onClick={handleAddTeamMember}>Add</Button>
-      </Stack>
+        <Stack direction="row" py={1} spacing={5} alignItems="center">
+          <InputLabel>Add Team Member:</InputLabel>
+          <Autocomplete
+            value={selectedMemberToAdd}
+            onChange={(event, newValue) => {
+              setSelectedMemberToAdd(newValue);
+            }}
+            options={teamMembersToAdd}
+            sx={{ width: 300 }}
+            isOptionEqualToValue={(option, value) => option === value}
+            renderInput={(params) => (
+              <TextField {...params} label="Search/Add Team Member" variant="outlined" />
+            )}
+          />
+          <Button variant="contained" color="primary" onClick={handleAddTeamMember}>Add</Button>
+        </Stack>
 
-      <Divider variant="middle" sx={{ py: 2 }} />
+        <Divider variant="middle" sx={{ py: 2 }} />
 
-      <Stack direction="row" py={1} spacing={5} alignItems="center">
-        <InputLabel>Remove Team Member:</InputLabel>
-        <Autocomplete
-          value={selectedMemberToRemove}
-          onChange={(event, newValue) => {
-            setSelectedMemberToRemove(newValue);
-          }}
-          options={teamMembersToRemove}
-          sx={{ width: 300 }}
-          isOptionEqualToValue={(option, value) => option === value}
-          renderInput={(params) => (
-            <TextField {...params} label="Search/Remove Team Member" variant="outlined" />
-          )}
-        />
-        <Button variant="contained" color="secondary" onClick={handleRemoveTeamMember}>Remove</Button>
-      </Stack>
-      <div style={{ flex: 1, display: 'flex' }}>
+        <Stack direction="row" py={1} spacing={5} alignItems="center">
+          <InputLabel>Remove Team Member:</InputLabel>
+          <Autocomplete
+            value={selectedMemberToRemove}
+            onChange={(event, newValue) => {
+              setSelectedMemberToRemove(newValue);
+            }}
+            options={teamMembersToRemove}
+            sx={{ width: 300 }}
+            isOptionEqualToValue={(option, value) => option === value}
+            renderInput={(params) => (
+              <TextField {...params} label="Search/Remove Team Member" variant="outlined" />
+            )}
+          />
+          <Button variant="contained" color="secondary" onClick={handleRemoveTeamMember}>Remove</Button>
+        </Stack>
+        <div style={{ flex: 1, display: 'flex' }}>
 
-      </div>
-    </Box>
+        </div>
+      </Box>
     </Box >
   );
 }

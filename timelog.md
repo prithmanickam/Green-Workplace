@@ -192,3 +192,6 @@
 
 ### 4 Nov 2023
 * *8 hours*  Started Team Owner Functions Page which fetches all relevent data. Current working functions are edit team page and set Work At Office Days.
+
+### 5 Nov 2023
+* *4 hours*  Completed Team Owner Functions Page which fetches all relevent data. Finished functions to add and remove team members.

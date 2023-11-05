@@ -15,6 +15,8 @@ const {
     getTeamOwnerFunctionsData,
     editTeamName,
     editTeamWAODays,
+    addTeamMember,
+    removeTeamMember
 } = require("../controllers/TeamControllers");
 
 const router = Router();
@@ -54,6 +56,12 @@ router.post("/editTeamName", editTeamName);
 
 //to edit team WAO days
 router.post("/editTeamWAODays", editTeamWAODays);
+
+//to add team member
+router.post("/addTeamMember", addTeamMember);
+
+//to remove team member
+router.post("/removeTeamMember", removeTeamMember);
 
 //to get the users team dashboard data from the database
 router.post("/getTeamDashboardData", getTeamDashboardData);
