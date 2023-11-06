@@ -195,3 +195,4 @@
 
 ### 5 Nov 2023
 * *4 hours*  Completed Team Owner Functions Page which fetches all relevent data. Finished functions to add and remove team members.
+* *7 hours*  Display popup and colour cards based on company carbon standard in the dashboard pages. Started Admin Functions Page where you can edit the companies good, average, and bad carbon footprint standards.

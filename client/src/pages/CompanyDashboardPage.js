@@ -1,22 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
-import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Divider } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
+import Popover from '@mui/material/Popover';
+import InfoIcon from '@mui/icons-material/Info';
 import { baseURL } from "../utils/constant";
 import { useUser } from '../context/UserContext';
 import { toast } from "react-toastify";
+import "../App.css"
 
 export default function CompanyDashboard() {
   const { userData } = useUser();
   const [companyData, setCompanyData] = useState({});
+  const [companyCarbonStandard, setCompanyCarbonStandard] = useState({});
+  const [gradient, setGradient] = useState('');
   const [teamsData, setTeamsData] = useState([]);
   const [sortedTeamsData, setSortedTeamsData] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [divisionSearchText, setDivisionSearchText] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
   const [sortBy, setSortBy] = useState('carbonFootprintAverage');
+  const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
+  const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
+
+  const handleInfoPopoverOpen = (event) => {
+    setInfoPopoverAnchorEl(event.currentTarget);
+  };
+
+  const handleInfoPopoverClose = () => {
+    setInfoPopoverAnchorEl(null);
+  };
 
   useEffect(() => {
-
     fetch(`${baseURL}/getCompanyDashboardData`, {
       method: "POST",
       headers: {
@@ -41,7 +56,42 @@ export default function CompanyDashboard() {
         toast.error("An error occurred while fetching company dashboard data.");
       });
 
+    fetch(`${baseURL}/getCompanyCarbonStandard`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        company_id: userData.company_id,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          setCompanyCarbonStandard(data.companyCarbonStandard);
+        } else {
+          toast.error("Failed to fetch company dashboard data.");
+        }
+      })
+      .catch((error) => {
+        toast.error("An error occurred while fetching company dashboard data.");
+      });
+
   }, [userData, sortOrder]);
+
+  useEffect(() => {
+    if (companyCarbonStandard && companyData) {
+      // Determine the gradient class based on the carbon standards
+      const carbonFootprint = parseFloat(companyData.averageCarbonFootprint);
+      if (carbonFootprint < companyCarbonStandard.amber_carbon_standard) {
+        setGradient("green-gradient");
+      } else if ((carbonFootprint >= companyCarbonStandard.amber_carbon_standard) && (carbonFootprint < companyCarbonStandard.red_carbon_standard)) {
+        setGradient("amber-gradient");
+      } else if (carbonFootprint >= companyCarbonStandard.red_carbon_standard) {
+        setGradient("red-gradient");
+      }
+    }
+  }, [companyCarbonStandard, companyData]);
 
   const handleSortChange = (event) => {
     const sortKey = event.target.value;
@@ -84,12 +134,12 @@ export default function CompanyDashboard() {
                   <Typography variant="h6" paragraph>
                     Company Info:
                   </Typography>
-                   Name: {companyData.name}
+                  Name: {companyData.name}
                 </CardContent>
               </Card>
             </Grid>
             <Grid item xs={4}>
-              <Card sx={{ height: '100%' }}>
+              <Card sx={{ height: '100%' }} className={gradient}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <Typography variant="h7" paragraph>
                     Company Average Weekly Commuting Carbon Footprint:
@@ -97,6 +147,13 @@ export default function CompanyDashboard() {
                   <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
                     {companyData.averageCarbonFootprint} kg CO2
                   </Typography>
+                  <IconButton
+                    onClick={handleInfoPopoverOpen}
+                    aria-label="info"
+                    style={{ marginLeft: '10px' }}
+                  >
+                    <InfoIcon />
+                  </IconButton>
                 </CardContent>
               </Card>
             </Grid>
@@ -174,6 +231,69 @@ export default function CompanyDashboard() {
           </Grid>
         </div>
       </Box>
+      <Popover
+        open={isInfoPopoverOpen}
+        anchorEl={infoPopoverAnchorEl}
+        onClose={handleInfoPopoverClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+      >
+        <Typography style={{ padding: '8px' }}>
+          Carbon Footprint Standard
+        </Typography>
+        <Divider/>
+        <Stack direction="row" spacing={2} py={0.5} alignItems="center">
+          <Typography style={{ flex: 1, textAlign: 'center' }}>
+            Good: &lt; {companyCarbonStandard.green_carbon_standard} kg
+          </Typography>
+          <div
+            className="green-gradient"
+            style={{
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              alignSelf: 'center',
+              marginRight: '20px',
+            }}
+          ></div>
+        </Stack>
+        <Stack direction="row" spacing={2} py={0.5} alignItems="center">
+          <Typography style={{ flex: 1, textAlign: 'center' }}>
+            Average: &lt; {companyCarbonStandard.amber_carbon_standard} kg
+          </Typography>
+          <div
+            className="amber-gradient"
+            style={{
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              alignSelf: 'center',
+              marginRight: '20px',
+            }}
+          ></div>
+        </Stack>
+        <Stack direction="row" spacing={2} py={0.5} alignItems="center">
+          <Typography style={{ flex: 1, textAlign: 'center' }}>
+            Bad: &gt; {companyCarbonStandard.red_carbon_standard} kg
+          </Typography>
+          <div
+            className="red-gradient"
+            style={{
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              alignSelf: 'center',
+              marginRight: '20px',
+            }}
+          ></div>
+        </Stack>
+      </Popover>
     </Box>
   );
 }

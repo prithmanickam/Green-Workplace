@@ -28,6 +28,22 @@
   color: #61dafb;
 }
 
+.green-gradient {
+  background: rgb(53,138,148);
+  background: linear-gradient(158deg, rgba(53,138,148,1) 0%, rgba(91,180,96,1) 100%);
+}
+
+.amber-gradient {
+  background: rgb(253,191,33);
+  background: linear-gradient(158deg, rgba(253,191,33,1) 0%, rgba(251,128,6,1) 100%);
+}
+
+.red-gradient {
+  background: rgb(255, 0, 0);
+  background: linear-gradient(158deg, rgb(241, 84, 84) 0%, rgb(123, 3, 3) 100%);
+}
+
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

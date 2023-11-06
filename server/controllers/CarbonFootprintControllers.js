@@ -200,3 +200,54 @@ module.exports.resetCarbonFootprint = async (req, res) => {
     //console.error(error);
   }
 };
+
+// Edit company carbon footprint standards as an admin
+module.exports.editCompanyCarbonStandard = async (req, res) => {
+  const { company_id, greenStandard, amberStandard, redStandard } = req.body;
+
+  try {
+
+    const { editCarbonStandardError } = await supabase
+      .from("Company")
+      .update({ "green_carbon_standard": greenStandard,
+                "amber_carbon_standard": amberStandard,
+                "red_carbon_standard": redStandard,
+       })
+      .eq("id", company_id);
+
+    if (editCarbonStandardError) {
+      console.error("Error finding team:", editCarbonStandardError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+// get company carbon footprint standards
+module.exports.getCompanyCarbonStandard = async (req, res) => {
+  const { company_id } = req.body;
+
+  try {
+
+    const { data: companyStandard, error:editCarbonStandardError } = await supabase
+      .from("Company")
+      .select("green_carbon_standard, amber_carbon_standard, red_carbon_standard" )
+      .eq("id", company_id);
+
+    if (editCarbonStandardError) {
+      console.error("Error finding team:", editCarbonStandardError);
+      return res.status(500).json({ status: "error" });
+    }
+
+    const companyCarbonStandard = companyStandard[0]
+
+    res.status(200).json({ status: "ok", companyCarbonStandard });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
