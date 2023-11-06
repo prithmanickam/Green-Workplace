@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import InfoIcon from '@mui/icons-material/Info';
 import { baseURL } from "../utils/constant";
+import { getGradientColors } from "../utils/gradientConstants";
 
 export default function YourDashboard() {
   const { userData } = useUser();
@@ -14,6 +15,7 @@ export default function YourDashboard() {
   const [confirmedPreferences, setConfirmedPreferences] = useState({});
   const [firstLoad, setFirstLoad] = useState(true);
   const [companyCarbonStandard, setCompanyCarbonStandard] = useState({});
+  const { green_gradient, amber_gradient, red_gradient } = getGradientColors();
   const [gradient, setGradient] = useState('');
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
@@ -87,14 +89,14 @@ export default function YourDashboard() {
       // Determine the gradient class based on the carbon standards
       const carbonFootprint = parseFloat(dashboardData.totalCarbonFootprint);
       if (carbonFootprint < companyCarbonStandard.amber_carbon_standard) {
-        setGradient("green-gradient");
+        setGradient(green_gradient);
       } else if ((carbonFootprint >= companyCarbonStandard.amber_carbon_standard) && (carbonFootprint < companyCarbonStandard.red_carbon_standard)) {
-        setGradient("amber-gradient");
+        setGradient(amber_gradient);
       } else if (carbonFootprint >= companyCarbonStandard.red_carbon_standard) {
-        setGradient("red-gradient");
+        setGradient(red_gradient);
       }
     }
-  }, [companyCarbonStandard, dashboardData]);
+  }, [companyCarbonStandard, dashboardData, green_gradient, amber_gradient, red_gradient]);
 
   if (!userData || (userData.type !== 'Employee')) {
     return <Navigate to="/homepage" replace />;
@@ -173,7 +175,7 @@ export default function YourDashboard() {
               </Card>
             </Grid>
             <Grid item xs={6}>
-              <Card sx={{ height: '100%' }} className={gradient}>
+              <Card sx={{ height: '100%', backgroundImage: gradient }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <Typography variant="h6" paragraph>
                     Your Total Weekly Commuting Carbon Footprint:
@@ -272,8 +274,8 @@ export default function YourDashboard() {
         </Typography>
         <Divider />
         <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'center' }}>
-            Good: &lt; {companyCarbonStandard.green_carbon_standard} kg
+          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
+            Good: &lt; {companyCarbonStandard.amber_carbon_standard} kg
           </Typography>
           <div
             className="green-gradient"
@@ -282,13 +284,14 @@ export default function YourDashboard() {
               height: '20px',
               borderRadius: '50%',
               alignSelf: 'center',
-              marginRight: '20px',
+              marginRight: '10px',
+              backgroundImage: green_gradient
             }}
           ></div>
         </Stack>
         <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'center' }}>
-            Average: &lt; {companyCarbonStandard.amber_carbon_standard} kg
+          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
+            Average: {companyCarbonStandard.amber_carbon_standard} &lt;= & &lt; {companyCarbonStandard.red_carbon_standard} kg
           </Typography>
           <div
             className="amber-gradient"
@@ -297,22 +300,23 @@ export default function YourDashboard() {
               height: '20px',
               borderRadius: '50%',
               alignSelf: 'center',
-              marginRight: '20px',
+              marginRight: '10px',
+              backgroundImage: amber_gradient
             }}
           ></div>
         </Stack>
         <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'center' }}>
-            Bad: &gt; {companyCarbonStandard.red_carbon_standard} kg
+          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
+            Bad: &gt;= {companyCarbonStandard.red_carbon_standard} kg
           </Typography>
           <div
-            className="red-gradient"
             style={{
               width: '20px',
               height: '20px',
               borderRadius: '50%',
               alignSelf: 'center',
-              marginRight: '20px',
+              marginRight: '10px',
+              backgroundImage: red_gradient
             }}
           ></div>
         </Stack>

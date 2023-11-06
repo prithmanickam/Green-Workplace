@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
-import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, Divider  } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, Divider } from '@mui/material';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
+import { getGradientColors } from "../utils/gradientConstants";
 import Avatar from '@mui/material/Avatar';
 import InfoIcon from '@mui/icons-material/Info';
 import InputLabel from '@mui/material/InputLabel';
@@ -24,6 +25,7 @@ export default function TeamDashboard() {
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [userTeams, setUserTeams] = useState([]);
   const [companyCarbonStandard, setCompanyCarbonStandard] = useState({});
+  const { green_gradient, amber_gradient, red_gradient } = getGradientColors();
   const [gradient, setGradient] = useState('');
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
@@ -120,14 +122,14 @@ export default function TeamDashboard() {
       // Determine the gradient class based on the carbon standards
       const carbonFootprint = parseFloat(teamDashboardData.carbon_footprint_metric);
       if (carbonFootprint < companyCarbonStandard.amber_carbon_standard) {
-        setGradient("green-gradient");
+        setGradient(green_gradient);
       } else if ((carbonFootprint >= companyCarbonStandard.amber_carbon_standard) && (carbonFootprint < companyCarbonStandard.red_carbon_standard)) {
-        setGradient("amber-gradient");
+        setGradient(amber_gradient);
       } else if (carbonFootprint >= companyCarbonStandard.red_carbon_standard) {
-        setGradient("red-gradient");
+        setGradient(red_gradient);
       }
     }
-  }, [companyCarbonStandard, teamDashboardData]);
+  }, [companyCarbonStandard, teamDashboardData, green_gradient, amber_gradient, red_gradient]);
 
 
   if (!userData || (userData.type !== 'Employee')) {
@@ -190,7 +192,7 @@ export default function TeamDashboard() {
               </Card>
             </Grid>
             <Grid item xs={4}>
-              <Card sx={{ height: '100%' }} className={gradient}>
+              <Card sx={{ height: '100%', backgroundImage: gradient }} >
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <Typography variant="h6" paragraph>
                     Teams Average Weekly Commuting Carbon Footprint:
@@ -277,10 +279,10 @@ export default function TeamDashboard() {
         <Typography style={{ padding: '8px' }}>
           Carbon Footprint Standard
         </Typography>
-        <Divider/>
+        <Divider />
         <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'center' }}>
-            Good: &lt; {companyCarbonStandard.green_carbon_standard} kg
+          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
+            Good: &lt; {companyCarbonStandard.amber_carbon_standard} kg
           </Typography>
           <div
             className="green-gradient"
@@ -289,13 +291,14 @@ export default function TeamDashboard() {
               height: '20px',
               borderRadius: '50%',
               alignSelf: 'center',
-              marginRight: '20px',
+              marginRight: '10px',
+              backgroundImage: green_gradient
             }}
           ></div>
         </Stack>
         <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'center' }}>
-            Average: &lt; {companyCarbonStandard.amber_carbon_standard} kg
+          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
+            Average: {companyCarbonStandard.amber_carbon_standard} &lt;= & &lt; {companyCarbonStandard.red_carbon_standard} kg
           </Typography>
           <div
             className="amber-gradient"
@@ -304,22 +307,23 @@ export default function TeamDashboard() {
               height: '20px',
               borderRadius: '50%',
               alignSelf: 'center',
-              marginRight: '20px',
+              marginRight: '10px',
+              backgroundImage: amber_gradient
             }}
           ></div>
         </Stack>
         <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'center' }}>
-            Bad: &gt; {companyCarbonStandard.red_carbon_standard} kg
+          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
+            Bad: &gt;= {companyCarbonStandard.red_carbon_standard} kg
           </Typography>
           <div
-            className="red-gradient"
             style={{
               width: '20px',
               height: '20px',
               borderRadius: '50%',
               alignSelf: 'center',
-              marginRight: '20px',
+              marginRight: '10px',
+              backgroundImage: red_gradient
             }}
           ></div>
         </Stack>
