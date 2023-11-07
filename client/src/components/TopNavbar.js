@@ -30,7 +30,7 @@ function TopNavbar() {
   const { sameThemeColour, oppositeThemeColour } = getThemeColors(mode);
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: sameThemeColour }}>
+    <AppBar position="static" sx={{ backgroundColor: sameThemeColour}}>
       <Container maxWidth="xl">
         <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>

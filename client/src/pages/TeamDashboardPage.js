@@ -186,7 +186,7 @@ export default function TeamDashboard() {
                     Company: {teamDashboardData.company}
                   </Typography>
                   <Typography variant="body1" style={{ marginBottom: '8px' }}>
-                    Account Created: {teamDashboardData.team_created}
+                    Account Created: {teamDashboardData?.team_created?.slice(0, 10) || ""}
                   </Typography>
                 </CardContent>
               </Card>

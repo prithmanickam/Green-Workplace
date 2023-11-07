@@ -195,15 +195,18 @@ function FootprintMapPage() {
     setTotalPercentage(total);
   };
 
+  const isSingleTeamUser = Array.isArray(teams) && teams.length === 1;
+
   const teamFields = Array.isArray(teams) ? teams.map((team) => (
     <Box key={team.teamName}>
       <hr />
       <Typography>{team.teamName}</Typography>
+      
       <TextField
         //label="Percentage"
         size="small"
         style={{ width: '100%' }}
-        value={teamPercentages[team.teamName] || ''}
+        value={isSingleTeamUser ? 100 : teamPercentages[team.teamName] || ''}
         InputProps={{
           endAdornment: <InputAdornment position="end">%</InputAdornment>,
         }}
@@ -309,7 +312,7 @@ function FootprintMapPage() {
           width: '100%',
         }}
       >
-        <TopNavbar />
+        <TopNavbar/>
         <GoogleMap
           center={center}
           zoom={15}

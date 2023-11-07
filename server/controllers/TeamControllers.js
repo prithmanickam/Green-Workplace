@@ -322,6 +322,8 @@ module.exports.getYourDashboardData = async (req, res) => {
 
       yourDashboardInfo.teams.push([teamInfo, teamCarbonFootprint]);
     }
+    
+    yourDashboardInfo.totalCarbonFootprint = yourDashboardInfo.totalCarbonFootprint.toFixed(2)
 
     res.status(200).json({ status: "ok", data: yourDashboardInfo });
   } catch (error) {

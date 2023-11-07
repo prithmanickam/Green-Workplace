@@ -46,12 +46,14 @@ const LoginPage = () => {
           console.log(data, "userRegister");
           //if login is successful we store the token, and var loggedIn is set to true
           if (data.status === "ok") {
-            toast.success("Login successful")
+            toast.success("Login successful");
 
             window.localStorage.setItem("token", data.token);
             window.localStorage.setItem("loggedIn", true);
-
             window.location.href = "./homepage";
+          }
+          else {
+            toast.error(data.error);
           }
         });
     } catch (error) {

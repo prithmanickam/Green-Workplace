@@ -157,6 +157,12 @@ module.exports.getCarbonFootprint = async (req, res) => {
       }
     }
 
+    totalStats.Monday.carbon_footprint = totalStats.Monday.carbon_footprint.toFixed(2)
+    totalStats.Tuesday.carbon_footprint = totalStats.Tuesday.carbon_footprint.toFixed(2)
+    totalStats.Wednesday.carbon_footprint = totalStats.Wednesday.carbon_footprint.toFixed(2)
+    totalStats.Thursday.carbon_footprint = totalStats.Thursday.carbon_footprint.toFixed(2)
+    totalStats.Friday.carbon_footprint = totalStats.Friday.carbon_footprint.toFixed(2)
+
     res.status(200).json({ status: "ok", stats, totalStats });
   } catch (error) {
     //console.log(error)

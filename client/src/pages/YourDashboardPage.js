@@ -169,7 +169,7 @@ export default function YourDashboard() {
                     Company: {dashboardData.company}
                   </Typography>
                   <Typography variant="body1" style={{ marginBottom: '8px' }}>
-                    Account Created: {dashboardData.accountCreated}
+                    Account Created: {dashboardData?.accountCreated?.slice(0, 10) || ""}
                   </Typography>
                 </CardContent>
               </Card>

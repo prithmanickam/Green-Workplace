@@ -203,4 +203,5 @@
 * *3 hours*  Fixed bug to display correct colours for dashboard cards based on carbon footprint. 
 
 ### 7 Oct 2023
+* *3 hours*  Fixed UAT Bug Fixes: Notify user if incorrect login credentials entered, Shorten account created info in dashboard pages. Floating point error fixes in apis for dashboards. Added Icons in Team Ownership Page.
 * *0.5 hour*  Meeting with Supervisor.

@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
 import EditIcon from '@mui/icons-material/Edit';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import InputLabel from '@mui/material/InputLabel';
 import Autocomplete from '@mui/material/Autocomplete';
 import Divider from '@mui/material/Divider';
@@ -23,6 +25,7 @@ export default function TeamOwnerFunctions() {
   const [selectedMemberToRemove, setSelectedMemberToRemove] = useState('');
   const [teamPreferences, setTeamPreferences] = useState([]);
   const [confirmedPreferences, setConfirmedPreferences] = useState([]);
+  const [firstLoad, setFirstLoad] = useState(true);
 
   const teamOptions = userTeams.map(team => ({
     team_id: team.id,
@@ -74,6 +77,10 @@ export default function TeamOwnerFunctions() {
         .then((data) => {
           if (data.status === "ok") {
             setConfirmedPreferences(data.teamInfo[0].wao_days)
+            if (firstLoad === true) {
+              setTeamPreferences(data.teamInfo[0].wao_days);
+              setFirstLoad(false)
+            }
             setTeamMembersToAdd(data.teamMembersToAdd);
             setTeamMembersToRemove(data.teamMembersToRemove);
           } else {
@@ -84,7 +91,7 @@ export default function TeamOwnerFunctions() {
           toast.error("An error occurred while fetching team dashboard data.");
         });
     }
-  }, [selectedTeamId, userData]);
+  }, [selectedTeamId, userData, firstLoad, confirmedPreferences]);
 
   const handleEditTeamName = () => {
     setEditingTeamName(true);
@@ -211,7 +218,6 @@ export default function TeamOwnerFunctions() {
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "ok") {
-          console.log("hiiii")
           toast.success("Preferences saved successfully");
           setConfirmedPreferences(
             orderedDays
@@ -277,14 +283,14 @@ export default function TeamOwnerFunctions() {
           ) : (
             <>
               <Typography variant="h6">{selectedTeam}</Typography>
-              <Button variant="contained" color="primary" onClick={handleEditTeamName}>Edit <EditIcon /></Button>
+              <Button variant="contained" color="primary" onClick={handleEditTeamName}>Edit &nbsp; <EditIcon /></Button>
             </>
           )}
         </Stack>
 
         <Divider variant="middle" sx={{ py: 2 }} />
         <Stack direction="row" py={1} spacing={5} alignItems="center">
-          <InputLabel>Current Set Teams Work At Office Days: </InputLabel>
+          <InputLabel>Current Set Team's Work At Office Days: </InputLabel> &nbsp;
           {confirmedPreferences ? confirmedPreferences.join(', ') : 'None selected'}
         </Stack>
 
@@ -335,7 +341,7 @@ export default function TeamOwnerFunctions() {
               <TextField {...params} label="Search/Add Team Member" variant="outlined" />
             )}
           />
-          <Button variant="contained" color="primary" onClick={handleAddTeamMember}>Add</Button>
+          <Button variant="contained" color="primary" onClick={handleAddTeamMember}>Add &nbsp; <PersonAddIcon /></Button>
         </Stack>
 
         <Divider variant="middle" sx={{ py: 2 }} />
@@ -354,7 +360,7 @@ export default function TeamOwnerFunctions() {
               <TextField {...params} label="Search/Remove Team Member" variant="outlined" />
             )}
           />
-          <Button variant="contained" color="secondary" onClick={handleRemoveTeamMember}>Remove</Button>
+          <Button variant="contained" color="secondary" onClick={handleRemoveTeamMember}>Remove &nbsp; <PersonRemoveIcon /></Button>
         </Stack>
         <div style={{ flex: 1, display: 'flex' }}>
 

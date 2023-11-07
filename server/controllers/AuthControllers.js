@@ -170,7 +170,7 @@ module.exports.loginUser = async (req, res) => {
     res.status(200).json({ status: "ok", token });
   } catch (error) {
     //console.error(error);
-    res.status(500).json({ status: "error" });
+    res.status(500).json({ status: "error", error: "error" });
   }
 };
 
