@@ -29,10 +29,8 @@ import { useUser } from '../context/UserContext';
 import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 import ChatIcon from '@mui/icons-material/Chat';
 import AppsIcon from '@mui/icons-material/Apps';
-import GroupIcon from '@mui/icons-material/Group';
 import BusinessIcon from '@mui/icons-material/Business';
 import EventSeatIcon from '@mui/icons-material/EventSeat';
-import EventIcon from '@mui/icons-material/Event';
 
 const drawerWidth = 240;
 
@@ -49,10 +47,8 @@ const employeeMenuItems = [
   { text: 'Team Chat', route: '/TeamChat', icon: <ChatIcon /> },
   { text: 'Team Dashboard', route: '/TeamDashboard', icon: <AppsIcon /> },
   { text: 'Team Owner Functions', route: '/TeamOwnerFunctions', icon: <SettingsIcon /> },
-  { text: 'Join or Leave a Team', route: '/Join or Leave a Team', icon: <GroupIcon /> },
   { text: 'Company Dashboard', route: '/CompanyDashboard', icon: <BusinessIcon /> },
   { text: 'Book Floors', route: '/Book Floors', icon: <EventSeatIcon /> },
-  { text: 'View Events', route: '/ViewEvents', icon: <EventIcon /> },
 ];
 
 const openedMixin = (theme) => ({

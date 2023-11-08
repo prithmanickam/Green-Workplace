@@ -105,32 +105,19 @@ export default function HomePage() {
     },
     {
       id: 6,
-      name: "Join or Leave a Team",
-      description: "Join or leave a team as a Team member.",
-      picture: greyBackground,
-      link: "JoinOrLeaveTeam"
-    },
-    {
-      id: 7,
       name: "Company Dashboard",
       description: "View all teams' carbon footprint and sort by highest. See company collective metrics.",
       picture: greyBackground,
       link: "CompanyDashboard"
     },
     {
-      id: 8,
+      id: 7,
       name: "Book Floors",
       description: "View floors current capacity based on days of the week. Team Owners will book on behalf of the team.",
       picture: greyBackground,
       link: "BookFloors"
     },
-    {
-      id: 9,
-      name: "View Events",
-      description: "Create or view events e.g. Socials, ERG's, Sports Clubs.",
-      picture: greyBackground,
-      link: "ViewEvents"
-    },
+    
   ];
 
   //display the right cards for the type of user logged in
