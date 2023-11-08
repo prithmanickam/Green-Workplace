@@ -13,6 +13,7 @@ import CompanyDashboardPage from './pages/CompanyDashboardPage';
 import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
 import YourDashboardPage from './pages/YourDashboardPage';
 import TeamDashboardPage from './pages/TeamDashboardPage';
+import TransportModeDetection from './pages/TransportModeDetection';
 import TeamChatPage from './pages/TeamChatPage';
 import TeamOwnerFunctionsPage from './pages/TeamOwnerFunctionsPage';
 import { ThemeContextProvider } from './context/ThemeContext';
@@ -114,6 +115,10 @@ const App = () => {
               <Route
                 path="/TeamOwnerFunctions"
                 element={<ProtectedRoute element={<TeamOwnerFunctionsPage />} isLoggedIn={isLoggedIn} />}
+              />
+              <Route
+                path="/TransportModeDetection"
+                element={<ProtectedRoute element={<TransportModeDetection />} isLoggedIn={isLoggedIn} />}
               />
             </Routes>
             <ToastContainer

@@ -49,6 +49,7 @@ const employeeMenuItems = [
   { text: 'Team Owner Functions', route: '/TeamOwnerFunctions', icon: <SettingsIcon /> },
   { text: 'Company Dashboard', route: '/CompanyDashboard', icon: <BusinessIcon /> },
   { text: 'Book Floors', route: '/Book Floors', icon: <EventSeatIcon /> },
+  { text: '(Beta) Transport Detector', route: '/TransportModeDetection', icon: <EnergySavingsLeafIcon /> },
 ];
 
 const openedMixin = (theme) => ({

@@ -117,6 +117,13 @@ export default function HomePage() {
       picture: greyBackground,
       link: "BookFloors"
     },
+    {
+      id: 8,
+      name: "Transport Detector (Beta)",
+      description: "Under development. To track steps and mode of transport used.",
+      picture: greyBackground,
+      link: "TransportModeDetection"
+    },
     
   ];
 
