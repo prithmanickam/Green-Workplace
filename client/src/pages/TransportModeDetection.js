@@ -106,9 +106,9 @@ const TransportModeDetection = () => {
       setSensorData(prevData => {
         const updatedAccelData = [
           ...prevData.accelerometerData,
-          accelerationIncludingGravity.x,
-          accelerationIncludingGravity.y,
-          accelerationIncludingGravity.z,
+          Math.abs(accelerationIncludingGravity.x - 9.81),
+          Math.abs(accelerationIncludingGravity.y - 9.81),
+          Math.abs(accelerationIncludingGravity.z - 9.81)
         ].filter(isFinite); // Filtering out null/undefined values
 
         return {
