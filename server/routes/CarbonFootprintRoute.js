@@ -5,7 +5,8 @@ const {
   getCarbonFootprint,
   resetCarbonFootprint,
   editCompanyCarbonStandard,
-  getCompanyCarbonStandard
+  getCompanyCarbonStandard,
+  getTransportMode
 } = require("../controllers/CarbonFootprintControllers");
 
 const router = Router();
@@ -25,5 +26,7 @@ router.post("/editCompanyCarbonStandard", editCompanyCarbonStandard);
 //get company carbon footprint standards
 router.post("/getCompanyCarbonStandard", getCompanyCarbonStandard);
 
+//get users transport mode in a 5-sec intervals
+router.post("/getTransportMode", getTransportMode);
 
 module.exports = router;

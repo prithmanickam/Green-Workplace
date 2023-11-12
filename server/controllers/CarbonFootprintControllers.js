@@ -1,4 +1,45 @@
 const supabase = require("../config/supabaseConfig");
+const { DecisionTreeClassifier } = require('ml-cart');
+const { Matrix } = require('ml-matrix');
+const { readFileSync } = require('fs');
+const path = require('path');
+
+const modelPath = path.join(__dirname, 'model.json');
+
+// Load the model and targetMap 
+
+const loadModel = (filePath) => {
+  const data = readFileSync(filePath, 'utf8');
+  const modelState = JSON.parse(data);
+  const classifier = DecisionTreeClassifier.load(modelState.model);
+  return {
+    classifier: classifier,
+    targetMap: modelState.targetMap
+  };
+};
+
+const { classifier, targetMap } = loadModel(modelPath);
+
+module.exports.getTransportMode = async (req, res) => {
+  try {
+    const newData = req.body;
+
+    if (!newData || Object.keys(newData).length === 0) {
+      return res.status(400).json({ status: "error", message: "No data provided." });
+    }
+
+    const input = new Matrix([Object.values(newData)]);
+    const prediction = classifier.predict(input);
+
+    // Find the mode from the targetMap using the prediction
+    const mode = Object.keys(targetMap).find(key => targetMap[key] === prediction[0]);
+
+    res.status(200).json({ status: "ok", mode });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error", message: "An error occurred on the server." });
+  }
+};
 
 module.exports.postCarbonFootprint = async (req, res) => {
   const { user_id, day, duration, carbonFootprint, teamData } = req.body; //teamData has team_id and carbon stats
@@ -215,10 +256,11 @@ module.exports.editCompanyCarbonStandard = async (req, res) => {
 
     const { editCarbonStandardError } = await supabase
       .from("Company")
-      .update({ "green_carbon_standard": greenStandard,
-                "amber_carbon_standard": amberStandard,
-                "red_carbon_standard": redStandard,
-       })
+      .update({
+        "green_carbon_standard": greenStandard,
+        "amber_carbon_standard": amberStandard,
+        "red_carbon_standard": redStandard,
+      })
       .eq("id", company_id);
 
     if (editCarbonStandardError) {
@@ -239,9 +281,9 @@ module.exports.getCompanyCarbonStandard = async (req, res) => {
 
   try {
 
-    const { data: companyStandard, error:editCarbonStandardError } = await supabase
+    const { data: companyStandard, error: editCarbonStandardError } = await supabase
       .from("Company")
-      .select("green_carbon_standard, amber_carbon_standard, red_carbon_standard" )
+      .select("green_carbon_standard, amber_carbon_standard, red_carbon_standard")
       .eq("id", company_id);
 
     if (editCarbonStandardError) {
