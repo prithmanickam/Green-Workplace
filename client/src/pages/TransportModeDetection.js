@@ -51,13 +51,20 @@ const TransportModeDetection = () => {
     const min = Math.min(...data);
     const max = Math.max(...data);
     const std = Math.sqrt(data.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / data.length);
-    return { mean, min, max, std };
+
+    console.log("calculated:", mean, min, max, std)
+
+    return {
+      mean: Number(mean.toFixed(5)),
+      min: Number(min.toFixed(5)),
+      max: Number(max.toFixed(5)),
+      std: Number(std.toFixed(5)),
+    };
   };
 
   useEffect(() => {
     const handleMotion = (event) => {
       const { accelerationIncludingGravity } = event;
-      console.log("x acceleration", accelerationIncludingGravity.x)
       setAccelerationX(accelerationIncludingGravity.x)
       setSensorData(prevData => ({
         ...prevData,
@@ -101,7 +108,6 @@ const TransportModeDetection = () => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      console.log(sensorData)
       // Only proceed if we have enough data
       //if (sensorData.accelerometerData.length > 0 && sensorData.gyroscopeData.length > 0) {
       // Calculate stats for accelerometer and gyroscope
@@ -118,6 +124,8 @@ const TransportModeDetection = () => {
         'android.sensor.gyroscope#max': gyroscopeStats.max,
         'android.sensor.gyroscope#std': gyroscopeStats.std,
       };
+
+      console.log(newData)
 
       // Send this sensor data to the backend
       fetch(`${baseURL}/getTransportMode`, {
@@ -180,7 +188,7 @@ const TransportModeDetection = () => {
           Gyroscope Data length: {sensorData.gyroscopeData.length}
         </Typography>
         <Typography variant="h6">
-          Acceleration X: {accelerationX}
+        Acceleration X: {accelerationX ? accelerationX.toFixed(2) : 'N/A'}
         </Typography>
         <Typography variant="h6">
           Gyroscope Data: {sensorData.gyroscopeData}

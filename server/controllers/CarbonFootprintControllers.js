@@ -28,7 +28,12 @@ module.exports.getTransportMode = async (req, res) => {
       return res.status(400).json({ status: "error", message: "No data provided." });
     }
 
-    const input = new Matrix([Object.values(newData)]);
+    // convert to numbers (default to zero if not a finite number)
+    const cleanData = Object.values(newData).map(value =>
+      isFinite(value) ? Number(value) : 0
+    );
+
+    const input = new Matrix([cleanData]);
     const prediction = classifier.predict(input);
 
     // Find the mode from the targetMap using the prediction
@@ -37,7 +42,7 @@ module.exports.getTransportMode = async (req, res) => {
     res.status(200).json({ status: "ok", mode });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ status: "error", message: "An error occurred on the server." });
+    res.status(500).json({ status: "error", errorMsg: error, message: "An error occurred on the server." });
   }
 };
 
