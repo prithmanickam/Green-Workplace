@@ -8,6 +8,7 @@ const TransportModeDetection = () => {
   const [transportMode, setTransportMode] = useState('');
   const [transportModes, setTransportModes] = useState([]);
   const [accelerationX, setAccelerationX] = useState();
+  const [accelerometerMin, setAccelerometerMin] = useState(null);
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
     gyroscopeData: [],
@@ -56,7 +57,7 @@ const TransportModeDetection = () => {
   useEffect(() => {
     const handleMotion = (event) => {
       const { accelerationIncludingGravity } = event;
-      console.log("x acceleration",accelerationIncludingGravity.x)
+      console.log("x acceleration", accelerationIncludingGravity.x)
       setAccelerationX(accelerationIncludingGravity.x)
       setSensorData(prevData => ({
         ...prevData,
@@ -67,6 +68,13 @@ const TransportModeDetection = () => {
           accelerationIncludingGravity.z,
         ].filter(Boolean), // Filtering out null/undefined values
       }));
+
+      const magnitude = Math.sqrt(
+        accelerationIncludingGravity.x ** 2 +
+        accelerationIncludingGravity.y ** 2 +
+        accelerationIncludingGravity.z ** 2
+      );
+      setAccelerometerMin(prevMin => prevMin !== null ? Math.min(prevMin, magnitude) : magnitude);
     };
 
     const handleOrientation = (event) => {
@@ -77,7 +85,7 @@ const TransportModeDetection = () => {
           event.alpha,
           event.beta,
           event.gamma,
-        ].filter(Boolean), 
+        ].filter(Boolean),
       }));
     };
 
@@ -95,47 +103,51 @@ const TransportModeDetection = () => {
     const intervalId = setInterval(() => {
       console.log(sensorData)
       // Only proceed if we have enough data
-      if (sensorData.accelerometerData.length > 0 && sensorData.gyroscopeData.length > 0) {
-        // Calculate stats for accelerometer and gyroscope
-        const accelerometerStats = calculateStats(sensorData.accelerometerData);
-        const gyroscopeStats = calculateStats(sensorData.gyroscopeData);
+      //if (sensorData.accelerometerData.length > 0 && sensorData.gyroscopeData.length > 0) {
+      // Calculate stats for accelerometer and gyroscope
+      const accelerometerStats = calculateStats(sensorData.accelerometerData);
+      const gyroscopeStats = calculateStats(sensorData.gyroscopeData);
 
-        const newData = {
-          'android.sensor.accelerometer#mean': accelerometerStats.mean,
-          'android.sensor.accelerometer#min': accelerometerStats.min,
-          'android.sensor.accelerometer#max': accelerometerStats.max,
-          'android.sensor.accelerometer#std': accelerometerStats.std,
-          'android.sensor.gyroscope#mean': gyroscopeStats.mean,
-          'android.sensor.gyroscope#min': gyroscopeStats.min,
-          'android.sensor.gyroscope#max': gyroscopeStats.max,
-          'android.sensor.gyroscope#std': gyroscopeStats.std,
-        };
+      const newData = {
+        'android.sensor.accelerometer#mean': accelerometerStats.mean,
+        'android.sensor.accelerometer#min': accelerometerStats.min,
+        'android.sensor.accelerometer#max': accelerometerStats.max,
+        'android.sensor.accelerometer#std': accelerometerStats.std,
+        'android.sensor.gyroscope#mean': gyroscopeStats.mean,
+        'android.sensor.gyroscope#min': gyroscopeStats.min,
+        'android.sensor.gyroscope#max': gyroscopeStats.max,
+        'android.sensor.gyroscope#std': gyroscopeStats.std,
+      };
 
-        // Send this sensor data to the backend
-        fetch(`${baseURL}/getTransportMode`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newData),
-        })
+      // Send this sensor data to the backend
+      fetch(`${baseURL}/getTransportMode`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newData),
+      })
         .then((response) => response.json())
         .then((data) => {
-          setTransportMode(data.mode);
-          setTransportModes(modes => [...modes, data.mode]);
-          toast.success("Fetched transport mode: " + data.mode);
+          if (data.status === "ok") {
+            setTransportMode(data.mode);
+            setTransportModes(modes => [...modes, data.mode]);
+            toast.success("Fetched transport mode: " + data.mode);
+          } else {
+            toast.error("In API but failed to fetch user carbon data for teams.");
+          }
         })
         .catch((error) => {
           console.error('Error:', error);
           toast.error("Error fetching transport mode.");
         });
 
-        // Resets the sensor data arrays
-        setSensorData({
-          accelerometerData: [],
-          gyroscopeData: [],
-        });
-      }
+      // Resets the sensor data arrays
+      setSensorData({
+        accelerometerData: [],
+        gyroscopeData: [],
+      });
+      //}
     }, 7000);
 
     // Clears the interval when the component unmounts
@@ -161,7 +173,11 @@ const TransportModeDetection = () => {
           Accelerometer Data: {sensorData.accelerometerData}
         </Typography>
         <Typography variant="h6">
-          Accelerometer Data min: {sensorData.accelerometerData.min}
+          Accelerometer Data min: {accelerometerMin !== null ? accelerometerMin.toFixed(2) : 'Calculating...'}
+        </Typography>
+        <Typography variant="h6">
+          Accelerometer Data length: {sensorData.accelerometerData.length}
+          Gyroscope Data length: {sensorData.gyroscopeData.length}
         </Typography>
         <Typography variant="h6">
           Acceleration X: {accelerationX}
