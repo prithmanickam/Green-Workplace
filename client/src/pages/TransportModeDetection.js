@@ -100,14 +100,14 @@ const TransportModeDetection = () => {
 
   useEffect(() => {
     const handleMotion = (event) => {
-      const { accelerationIncludingGravity } = event;
+      const { acceleration } = event;
 
-      console.log("Accel incl gravity: ", accelerationIncludingGravity)
+      console.log("Accel : ", acceleration)
   
-      const accelSum = (accelerationIncludingGravity.x + accelerationIncludingGravity.y + accelerationIncludingGravity.z);
+      const accelSum = (acceleration + acceleration + acceleration + 9.81);
   
       const rotationRate = event.rotationRate || { alpha: 0, beta: 0, gamma: 0 };
-      console.log("rotation rate: ", accelerationIncludingGravity)
+      console.log("rotation rate: ", rotationRate)
 
       const { alpha, beta, gamma } = rotationRate;
       const gyroSum = (alpha + beta + gamma);
