@@ -8,7 +8,6 @@ const TransportModeDetection = () => {
   const [transportMode, setTransportMode] = useState('');
   const [transportModes, setTransportModes] = useState([]);
 
-
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
     gyroscopeData: [],
@@ -102,10 +101,14 @@ const TransportModeDetection = () => {
   useEffect(() => {
     const handleMotion = (event) => {
       const { accelerationIncludingGravity } = event;
+
+      console.log("Accel incl gravity: ", accelerationIncludingGravity)
   
       const accelSum = (accelerationIncludingGravity.x + accelerationIncludingGravity.y + accelerationIncludingGravity.z);
   
       const rotationRate = event.rotationRate || { alpha: 0, beta: 0, gamma: 0 };
+      console.log("rotation rate: ", accelerationIncludingGravity)
+
       const { alpha, beta, gamma } = rotationRate;
       const gyroSum = (alpha + beta + gamma);
   
@@ -214,14 +217,14 @@ const TransportModeDetection = () => {
           Testing purposes:
         </Typography>
         <Typography variant="h6">
-          Accelerometer Data: {sensorData.accelerometerData.join(', ')}
+          Accelerometer Data: {sensorData.accelerometerData.slice(-5).join(', ')}
         </Typography>
         <Typography variant="h6">
           Accelerometer Data length: {sensorData.accelerometerData.length}
           Gyroscope Data length: {sensorData.gyroscopeData.length}
         </Typography>
         <Typography variant="h6">
-          Gyroscope Data: {sensorData.gyroscopeData.join(', ')}
+          Gyroscope Data: {sensorData.gyroscopeData.slice(-5).join(', ')}
         </Typography>
         {/* Display the latest transport mode */}
         {transportMode && (
