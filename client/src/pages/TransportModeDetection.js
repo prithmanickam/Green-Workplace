@@ -102,55 +102,31 @@ const TransportModeDetection = () => {
   useEffect(() => {
     const handleMotion = (event) => {
       const { accelerationIncludingGravity } = event;
-      
-      // Calculate the magnitude of the acceleration vector
-      const magnitude = Math.sqrt(
-        accelerationIncludingGravity.x ** 2 +
-        accelerationIncludingGravity.y ** 2 +
-        accelerationIncludingGravity.z ** 2
-      );
-    
-      // Adjust the magnitude by the expected gravity on Earth 
-      const adjustedMagnitude = Math.abs(magnitude - 9.81);
-    
+  
+      const accelSum = (accelerationIncludingGravity.x + accelerationIncludingGravity.y + accelerationIncludingGravity.z);
+  
+      const rotationRate = event.rotationRate || { alpha: 0, beta: 0, gamma: 0 };
+      const { alpha, beta, gamma } = rotationRate;
+      const gyroSum = (alpha + beta + gamma);
+  
       setSensorData(prevData => {
-        const updatedAccelData = [...prevData.accelerometerData, adjustedMagnitude].filter(isFinite);
-    
+        const updatedAccelData = [...prevData.accelerometerData, accelSum].filter(isFinite);
+        const updatedGyroData = [...prevData.gyroscopeData, gyroSum];
+  
         return {
           ...prevData,
-          accelerometerData: updatedAccelData
+          accelerometerData: updatedAccelData,
+          gyroscopeData: updatedGyroData
         };
       });
     };
-
-    const handleOrientation = (event) => {
-      setSensorData(prevData => {
-        const updatedGyroData = [
-          ...prevData.gyroscopeData,
-          event.alpha,
-          event.beta,
-          event.gamma,
-        ].filter(isFinite);
-
-        const smoothedGyroData = movingAverage(updatedGyroData, 5);
-
-        return {
-          ...prevData,
-          gyroscopeData: smoothedGyroData
-        };
-      });
-    };
-
+  
     window.addEventListener('devicemotion', handleMotion);
-    window.addEventListener('deviceorientation', handleOrientation);
-
-    // Cleaning up the event listener when the component unmounts
+  
     return () => {
       window.removeEventListener('devicemotion', handleMotion);
-      window.removeEventListener('deviceorientation', handleOrientation);
     };
   }, []);
-
 
   useEffect(() => {
     const intervalId = setInterval(() => {
