@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 const TransportModeDetection = () => {
   const [transportMode, setTransportMode] = useState('');
   const [transportModes, setTransportModes] = useState([]);
+  const [accelerationX, setAccelerationX] = useState();
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
     gyroscopeData: [],
@@ -55,6 +56,8 @@ const TransportModeDetection = () => {
   useEffect(() => {
     const handleMotion = (event) => {
       const { accelerationIncludingGravity } = event;
+      console.log("x acceleration",accelerationIncludingGravity.x)
+      setAccelerationX(accelerationIncludingGravity.x)
       setSensorData(prevData => ({
         ...prevData,
         accelerometerData: [
@@ -90,6 +93,7 @@ const TransportModeDetection = () => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
+      console.log(sensorData)
       // Only proceed if we have enough data
       if (sensorData.accelerometerData.length > 0 && sensorData.gyroscopeData.length > 0) {
         // Calculate stats for accelerometer and gyroscope
@@ -149,6 +153,21 @@ const TransportModeDetection = () => {
         </Typography>
         <Typography variant="h6">
           Accessing from: {deviceType}
+        </Typography>
+        <Typography variant="h6">
+          Testing purposes:
+        </Typography>
+        <Typography variant="h6">
+          Accelerometer Data: {sensorData.accelerometerData}
+        </Typography>
+        <Typography variant="h6">
+          Accelerometer Data min: {sensorData.accelerometerData.min}
+        </Typography>
+        <Typography variant="h6">
+          Acceleration X: {accelerationX}
+        </Typography>
+        <Typography variant="h6">
+          Gyroscope Data: {sensorData.gyroscopeData}
         </Typography>
         {/* Display the latest transport mode */}
         {transportMode && (
