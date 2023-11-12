@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef  } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import SideNavbar from '../components/SideNavbar';
 import { baseURL } from "../utils/constant";
@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 const TransportModeDetection = () => {
   const [transportMode, setTransportMode] = useState('');
   const [transportModes, setTransportModes] = useState([]);
-  const [accelerationX, setAccelerationX] = useState();
+
   const [accelerometerMin, setAccelerometerMin] = useState(null);
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
@@ -77,14 +77,17 @@ const TransportModeDetection = () => {
   useEffect(() => {
     const handleMotion = (event) => {
       const { accelerationIncludingGravity } = event;
-      setAccelerationX(accelerationIncludingGravity.x)
+      const accelerationIncludingGravity_x = Math.abs(accelerationIncludingGravity.x);
+      const accelerationIncludingGravity_y = Math.abs(accelerationIncludingGravity.y);
+      const accelerationIncludingGravity_z = Math.abs(accelerationIncludingGravity.z);
+
       setSensorData(prevData => ({
         ...prevData,
         accelerometerData: [
           ...prevData.accelerometerData,
-          accelerationIncludingGravity.x,
-          accelerationIncludingGravity.y,
-          accelerationIncludingGravity.z,
+          accelerationIncludingGravity_x,
+          accelerationIncludingGravity_y,
+          accelerationIncludingGravity_z,
         ].filter(Boolean), // Filtering out null/undefined values
       }));
 
@@ -97,13 +100,16 @@ const TransportModeDetection = () => {
     };
 
     const handleOrientation = (event) => {
+      const event_alpha = Math.abs(event.alpha);
+      const event_beta = Math.abs(event.beta);
+      const event_gamma = Math.abs(event.gamma);
       setSensorData(prevData => ({
         ...prevData,
         gyroscopeData: [
           ...prevData.gyroscopeData,
-          event.alpha,
-          event.beta,
-          event.gamma,
+          event_alpha,
+          event_beta,
+          event_gamma,
         ].filter(Boolean),
       }));
     };
@@ -159,7 +165,7 @@ const TransportModeDetection = () => {
               setTransportModes(modes => [...modes, data.mode]);
               toast.success("Fetched transport mode: " + data.mode);
               // Resets the sensor data when mode fetched
-              setSensorData({ 
+              setSensorData({
                 accelerometerData: [],
                 gyroscopeData: [],
               });
@@ -213,9 +219,6 @@ const TransportModeDetection = () => {
         <Typography variant="h6">
           Accelerometer Data length: {sensorData.accelerometerData.length}
           Gyroscope Data length: {sensorData.gyroscopeData.length}
-        </Typography>
-        <Typography variant="h6">
-          Acceleration X: {accelerationX ? accelerationX.toFixed(2) : 'N/A'}
         </Typography>
         <Typography variant="h6">
           Gyroscope Data: {sensorData.gyroscopeData}
