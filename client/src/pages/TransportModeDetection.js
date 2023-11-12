@@ -102,15 +102,20 @@ const TransportModeDetection = () => {
   useEffect(() => {
     const handleMotion = (event) => {
       const { accelerationIncludingGravity } = event;
-
+      
+      // Calculate the magnitude of the acceleration vector
+      const magnitude = Math.sqrt(
+        accelerationIncludingGravity.x ** 2 +
+        accelerationIncludingGravity.y ** 2 +
+        accelerationIncludingGravity.z ** 2
+      );
+    
+      // Adjust the magnitude by the expected gravity on Earth 
+      const adjustedMagnitude = Math.abs(magnitude - 9.81);
+    
       setSensorData(prevData => {
-        const updatedAccelData = [
-          ...prevData.accelerometerData,
-          Math.abs(accelerationIncludingGravity.x - 9.81),
-          Math.abs(accelerationIncludingGravity.y - 9.81),
-          Math.abs(accelerationIncludingGravity.z - 9.81)
-        ].filter(isFinite); // Filtering out null/undefined values
-
+        const updatedAccelData = [...prevData.accelerometerData, adjustedMagnitude].filter(isFinite);
+    
         return {
           ...prevData,
           accelerometerData: updatedAccelData
