@@ -29,6 +29,7 @@ module.exports.getTransportMode = async (req, res) => {
     }
 
     console.log("in here (debugging)")
+    console.log(newData)
 
     const input = new Matrix([Object.values(newData)]);
     const prediction = classifier.predict(input);
