@@ -8,7 +8,7 @@ const TransportModeDetection = () => {
   const [transportMode, setTransportMode] = useState('');
   const [transportModes, setTransportModes] = useState([]);
 
-  
+
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
     gyroscopeData: [],
@@ -52,18 +52,24 @@ const TransportModeDetection = () => {
 
   // Function to calculate stats
   const calculateStats = (data) => {
-    // Filter out non-numeric and infinite values before calculations
-    const validData = data.filter(val => typeof val === 'number' && isFinite(val));
+    // Ensure that data is an array of numbers 
+    const numericData = data.filter(isFinite);
 
-    if (validData.length === 0) {
+    // Apply the moving average filter to the numeric data
+    const filteredData = movingAverage(numericData, 5);
+
+    // If there's no valid data, return null stats
+    if (filteredData.length === 0) {
       return { mean: null, min: null, max: null, std: null };
     }
 
-    const sum = validData.reduce((a, b) => a + b, 0);
-    const mean = sum / validData.length;
-    const min = Math.min(...validData);
-    const max = Math.max(...validData);
-    const variance = validData.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / validData.length;
+    const sum = filteredData.reduce((a, b) => a + b, 0);
+    const mean = sum / filteredData.length;
+    const min = Math.min(...filteredData);
+    const max = Math.max(...filteredData);
+
+    // Calculate standard deviation
+    const variance = filteredData.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / filteredData.length;
     const std = Math.sqrt(variance);
 
     return {
@@ -76,7 +82,7 @@ const TransportModeDetection = () => {
 
   const movingAverage = (arr, windowSize) => {
     let result = [];
-  
+
     for (let i = 0; i < arr.length; i++) {
       if (i < windowSize) {
         // Not enough data points yet
@@ -89,35 +95,29 @@ const TransportModeDetection = () => {
         result.push(sum / windowSize);
       }
     }
-  
+
     return result;
   };
 
   useEffect(() => {
     const handleMotion = (event) => {
       const { accelerationIncludingGravity } = event;
-      
+
       setSensorData(prevData => {
         const updatedAccelData = [
           ...prevData.accelerometerData,
           accelerationIncludingGravity.x,
           accelerationIncludingGravity.y,
           accelerationIncludingGravity.z,
-        ].filter(Boolean); // Filtering out null/undefined values
-    
-        const smoothedAccelData = {
-          x: movingAverage(updatedAccelData.map(d => d.x), 5),
-          y: movingAverage(updatedAccelData.map(d => d.y), 5),
-          z: movingAverage(updatedAccelData.map(d => d.z), 5)
-        };
-    
+        ].filter(isFinite); // Filtering out null/undefined values
+
         return {
           ...prevData,
-          accelerometerData: smoothedAccelData
+          accelerometerData: updatedAccelData
         };
       });
     };
-    
+
     const handleOrientation = (event) => {
       setSensorData(prevData => {
         const updatedGyroData = [
@@ -125,10 +125,10 @@ const TransportModeDetection = () => {
           event.alpha,
           event.beta,
           event.gamma,
-        ].filter(Boolean); 
-    
+        ].filter(isFinite);
+
         const smoothedGyroData = movingAverage(updatedGyroData, 5);
-    
+
         return {
           ...prevData,
           gyroscopeData: smoothedGyroData
@@ -233,14 +233,14 @@ const TransportModeDetection = () => {
           Testing purposes:
         </Typography>
         <Typography variant="h6">
-          Accelerometer Data: {sensorData.accelerometerData}
+          Accelerometer Data: {sensorData.accelerometerData.join(', ')}
         </Typography>
         <Typography variant="h6">
           Accelerometer Data length: {sensorData.accelerometerData.length}
           Gyroscope Data length: {sensorData.gyroscopeData.length}
         </Typography>
         <Typography variant="h6">
-          Gyroscope Data: {sensorData.gyroscopeData}
+          Gyroscope Data: {sensorData.gyroscopeData.join(', ')}
         </Typography>
         {/* Display the latest transport mode */}
         {transportMode && (
