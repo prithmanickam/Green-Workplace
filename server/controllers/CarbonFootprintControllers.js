@@ -28,12 +28,7 @@ module.exports.getTransportMode = async (req, res) => {
       return res.status(400).json({ status: "error", message: "No data provided." });
     }
 
-    // convert to numbers (default to zero if not a finite number)
-    const cleanData = Object.values(newData).map(value =>
-      isFinite(value) ? Number(value) : 0
-    );
-
-    const input = new Matrix([cleanData]);
+    const input = new Matrix([Object.values(newData)]);
     const prediction = classifier.predict(input);
 
     // Find the mode from the targetMap using the prediction

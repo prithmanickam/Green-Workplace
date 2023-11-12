@@ -47,18 +47,25 @@ const TransportModeDetection = () => {
 
   // Function to calculate stats
   const calculateStats = (data) => {
-    const mean = data.reduce((a, b) => a + b, 0) / data.length;
-    const min = Math.min(...data);
-    const max = Math.max(...data);
-    const std = Math.sqrt(data.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / data.length);
-
-    console.log("calculated:", mean, min, max, std)
-
+    // Filter out non-numeric and infinite values before calculations
+    const validData = data.filter(val => typeof val === 'number' && isFinite(val));
+  
+    if (validData.length === 0) {
+      return { mean: null, min: null, max: null, std: null };
+    }
+  
+    const sum = validData.reduce((a, b) => a + b, 0);
+    const mean = sum / validData.length;
+    const min = Math.min(...validData);
+    const max = Math.max(...validData);
+    const variance = validData.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / validData.length;
+    const std = Math.sqrt(variance);
+  
     return {
-      mean: Number(mean.toFixed(5)),
-      min: Number(min.toFixed(5)),
-      max: Number(max.toFixed(5)),
-      std: Number(std.toFixed(5)),
+      mean: parseFloat(mean.toFixed(5)),
+      min: parseFloat(min.toFixed(5)),
+      max: parseFloat(max.toFixed(5)),
+      std: parseFloat(std.toFixed(5)),
     };
   };
 
@@ -108,8 +115,10 @@ const TransportModeDetection = () => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
+      console.log(sensorData.accelerometerData.length)
+      console.log(sensorData.gyroscopeData.length)
       // Only proceed if we have enough data
-      //if (sensorData.accelerometerData.length > 0 && sensorData.gyroscopeData.length > 0) {
+      if (sensorData.accelerometerData.length > 0 && sensorData.gyroscopeData.length > 0) {
       // Calculate stats for accelerometer and gyroscope
       const accelerometerStats = calculateStats(sensorData.accelerometerData);
       const gyroscopeStats = calculateStats(sensorData.gyroscopeData);
@@ -155,7 +164,7 @@ const TransportModeDetection = () => {
         accelerometerData: [],
         gyroscopeData: [],
       });
-      //}
+      }
     }, 7000);
 
     // Clears the interval when the component unmounts
