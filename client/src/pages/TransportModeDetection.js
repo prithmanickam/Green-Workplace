@@ -158,6 +158,11 @@ const TransportModeDetection = () => {
               setTransportMode(data.mode);
               setTransportModes(modes => [...modes, data.mode]);
               toast.success("Fetched transport mode: " + data.mode);
+              // Resets the sensor data when mode fetched
+              setSensorData({ 
+                accelerometerData: [],
+                gyroscopeData: [],
+              });
             } else {
               toast.error("In API but failed to fetch user carbon data for teams.");
             }
