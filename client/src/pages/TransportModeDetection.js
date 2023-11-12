@@ -8,7 +8,7 @@ const TransportModeDetection = () => {
   const [transportMode, setTransportMode] = useState('');
   const [transportModes, setTransportModes] = useState([]);
 
-  const [accelerometerMin, setAccelerometerMin] = useState(null);
+  
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
     gyroscopeData: [],
@@ -74,44 +74,66 @@ const TransportModeDetection = () => {
     };
   };
 
+  const movingAverage = (arr, windowSize) => {
+    let result = [];
+  
+    for (let i = 0; i < arr.length; i++) {
+      if (i < windowSize) {
+        // Not enough data points yet
+        result.push(arr[i]);
+      } else {
+        let sum = 0;
+        for (let j = i; j > i - windowSize; j--) {
+          sum += arr[j];
+        }
+        result.push(sum / windowSize);
+      }
+    }
+  
+    return result;
+  };
+
   useEffect(() => {
     const handleMotion = (event) => {
       const { accelerationIncludingGravity } = event;
-      const accelerationIncludingGravity_x = Math.abs(accelerationIncludingGravity.x);
-      const accelerationIncludingGravity_y = Math.abs(accelerationIncludingGravity.y);
-      const accelerationIncludingGravity_z = Math.abs(accelerationIncludingGravity.z);
-
-      setSensorData(prevData => ({
-        ...prevData,
-        accelerometerData: [
+      
+      setSensorData(prevData => {
+        const updatedAccelData = [
           ...prevData.accelerometerData,
-          accelerationIncludingGravity_x,
-          accelerationIncludingGravity_y,
-          accelerationIncludingGravity_z,
-        ].filter(Boolean), // Filtering out null/undefined values
-      }));
-
-      const magnitude = Math.sqrt(
-        accelerationIncludingGravity.x ** 2 +
-        accelerationIncludingGravity.y ** 2 +
-        accelerationIncludingGravity.z ** 2
-      );
-      setAccelerometerMin(prevMin => prevMin !== null ? Math.min(prevMin, magnitude) : magnitude);
+          accelerationIncludingGravity.x,
+          accelerationIncludingGravity.y,
+          accelerationIncludingGravity.z,
+        ].filter(Boolean); // Filtering out null/undefined values
+    
+        const smoothedAccelData = {
+          x: movingAverage(updatedAccelData.map(d => d.x), 5),
+          y: movingAverage(updatedAccelData.map(d => d.y), 5),
+          z: movingAverage(updatedAccelData.map(d => d.z), 5)
+        };
+    
+        return {
+          ...prevData,
+          accelerometerData: smoothedAccelData
+        };
+      });
     };
-
+    
     const handleOrientation = (event) => {
-      const event_alpha = Math.abs(event.alpha);
-      const event_beta = Math.abs(event.beta);
-      const event_gamma = Math.abs(event.gamma);
-      setSensorData(prevData => ({
-        ...prevData,
-        gyroscopeData: [
+      setSensorData(prevData => {
+        const updatedGyroData = [
           ...prevData.gyroscopeData,
-          event_alpha,
-          event_beta,
-          event_gamma,
-        ].filter(Boolean),
-      }));
+          event.alpha,
+          event.beta,
+          event.gamma,
+        ].filter(Boolean); 
+    
+        const smoothedGyroData = movingAverage(updatedGyroData, 5);
+    
+        return {
+          ...prevData,
+          gyroscopeData: smoothedGyroData
+        };
+      });
     };
 
     window.addEventListener('devicemotion', handleMotion);
@@ -212,9 +234,6 @@ const TransportModeDetection = () => {
         </Typography>
         <Typography variant="h6">
           Accelerometer Data: {sensorData.accelerometerData}
-        </Typography>
-        <Typography variant="h6">
-          Accelerometer Data min: {accelerometerMin !== null ? accelerometerMin.toFixed(2) : 'Calculating...'}
         </Typography>
         <Typography variant="h6">
           Accelerometer Data length: {sensorData.accelerometerData.length}
