@@ -28,11 +28,15 @@ module.exports.getTransportMode = async (req, res) => {
       return res.status(400).json({ status: "error", message: "No data provided." });
     }
 
+    console.log("in here (debugging)")
+
     const input = new Matrix([Object.values(newData)]);
     const prediction = classifier.predict(input);
 
     // Find the mode from the targetMap using the prediction
     const mode = Object.keys(targetMap).find(key => targetMap[key] === prediction[0]);
+
+    console.log(mode)
 
     res.status(200).json({ status: "ok", mode });
   } catch (error) {
