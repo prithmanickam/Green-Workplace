@@ -104,7 +104,7 @@ const TransportModeDetection = () => {
 
       console.log("Accel : ", acceleration)
   
-      const accelSum = (acceleration + acceleration + acceleration + 9.81);
+      const accelSum = (acceleration.x + acceleration.y + acceleration.z);
   
       const rotationRate = event.rotationRate || { alpha: 0, beta: 0, gamma: 0 };
       console.log("rotation rate: ", rotationRate)
