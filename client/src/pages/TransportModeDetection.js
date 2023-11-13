@@ -57,20 +57,20 @@ const TransportModeDetection = () => {
     const numericData = data.filter(isFinite);
 
     // Apply the moving average filter to the numeric data
-    //onst filteredData = movingAverage(numericData, 5);
+    const filteredData = movingAverage(numericData, 5);
 
     // If there's no valid data, return null stats
-    if (numericData.length === 0) {
+    if (filteredData.length === 0) {
       return { mean: null, min: null, max: null, std: null };
     }
 
-    const sum = numericData.reduce((a, b) => a + b, 0);
-    const mean = sum / numericData.length;
-    const min = Math.min(...numericData);
-    const max = Math.max(...numericData);
+    const sum = filteredData.reduce((a, b) => a + b, 0);
+    const mean = sum / filteredData.length;
+    const min = Math.min(...filteredData);
+    const max = Math.max(...filteredData);
 
     // Calculate standard deviation
-    const variance = numericData.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / numericData.length;
+    const variance = filteredData.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / filteredData.length;
     const std = Math.sqrt(variance);
 
     return {
@@ -109,7 +109,7 @@ const TransportModeDetection = () => {
       const acceleration = {
         x: accelerationIncludingGravity.x || 0,
         y: accelerationIncludingGravity.y || 0,
-        z: (accelerationIncludingGravity.z || 0) - 9.81
+        z: (accelerationIncludingGravity.z || 0) 
       };
 
       const accelerationMagnitude = Math.sqrt(
@@ -117,6 +117,8 @@ const TransportModeDetection = () => {
         acceleration.y ** 2 +
         acceleration.z ** 2
       ).toFixed(5);
+
+      console.log("Acceleration Magnitude", accelerationMagnitude)
 
       setAccelData({
         x: Number(acceleration.x).toFixed(5),
