@@ -73,6 +73,8 @@ const TransportModeDetection = () => {
     const variance = filteredData.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / filteredData.length;
     const std = Math.sqrt(variance);
 
+    console.log(mean, min, max, std)
+
     return {
       mean: parseFloat(mean.toFixed(5)),
       min: parseFloat(min.toFixed(5)),
@@ -102,32 +104,22 @@ const TransportModeDetection = () => {
 
   useEffect(() => {
     const handleMotion = (event) => {
-      const accelerationIncludingGravity = event.accelerationIncludingGravity || { x: 0, y: 0, z: 0 };
-
-      console.log("Accel : ", accelerationIncludingGravity)
-
-      const acceleration = {
-        x: accelerationIncludingGravity.x || 0,
-        y: accelerationIncludingGravity.y || 0,
-        z: (accelerationIncludingGravity.z || 0) 
-      };
+      const { accelerationIncludingGravity } = event;
 
       const accelerationMagnitude = Math.sqrt(
-        acceleration.x ** 2 +
-        acceleration.y ** 2 +
-        acceleration.z ** 2
+        accelerationIncludingGravity.x ** 2 +
+        accelerationIncludingGravity.y ** 2 +
+        accelerationIncludingGravity.z ** 2
       ).toFixed(5);
 
-      console.log("Acceleration Magnitude", accelerationMagnitude)
-
       setAccelData({
-        x: Number(acceleration.x).toFixed(5),
-        y: Number(acceleration.y).toFixed(5),
-        z: Number(acceleration.z).toFixed(5),
+        x: Number(accelerationIncludingGravity.x).toFixed(5),
+        y: Number(accelerationIncludingGravity.y).toFixed(5),
+        z: Number(accelerationIncludingGravity.z).toFixed(5),
       });
 
       const rotationRate = event.rotationRate || { alpha: 0, beta: 0, gamma: 0 };
-      console.log("rotation rate: ", rotationRate)
+      //console.log("rotation rate: ", rotationRate)
 
       const alpha = rotationRate.alpha ? Number(((rotationRate.alpha * Math.PI) / 180).toFixed(5)) : 0;
       const beta = rotationRate.beta ? Number(((rotationRate.beta * Math.PI) / 180).toFixed(5)) : 0;
@@ -146,7 +138,7 @@ const TransportModeDetection = () => {
       ).toFixed(5);
 
       setSensorData(prevData => {
-        const updatedAccelData = [...prevData.accelerometerData, accelerationMagnitude].filter(isFinite);
+        const updatedAccelData = [...prevData.accelerometerData, accelerationMagnitude];
         const updatedGyroData = [...prevData.gyroscopeData, gyroscopeMagnitude];
 
         return {
@@ -170,7 +162,7 @@ const TransportModeDetection = () => {
       console.log(sensorData.accelerometerData.length)
       console.log(sensorData.gyroscopeData.length)
       // Only proceed if we have enough data
-      if (accelerometerData.length > 0 && gyroscopeData.length > 0) {
+      if (accelerometerData.length > 5 && gyroscopeData.length > 5) {
         // Calculate stats for accelerometer and gyroscope
         const accelerometerStats = calculateStats(accelerometerData);
         const gyroscopeStats = calculateStats(gyroscopeData);
