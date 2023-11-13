@@ -110,14 +110,23 @@ const TransportModeDetection = () => {
       const rotationRate = event.rotationRate || { alpha: 0, beta: 0, gamma: 0 };
       console.log("rotation rate: ", rotationRate)
 
-      const { alpha, beta, gamma } = rotationRate;
-      const gyroSum = (alpha + beta + gamma);
+      const alpha = rotationRate.alpha ? Number(((rotationRate.alpha * Math.PI) / 180).toFixed(5)) : 0;
+      const beta = rotationRate.beta ? Number(((rotationRate.beta * Math.PI) / 180).toFixed(5)) : 0;
+      const gamma = rotationRate.gamma ? Number(((rotationRate.gamma * Math.PI) / 180).toFixed(5)) : 0;
 
       setGyroData({
-        alpha: event.rotationRate.alpha,
-        beta: event.rotationRate.beta,
-        gamma: event.rotationRate.gamma,
+        alpha: alpha,
+        beta: beta,
+        gamma: gamma,
       });
+
+      setGyroData({
+        alpha: alpha.toFixed(5),
+        beta: beta.toFixed(5),
+        gamma: gamma.toFixed(5),
+      });
+
+      const gyroSum = (alpha + beta + gamma);
 
       setSensorData(prevData => {
         const updatedAccelData = [...prevData.accelerometerData, accelSum].filter(isFinite);
@@ -225,9 +234,9 @@ const TransportModeDetection = () => {
         </Typography>
         <div>
           <h3>Gyroscope Data (rad/s)</h3>
-          <p>Alpha: {gyroData.alpha?.toFixed(5) || '0'} rad/s</p>
-          <p>Beta: {gyroData.beta?.toFixed(5) || '0'} rad/s</p>
-          <p>Gamma: {gyroData.gamma?.toFixed(5) || '0'} rad/s</p>
+          <p>Alpha: {gyroData.alpha} rad/s</p>
+          <p>Beta: {gyroData.beta} rad/s</p>
+          <p>Gamma: {gyroData.gamma} rad/s</p>
         </div>
         <Typography variant="h6">
           Accelerometer Data: {sensorData.accelerometerData.slice(-5).join(', ')}
