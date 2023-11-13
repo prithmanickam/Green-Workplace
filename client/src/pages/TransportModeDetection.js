@@ -8,6 +8,7 @@ const TransportModeDetection = () => {
   const [transportMode, setTransportMode] = useState('');
   const [transportModes, setTransportModes] = useState([]);
   const [gyroData, setGyroData] = useState({ alpha: 0, beta: 0, gamma: 0 });
+  const [accelData, setAccelData] = useState({ x: 0, y: 0, z: 0 });
 
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
@@ -56,20 +57,20 @@ const TransportModeDetection = () => {
     const numericData = data.filter(isFinite);
 
     // Apply the moving average filter to the numeric data
-    const filteredData = movingAverage(numericData, 5);
+    //onst filteredData = movingAverage(numericData, 5);
 
     // If there's no valid data, return null stats
-    if (filteredData.length === 0) {
+    if (numericData.length === 0) {
       return { mean: null, min: null, max: null, std: null };
     }
 
-    const sum = filteredData.reduce((a, b) => a + b, 0);
-    const mean = sum / filteredData.length;
-    const min = Math.min(...filteredData);
-    const max = Math.max(...filteredData);
+    const sum = numericData.reduce((a, b) => a + b, 0);
+    const mean = sum / numericData.length;
+    const min = Math.min(...numericData);
+    const max = Math.max(...numericData);
 
     // Calculate standard deviation
-    const variance = filteredData.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / filteredData.length;
+    const variance = numericData.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / numericData.length;
     const std = Math.sqrt(variance);
 
     return {
@@ -101,11 +102,27 @@ const TransportModeDetection = () => {
 
   useEffect(() => {
     const handleMotion = (event) => {
-      const { acceleration } = event;
+      const accelerationIncludingGravity = event.accelerationIncludingGravity || { x: 0, y: 0, z: 0 };
 
-      console.log("Accel : ", acceleration)
+      console.log("Accel : ", accelerationIncludingGravity)
 
-      const accelSum = (acceleration.x + acceleration.y + acceleration.z + 9.81);
+      const acceleration = {
+        x: accelerationIncludingGravity.x || 0,
+        y: accelerationIncludingGravity.y || 0,
+        z: (accelerationIncludingGravity.z || 0) - 9.81
+      };
+
+      const accelerationMagnitude = Math.sqrt(
+        acceleration.x ** 2 +
+        acceleration.y ** 2 +
+        acceleration.z ** 2
+      ).toFixed(5);
+
+      setAccelData({
+        x: Number(acceleration.x).toFixed(5),
+        y: Number(acceleration.y).toFixed(5),
+        z: Number(acceleration.z).toFixed(5),
+      });
 
       const rotationRate = event.rotationRate || { alpha: 0, beta: 0, gamma: 0 };
       console.log("rotation rate: ", rotationRate)
@@ -115,22 +132,20 @@ const TransportModeDetection = () => {
       const gamma = rotationRate.gamma ? Number(((rotationRate.gamma * Math.PI) / 180).toFixed(5)) : 0;
 
       setGyroData({
-        alpha: alpha,
-        beta: beta,
-        gamma: gamma,
-      });
-
-      setGyroData({
         alpha: alpha.toFixed(5),
         beta: beta.toFixed(5),
         gamma: gamma.toFixed(5),
       });
 
-      const gyroSum = (alpha + beta + gamma);
+      const gyroscopeMagnitude = Math.sqrt(
+        alpha ** 2 +
+        beta ** 2 +
+        gamma ** 2
+      ).toFixed(5);
 
       setSensorData(prevData => {
-        const updatedAccelData = [...prevData.accelerometerData, accelSum].filter(isFinite);
-        const updatedGyroData = [...prevData.gyroscopeData, gyroSum];
+        const updatedAccelData = [...prevData.accelerometerData, accelerationMagnitude].filter(isFinite);
+        const updatedGyroData = [...prevData.gyroscopeData, gyroscopeMagnitude];
 
         return {
           ...prevData,
@@ -232,6 +247,12 @@ const TransportModeDetection = () => {
         <Typography variant="h6">
           Testing purposes:
         </Typography>
+        <div>
+          <h3>Accelerometer Data</h3>
+          <p>X: {accelData.x} m/s²</p>
+          <p>Y: {accelData.y} m/s²</p>
+          <p>Z: {accelData.z} m/s²</p>
+        </div>
         <div>
           <h3>Gyroscope Data (rad/s)</h3>
           <p>Alpha: {gyroData.alpha} rad/s</p>
