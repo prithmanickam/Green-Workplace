@@ -55,7 +55,7 @@ const TransportModeDetection = () => {
   const calculateStats = (data) => {
     
     // Ensure that data is an array of numbers 
-    const numericData = data.filter(isFinite);
+    const numericData = data.map(d => parseFloat(d)).filter(isFinite);
 
     console.log("numeric DATA to calculate:", numericData)
 
