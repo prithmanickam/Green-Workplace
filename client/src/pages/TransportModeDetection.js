@@ -53,24 +53,25 @@ const TransportModeDetection = () => {
 
   // Function to calculate stats
   const calculateStats = (data) => {
+    console.log("DATA to calculate:", data)
     // Ensure that data is an array of numbers 
-    const numericData = data.filter(isFinite);
+    //const numericData = data.filter(isFinite);
 
     // Apply the moving average filter to the numeric data
-    const filteredData = movingAverage(numericData, 5);
+    //const filteredData = movingAverage(numericData, 5);
 
     // If there's no valid data, return null stats
-    if (filteredData.length === 0) {
+    if (data.length === 0) {
       return { mean: null, min: null, max: null, std: null };
     }
 
-    const sum = filteredData.reduce((a, b) => a + b, 0);
-    const mean = sum / filteredData.length;
-    const min = Math.min(...filteredData);
-    const max = Math.max(...filteredData);
+    const sum = data.reduce((a, b) => a + b, 0);
+    const mean = sum / data.length;
+    const min = Math.min(...data);
+    const max = Math.max(...data);
 
     // Calculate standard deviation
-    const variance = filteredData.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / filteredData.length;
+    const variance = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / data.length;
     const std = Math.sqrt(variance);
 
     console.log(mean, min, max, std)
