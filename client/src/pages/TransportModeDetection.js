@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 const TransportModeDetection = () => {
   const [transportMode, setTransportMode] = useState('');
   const [transportModes, setTransportModes] = useState([]);
+  const [gyroData, setGyroData] = useState({ alpha: 0, beta: 0, gamma: 0 });
 
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
@@ -103,19 +104,25 @@ const TransportModeDetection = () => {
       const { acceleration } = event;
 
       console.log("Accel : ", acceleration)
-  
+
       const accelSum = (acceleration.x + acceleration.y + acceleration.z + 9.81);
-  
+
       const rotationRate = event.rotationRate || { alpha: 0, beta: 0, gamma: 0 };
       console.log("rotation rate: ", rotationRate)
 
       const { alpha, beta, gamma } = rotationRate;
       const gyroSum = (alpha + beta + gamma);
-  
+
+      setGyroData({
+        alpha: event.rotationRate.alpha,
+        beta: event.rotationRate.beta,
+        gamma: event.rotationRate.gamma,
+      });
+
       setSensorData(prevData => {
         const updatedAccelData = [...prevData.accelerometerData, accelSum].filter(isFinite);
         const updatedGyroData = [...prevData.gyroscopeData, gyroSum];
-  
+
         return {
           ...prevData,
           accelerometerData: updatedAccelData,
@@ -123,9 +130,9 @@ const TransportModeDetection = () => {
         };
       });
     };
-  
+
     window.addEventListener('devicemotion', handleMotion);
-  
+
     return () => {
       window.removeEventListener('devicemotion', handleMotion);
     };
@@ -216,6 +223,12 @@ const TransportModeDetection = () => {
         <Typography variant="h6">
           Testing purposes:
         </Typography>
+        <div>
+          <h3>Gyroscope Data (rad/s)</h3>
+          <p>Alpha: {gyroData.alpha?.toFixed(5) || '0'} rad/s</p>
+          <p>Beta: {gyroData.beta?.toFixed(5) || '0'} rad/s</p>
+          <p>Gamma: {gyroData.gamma?.toFixed(5) || '0'} rad/s</p>
+        </div>
         <Typography variant="h6">
           Accelerometer Data: {sensorData.accelerometerData.slice(-5).join(', ')}
         </Typography>
