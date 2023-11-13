@@ -53,25 +53,29 @@ const TransportModeDetection = () => {
 
   // Function to calculate stats
   const calculateStats = (data) => {
-    console.log("DATA to calculate:", data)
+    
     // Ensure that data is an array of numbers 
-    //const numericData = data.filter(isFinite);
+    const numericData = data.filter(isFinite);
+
+    console.log("numeric DATA to calculate:", numericData)
 
     // Apply the moving average filter to the numeric data
     //const filteredData = movingAverage(numericData, 5);
 
     // If there's no valid data, return null stats
-    if (data.length === 0) {
+    if (numericData.length === 0) {
+      console.log("in here where data len is 0")
       return { mean: null, min: null, max: null, std: null };
     }
 
-    const sum = data.reduce((a, b) => a + b, 0);
-    const mean = sum / data.length;
-    const min = Math.min(...data);
-    const max = Math.max(...data);
+    const sum = numericData.reduce((a, b) => a + b, 0);
+    console.log("sum", sum, "data len", numericData.length)
+    const mean = sum / numericData.length;
+    const min = Math.min(...numericData);
+    const max = Math.max(...numericData);
 
     // Calculate standard deviation
-    const variance = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / data.length;
+    const variance = numericData.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / numericData.length;
     const std = Math.sqrt(variance);
 
     console.log(mean, min, max, std)
@@ -108,9 +112,9 @@ const TransportModeDetection = () => {
       const { accelerationIncludingGravity } = event;
 
       const accelerationMagnitude = Math.sqrt(
-        accelerationIncludingGravity.x ** 2 +
-        accelerationIncludingGravity.y ** 2 +
-        accelerationIncludingGravity.z ** 2
+        Math.pow(accelerationIncludingGravity.x || 0, 2) +
+        Math.pow(accelerationIncludingGravity.y || 0, 2) +
+        Math.pow(accelerationIncludingGravity.z || 0, 2)
       ).toFixed(5);
 
       setAccelData({
