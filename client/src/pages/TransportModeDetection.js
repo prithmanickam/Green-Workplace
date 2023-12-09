@@ -10,6 +10,9 @@ const TransportModeDetection = () => {
   const [gyroData, setGyroData] = useState({ alpha: 0, beta: 0, gamma: 0 });
   const [accelData, setAccelData] = useState({ x: 0, y: 0, z: 0 });
 
+  const [location, setLocation] = useState({ latitude: 0, longitude: 0 });
+  const [totalDistance, setTotalDistance] = useState(0);
+
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
     gyroscopeData: [],
@@ -21,6 +24,56 @@ const TransportModeDetection = () => {
     accelerometerData: [],
     gyroscopeData: [],
   });
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      });
+    } else {
+      console.log("Geolocation is not supported by this browser.");
+    }
+  }
+
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const calculateDistance = (latitude1, lon1, latitude2, lon2) => {
+    const R = 6371e3; //earth radius in meters
+    //latitudes
+    const lat1 = latitude1 * Math.PI / 180;  //convert to radians
+    const lat2 = latitude2 * Math.PI / 180;
+
+    const diffInLat = (latitude2 - latitude1) * Math.PI / 180; //difference in latitudes Δφ 
+    const diffInLong = (lon2 - lon1) * Math.PI / 180; //difference in logitudes Δλ
+
+    const a = Math.sin(diffInLat / 2) * Math.sin(diffInLat / 2) +
+      Math.cos(lat1) * Math.cos(lat2) *
+      Math.sin(diffInLong / 2) * Math.sin(diffInLong / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // in metres
+  }
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const previousLocation = location;
+      getCurrentLocation();
+      const distance = calculateDistance(
+        previousLocation.latitude, previousLocation.longitude,
+        location.latitude, location.longitude
+      );
+      console.log(distance)
+      setTotalDistance(totalDistance + distance);
+    }, 5000); // Update every 10 seconds
+
+    return () => clearInterval(intervalId);
+  }, [location]);
+
 
   useEffect(() => {
     // Function to determine the device type
@@ -53,7 +106,7 @@ const TransportModeDetection = () => {
 
   // Function to calculate stats
   const calculateStats = (data) => {
-    
+
     // Ensure that data is an array of numbers 
     const numericData = data.map(d => parseFloat(d)).filter(isFinite);
 
@@ -164,8 +217,7 @@ const TransportModeDetection = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       const { accelerometerData, gyroscopeData } = sensorDataRef.current;
-      console.log(sensorData.accelerometerData.length)
-      console.log(sensorData.gyroscopeData.length)
+
       // Only proceed if we have enough data
       if (accelerometerData.length > 5 && gyroscopeData.length > 5) {
         // Calculate stats for accelerometer and gyroscope
@@ -245,6 +297,9 @@ const TransportModeDetection = () => {
         </Typography>
         <Typography variant="h6">
           Testing purposes:
+        </Typography>
+        <Typography variant="h6">
+          Total Distance Travelled: {totalDistance.toFixed(2)} meters
         </Typography>
         <div>
           <h3>Accelerometer Data</h3>
