@@ -153,8 +153,7 @@ const TransportModeDetection = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       const { accelerometerData, gyroscopeData, noGravityAccelerationData } = sensorDataRef.current;
-      console.log(sensorData.accelerometerData.length)
-      console.log(sensorData.gyroscopeData.length)
+
       // Only proceed if we have enough data
       if (accelerometerData.length > 5 && gyroscopeData.length > 5) {
         // Calculate stats for accelerometer and gyroscope
@@ -192,15 +191,13 @@ const TransportModeDetection = () => {
               setCurrentSpeed(meanAcceleration);
               console.log("current speed: ", currentSpeed);
 
-              let accurateMode = data.mode
-
-              //checks if person is still
-              if (meanAcceleration < 1) {
-                accurateMode = "Still"
-              }
+              let accurateMode = { 
+                mode: meanAcceleration < 1 ? "Still" : data.mode, 
+                time: new Date().toLocaleTimeString() 
+              };
 
               setTransportModes(modes => [accurateMode, ...modes]);
-              toast.success("Fetched transport mode: " + accurateMode);
+              toast.success("Fetched transport mode: " + accurateMode.mode);
 
               // Resets the sensor data when mode fetched
               setSensorData({
@@ -287,10 +284,10 @@ const TransportModeDetection = () => {
             <Card key={index} sx={{ mb: 2 }}>
               <CardContent>
                 <Typography color="text.secondary" gutterBottom>
-                  Previous Transport Mode {index + 1}
+                  Detected Transport Mode {mode.time}
                 </Typography>
                 <Typography variant="h6">
-                  {mode}
+                  {mode.mode}
                 </Typography>
               </CardContent>
             </Card>
