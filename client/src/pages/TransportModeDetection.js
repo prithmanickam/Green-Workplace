@@ -12,11 +12,29 @@ const TransportModeDetection = () => {
 
   const [location, setLocation] = useState({ latitude: 0, longitude: 0 });
   const [totalDistance, setTotalDistance] = useState(0);
+  const [speedKmH, setSpeedKmH] = useState(0);
 
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
     gyroscopeData: [],
   });
+
+  const calculateSpeedFromAcceleration = (accelDataArray) => {
+    let speed = 0;
+    for (let i = 1; i < accelDataArray.length; i++) {
+      const deltaTime = (accelDataArray[i].timestamp - accelDataArray[i - 1].timestamp) / 1000; // in seconds
+      const averageAccel = (accelDataArray[i].value + accelDataArray[i - 1].value) / 2;
+      speed += averageAccel * deltaTime;
+    }
+  
+    // Convert speed from m/s to km/h
+    return speed * 3.6;
+  };
+  
+  useEffect(() => {
+    const speedKmH = calculateSpeedFromAcceleration(sensorDataRef.current.accelerometerData);
+    setSpeedKmH(speedKmH); 
+  }, [sensorData]);
 
   const [deviceType, setDeviceType] = useState('Unknown Device');
 
@@ -32,14 +50,20 @@ const TransportModeDetection = () => {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         });
+      }, (error) => {
+        console.error("Error Code = " + error.code + " - " + error.message);
       });
     } else {
       console.log("Geolocation is not supported by this browser.");
     }
-  }
+  };
 
   useEffect(() => {
-    getCurrentLocation();
+    const intervalId = setInterval(() => {
+      getCurrentLocation();
+    }, 5000); // Update every 5 seconds
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const calculateDistance = (latitude1, lon1, latitude2, lon2) => {
@@ -61,19 +85,25 @@ const TransportModeDetection = () => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      const previousLocation = location;
-      getCurrentLocation();
-      const distance = calculateDistance(
-        previousLocation.latitude, previousLocation.longitude,
-        location.latitude, location.longitude
-      );
-      console.log(distance)
-      setTotalDistance(totalDistance + distance);
-    }, 5000); // Update every 10 seconds
-
+      if (navigator.geolocation) {
+        console.log("in here")
+        navigator.geolocation.getCurrentPosition((position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        }, (error) => {
+          console.error("Error Code = " + error.code + " - " + error.message);
+        });
+      } else {
+        console.log("Geolocation is not supported by this browser.");
+      }
+      
+    }, 5000); // Update every 5 seconds
+  
     return () => clearInterval(intervalId);
-  }, [location]);
-
+  }, []);
+  
 
   useEffect(() => {
     // Function to determine the device type
@@ -162,50 +192,53 @@ const TransportModeDetection = () => {
 
   useEffect(() => {
     const handleMotion = (event) => {
-      const { accelerationIncludingGravity } = event;
-
+      const { accelerationIncludingGravity, rotationRate } = event;
+    
+      // Calculate the magnitude of the acceleration
       const accelerationMagnitude = Math.sqrt(
         Math.pow(accelerationIncludingGravity.x || 0, 2) +
         Math.pow(accelerationIncludingGravity.y || 0, 2) +
         Math.pow(accelerationIncludingGravity.z || 0, 2)
-      ).toFixed(5);
-
+      );
+    
+      // Update accelerometer data state
       setAccelData({
         x: Number(accelerationIncludingGravity.x).toFixed(5),
         y: Number(accelerationIncludingGravity.y).toFixed(5),
         z: Number(accelerationIncludingGravity.z).toFixed(5),
       });
-
-      const rotationRate = event.rotationRate || { alpha: 0, beta: 0, gamma: 0 };
-      //console.log("rotation rate: ", rotationRate)
-
+    
+      // Prepare gyroscope data
       const alpha = rotationRate.alpha ? Number(((rotationRate.alpha * Math.PI) / 180).toFixed(5)) : 0;
       const beta = rotationRate.beta ? Number(((rotationRate.beta * Math.PI) / 180).toFixed(5)) : 0;
       const gamma = rotationRate.gamma ? Number(((rotationRate.gamma * Math.PI) / 180).toFixed(5)) : 0;
-
+    
+      // Update gyroscope data state
       setGyroData({
         alpha: alpha.toFixed(5),
         beta: beta.toFixed(5),
         gamma: gamma.toFixed(5),
       });
-
-      const gyroscopeMagnitude = Math.sqrt(
-        alpha ** 2 +
-        beta ** 2 +
-        gamma ** 2
-      ).toFixed(5);
-
+    
+      // Calculate gyroscope magnitude 
+      const gyroscopeMagnitude = Math.sqrt(alpha ** 2 + beta ** 2 + gamma ** 2);
+    
+      // Update sensor data state with new accelerometer and gyroscope data
       setSensorData(prevData => {
-        const updatedAccelData = [...prevData.accelerometerData, accelerationMagnitude];
-        const updatedGyroData = [...prevData.gyroscopeData, gyroscopeMagnitude];
-
         return {
           ...prevData,
-          accelerometerData: updatedAccelData,
-          gyroscopeData: updatedGyroData
+          accelerometerData: [
+            ...prevData.accelerometerData, 
+            { timestamp: Date.now(), value: parseFloat(accelerationMagnitude.toFixed(5)) }
+          ],
+          gyroscopeData: [
+            ...prevData.gyroscopeData,
+            { timestamp: Date.now(), value: parseFloat(gyroscopeMagnitude.toFixed(5)) }
+          ]
         };
       });
     };
+    
 
     window.addEventListener('devicemotion', handleMotion);
 
@@ -297,6 +330,12 @@ const TransportModeDetection = () => {
         </Typography>
         <Typography variant="h6">
           Testing purposes:
+        </Typography>
+        <Typography variant="h6">
+        Current Speed: {speedKmH.toFixed(2)} km/h
+      </Typography>
+        <Typography variant="h6">
+          Current Location: Latitude {location.latitude.toFixed(5)}, Longitude {location.longitude.toFixed(5)}
         </Typography>
         <Typography variant="h6">
           Total Distance Travelled: {totalDistance.toFixed(2)} meters
