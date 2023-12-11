@@ -9,12 +9,12 @@ const TransportModeDetection = () => {
   const [transportModes, setTransportModes] = useState([]);
   const [gyroData, setGyroData] = useState({ alpha: 0, beta: 0, gamma: 0 });
   const [accelData, setAccelData] = useState({ x: 0, y: 0, z: 0 });
-  const [noGravityAccelerationData, setNoGravityAccelerationData] = useState([]);
   const [currentSpeed, setCurrentSpeed] = useState(0);
 
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
     gyroscopeData: [],
+    noGravityAccelerationData: []
   });
 
   const [deviceType, setDeviceType] = useState('Unknown Device');
@@ -74,13 +74,14 @@ const TransportModeDetection = () => {
     };
   };
 
-  
+
   const calculateMean = (numbers) => {
+    console.log("calculate mean nums", numbers);
     if (!numbers.length) return 0;
     const sum = numbers.reduce((acc, val) => acc + val, 0);
     return sum / numbers.length;
   };
-   
+
 
   useEffect(() => {
     const handleMotion = (event) => {
@@ -98,9 +99,9 @@ const TransportModeDetection = () => {
         Math.pow(acceleration.z || 0, 2)
       ).toFixed(5);
 
-      console.log("noGravityAccelerationMagnitude: ", noGravityAccelerationMagnitude)
+      //console.log("noGravityAccelerationMagnitude: ", noGravityAccelerationMagnitude)
 
-      setNoGravityAccelerationData(currentData => [...currentData, noGravityAccelerationMagnitude]);
+      //setNoGravityAccelerationData(currentData => [...currentData, noGravityAccelerationMagnitude]);
 
       setAccelData({
         x: Number(accelerationIncludingGravity.x).toFixed(5),
@@ -130,11 +131,13 @@ const TransportModeDetection = () => {
       setSensorData(prevData => {
         const updatedAccelData = [...prevData.accelerometerData, accelerationMagnitude];
         const updatedGyroData = [...prevData.gyroscopeData, gyroscopeMagnitude];
+        const updatedNoGravityAccelData = [...prevData.noGravityAccelerationData, noGravityAccelerationMagnitude];
 
         return {
           ...prevData,
           accelerometerData: updatedAccelData,
-          gyroscopeData: updatedGyroData
+          gyroscopeData: updatedGyroData,
+          noGravityAccelerationData: updatedNoGravityAccelData,
         };
       });
     };
@@ -148,7 +151,7 @@ const TransportModeDetection = () => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      const { accelerometerData, gyroscopeData } = sensorDataRef.current;
+      const { accelerometerData, gyroscopeData, noGravityAccelerationData } = sensorDataRef.current;
       console.log(sensorData.accelerometerData.length)
       console.log(sensorData.gyroscopeData.length)
       // Only proceed if we have enough data
@@ -168,7 +171,7 @@ const TransportModeDetection = () => {
           'android.sensor.gyroscope#std': gyroscopeStats.std,
         };
 
-        console.log(newData)
+        console.log("newData: ",newData)
 
         // Send this sensor data to the backend
         fetch(`${baseURL}/getTransportMode`, {
@@ -185,10 +188,18 @@ const TransportModeDetection = () => {
               setTransportMode(data.mode);
               setTransportModes(modes => [...modes, data.mode]);
               toast.success("Fetched transport mode: " + data.mode);
+
+              // calculate speed
+              console.log("5 sec passed, refreshing speed")
+              const meanAcceleration = calculateMean(noGravityAccelerationData);
+              setCurrentSpeed(meanAcceleration); 
+              console.log("current speed: ", currentSpeed);
+
               // Resets the sensor data when mode fetched
               setSensorData({
                 accelerometerData: [],
                 gyroscopeData: [],
+                noGravityAccelerationData: []
               });
             } else {
               toast.error("In API but failed to fetch user carbon data for teams.");
@@ -203,21 +214,15 @@ const TransportModeDetection = () => {
         sensorDataRef.current = {
           accelerometerData: [],
           gyroscopeData: [],
+          noGravityAccelerationData: []
         };
 
-        if (noGravityAccelerationData.length > 0) {
-          console.log("5 sec passed, refreshing speed")
-          const meanAcceleration = calculateMean(noGravityAccelerationData);
-          setCurrentSpeed(meanAcceleration * 3.6); // Convert m/s to km/h
-          console.log("current speed: ",currentSpeed);
-          setNoGravityAccelerationData([]); // Reset the data array
-        }
       }
     }, 7000);
 
     // Clears the interval when the component unmounts
     return () => clearInterval(intervalId);
-  }, [currentSpeed, noGravityAccelerationData, sensorData]);
+  }, [currentSpeed]);
 
   // To update the ref whenever sensorData state changes
   useEffect(() => {
@@ -240,8 +245,8 @@ const TransportModeDetection = () => {
           Testing purposes:
         </Typography>
         <div>
-          <h3>Current Mean Speed (Last 5 Seconds)</h3>
-          <p>{currentSpeed.toFixed(2)} km/h</p> 
+          <h3>Current Mean Acceleration (Last 5 Seconds)</h3>
+          <p>{currentSpeed.toFixed(2)} m/s²</p>
         </div>
         <div>
           <h3>Accelerometer Data</h3>
@@ -256,7 +261,7 @@ const TransportModeDetection = () => {
           <p>Gamma: {gyroData.gamma} rad/s</p>
         </div>
         <Typography variant="h6">
-          No Gravity Accelerometer Data: {noGravityAccelerationData.slice(-5).join(', ')}
+          No Gravity Accelerometer Data: {sensorData.noGravityAccelerationData.slice(-5).join(', ')}
         </Typography>
         <Typography variant="h6">
           Accelerometer Data: {sensorData.accelerometerData.slice(-5).join(', ')}
