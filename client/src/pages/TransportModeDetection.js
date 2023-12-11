@@ -80,22 +80,7 @@ const TransportModeDetection = () => {
     const sum = numbers.reduce((acc, val) => acc + val, 0);
     return sum / numbers.length;
   };
-  
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (noGravityAccelerationData.length > 0) {
-        console.log("5 sec passed, refreshing speed")
-        const meanAcceleration = calculateMean(noGravityAccelerationData);
-        setCurrentSpeed(meanAcceleration * 3.6); // Convert m/s to km/h
-        setNoGravityAccelerationData([]); // Reset the data array
-      }
-    }, 5000); // 5 seconds
-  
-    return () => clearInterval(intervalId);
-  }, []);
-  
-
+   
 
   useEffect(() => {
     const handleMotion = (event) => {
@@ -219,12 +204,20 @@ const TransportModeDetection = () => {
           accelerometerData: [],
           gyroscopeData: [],
         };
+
+        if (noGravityAccelerationData.length > 0) {
+          console.log("5 sec passed, refreshing speed")
+          const meanAcceleration = calculateMean(noGravityAccelerationData);
+          setCurrentSpeed(meanAcceleration * 3.6); // Convert m/s to km/h
+          console.log("current speed: ",currentSpeed);
+          setNoGravityAccelerationData([]); // Reset the data array
+        }
       }
     }, 7000);
 
     // Clears the interval when the component unmounts
     return () => clearInterval(intervalId);
-  }, []);
+  }, [currentSpeed, noGravityAccelerationData, sensorData]);
 
   // To update the ref whenever sensorData state changes
   useEffect(() => {
