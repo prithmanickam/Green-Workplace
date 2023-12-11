@@ -9,13 +9,8 @@ const TransportModeDetection = () => {
   const [transportModes, setTransportModes] = useState([]);
   const [gyroData, setGyroData] = useState({ alpha: 0, beta: 0, gamma: 0 });
   const [accelData, setAccelData] = useState({ x: 0, y: 0, z: 0 });
+  const [noGravityAccelerationData, setNoGravityAccelerationData] = useState([]);
   const [currentSpeed, setCurrentSpeed] = useState(0);
-
-  const calculateSpeed = (acceleration) => {
-    let speedMps = currentSpeed + acceleration * 5; // Speed in m/s
-    let speedKmph = speedMps * 3.6; // Convert m/s to km/h
-    setCurrentSpeed(speedKmph);
-  };
 
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
@@ -114,9 +109,34 @@ const TransportModeDetection = () => {
     return result;
   };
 
+  const calculateMedian = (numbers) => {
+    if (!numbers.length) return 0;
+    const sortedNumbers = [...numbers].sort((a, b) => a - b);
+    const middleIndex = Math.floor(sortedNumbers.length / 2);
+
+    if (sortedNumbers.length % 2 === 0) {
+      return (sortedNumbers[middleIndex - 1] + sortedNumbers[middleIndex]) / 2;
+    }
+
+    return sortedNumbers[middleIndex];
+  };
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (noGravityAccelerationData.length > 0) {
+        const medianAcceleration = calculateMedian(noGravityAccelerationData);
+        setCurrentSpeed(medianAcceleration * 3.6);
+        setNoGravityAccelerationData([]); // Reset the data array
+      }
+    }, 5000); // 5 seconds
+
+    return () => clearInterval(intervalId);
+  }, [noGravityAccelerationData]);
+
+
   useEffect(() => {
     const handleMotion = (event) => {
-      const { accelerationIncludingGravity } = event;
+      const { accelerationIncludingGravity, acceleration } = event;
 
       const accelerationMagnitude = Math.sqrt(
         Math.pow(accelerationIncludingGravity.x || 0, 2) +
@@ -124,7 +144,15 @@ const TransportModeDetection = () => {
         Math.pow(accelerationIncludingGravity.z || 0, 2)
       ).toFixed(5);
 
-      calculateSpeed(accelerationMagnitude);
+      const noGravityAccelerationMagnitude = Math.sqrt(
+        Math.pow(acceleration.x || 0, 2) +
+        Math.pow(acceleration.y || 0, 2) +
+        Math.pow(acceleration.z || 0, 2)
+      ).toFixed(5);
+
+      console.log("noGravityAccelerationMagnitude: ", noGravityAccelerationMagnitude)
+
+      setNoGravityAccelerationData(currentData => [...currentData, noGravityAccelerationMagnitude]);
 
       setAccelData({
         x: Number(accelerationIncludingGravity.x).toFixed(5),
@@ -256,8 +284,8 @@ const TransportModeDetection = () => {
           Testing purposes:
         </Typography>
         <div>
-          <h3>Current Speed</h3>
-          <p>{currentSpeed.toFixed(2)} km/h</p>
+          <h3>Current Median Acceleration (Last 5 Seconds)</h3>
+          <p>{(currentSpeed / 3.6).toFixed(2)} m/s²</p> {/* Display median acceleration */}
         </div>
         <div>
           <h3>Accelerometer Data</h3>
