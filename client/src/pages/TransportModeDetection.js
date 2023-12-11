@@ -37,22 +37,6 @@ const TransportModeDetection = () => {
     setDeviceType(determineDeviceType());
   }, []);
 
-  // (for web app testing purposes) Function to generate random sensor data
-  const generateRandomSensorData = () => {
-    const getRandomValue = (min, max) => Math.random() * (max - min) + min;
-
-    return {
-      'android.sensor.accelerometer#mean': getRandomValue(9, 10),
-      'android.sensor.accelerometer#min': getRandomValue(6, 7),
-      'android.sensor.accelerometer#max': getRandomValue(15, 16),
-      'android.sensor.accelerometer#std': getRandomValue(2, 3),
-      'android.sensor.gyroscope#mean': getRandomValue(1, 2),
-      'android.sensor.gyroscope#min': getRandomValue(0, 1),
-      'android.sensor.gyroscope#max': getRandomValue(3, 4),
-      'android.sensor.gyroscope#std': getRandomValue(1, 2),
-    };
-  };
-
   // Function to calculate stats
   const calculateStats = (data) => {
 
@@ -90,48 +74,27 @@ const TransportModeDetection = () => {
     };
   };
 
-  const movingAverage = (arr, windowSize) => {
-    let result = [];
-
-    for (let i = 0; i < arr.length; i++) {
-      if (i < windowSize) {
-        // Not enough data points yet
-        result.push(arr[i]);
-      } else {
-        let sum = 0;
-        for (let j = i; j > i - windowSize; j--) {
-          sum += arr[j];
-        }
-        result.push(sum / windowSize);
-      }
-    }
-
-    return result;
-  };
-
-  const calculateMedian = (numbers) => {
+  
+  const calculateMean = (numbers) => {
     if (!numbers.length) return 0;
-    const sortedNumbers = [...numbers].sort((a, b) => a - b);
-    const middleIndex = Math.floor(sortedNumbers.length / 2);
-
-    if (sortedNumbers.length % 2 === 0) {
-      return (sortedNumbers[middleIndex - 1] + sortedNumbers[middleIndex]) / 2;
-    }
-
-    return sortedNumbers[middleIndex];
+    const sum = numbers.reduce((acc, val) => acc + val, 0);
+    return sum / numbers.length;
   };
+  
 
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (noGravityAccelerationData.length > 0) {
-        const medianAcceleration = calculateMedian(noGravityAccelerationData);
-        setCurrentSpeed(medianAcceleration * 3.6);
+        console.log("5 sec passed, refreshing speed")
+        const meanAcceleration = calculateMean(noGravityAccelerationData);
+        setCurrentSpeed(meanAcceleration * 3.6); // Convert m/s to km/h
         setNoGravityAccelerationData([]); // Reset the data array
       }
     }, 5000); // 5 seconds
-
+  
     return () => clearInterval(intervalId);
-  }, [noGravityAccelerationData]);
+  }, []);
+  
 
 
   useEffect(() => {
@@ -284,8 +247,8 @@ const TransportModeDetection = () => {
           Testing purposes:
         </Typography>
         <div>
-          <h3>Current Median Acceleration (Last 5 Seconds)</h3>
-          <p>{(currentSpeed / 3.6).toFixed(2)} m/s²</p> {/* Display median acceleration */}
+          <h3>Current Mean Speed (Last 5 Seconds)</h3>
+          <p>{currentSpeed.toFixed(2)} km/h</p> 
         </div>
         <div>
           <h3>Accelerometer Data</h3>
@@ -299,6 +262,9 @@ const TransportModeDetection = () => {
           <p>Beta: {gyroData.beta} rad/s</p>
           <p>Gamma: {gyroData.gamma} rad/s</p>
         </div>
+        <Typography variant="h6">
+          No Gravity Accelerometer Data: {noGravityAccelerationData.slice(-5).join(', ')}
+        </Typography>
         <Typography variant="h6">
           Accelerometer Data: {sensorData.accelerometerData.slice(-5).join(', ')}
         </Typography>
