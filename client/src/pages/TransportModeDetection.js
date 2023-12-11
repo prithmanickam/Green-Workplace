@@ -5,7 +5,6 @@ import { baseURL } from "../utils/constant";
 import { toast } from "react-toastify";
 
 const TransportModeDetection = () => {
-  const [transportMode, setTransportMode] = useState('');
   const [transportModes, setTransportModes] = useState([]);
   const [gyroData, setGyroData] = useState({ alpha: 0, beta: 0, gamma: 0 });
   const [accelData, setAccelData] = useState({ x: 0, y: 0, z: 0 });
@@ -80,7 +79,7 @@ const TransportModeDetection = () => {
     console.log("calculate mean nums", numbers);
     if (!numbers.length) return 0;
     const sum = numbers.reduce((acc, val) => acc + val, 0);
-    console.log("mean: ",sum / numbers.length)
+    console.log("mean: ", sum / numbers.length)
     return sum / numbers.length;
   };
 
@@ -173,7 +172,7 @@ const TransportModeDetection = () => {
           'android.sensor.gyroscope#std': gyroscopeStats.std,
         };
 
-        console.log("newData: ",newData)
+        console.log("newData: ", newData)
 
         // Send this sensor data to the backend
         fetch(`${baseURL}/getTransportMode`, {
@@ -186,16 +185,22 @@ const TransportModeDetection = () => {
           .then((response) => response.json())
           .then((data) => {
             if (data.status === "ok") {
-              console.log(data.mode)
-              setTransportMode(data.mode);
-              setTransportModes(modes => [...modes, data.mode]);
-              toast.success("Fetched transport mode: " + data.mode);
 
               // calculate speed
               console.log("5 sec passed, refreshing speed")
               const meanAcceleration = calculateMean(noGravityAccelerationData);
-              setCurrentSpeed(meanAcceleration); 
+              setCurrentSpeed(meanAcceleration);
               console.log("current speed: ", currentSpeed);
+
+              let accurateMode = data.mode
+
+              //checks if person is still
+              if (meanAcceleration < 1) {
+                accurateMode = "Still"
+              }
+
+              setTransportModes(modes => [accurateMode, ...modes]);
+              toast.success("Fetched transport mode: " + accurateMode);
 
               // Resets the sensor data when mode fetched
               setSensorData({
@@ -275,21 +280,9 @@ const TransportModeDetection = () => {
         <Typography variant="h6">
           Gyroscope Data: {sensorData.gyroscopeData.slice(-5).join(', ')}
         </Typography>
-        {/* Display the latest transport mode */}
-        {transportMode && (
-          <Card sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>
-                Latest Transport Mode
-              </Typography>
-              <Typography variant="h5">
-                {transportMode}
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
+
         {/* Display the history of transport modes */}
-        <Box>
+        <Box sx={{ maxHeight: 300, overflowY: 'auto' }}> 
           {transportModes.map((mode, index) => (
             <Card key={index} sx={{ mb: 2 }}>
               <CardContent>
@@ -303,6 +296,7 @@ const TransportModeDetection = () => {
             </Card>
           ))}
         </Box>
+
       </Box>
     </Box>
   );
