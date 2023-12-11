@@ -75,10 +75,12 @@ const TransportModeDetection = () => {
   };
 
 
-  const calculateMean = (numbers) => {
+  const calculateMean = (data) => {
+    const numbers = data.map(d => parseFloat(d)).filter(isFinite);
     console.log("calculate mean nums", numbers);
     if (!numbers.length) return 0;
     const sum = numbers.reduce((acc, val) => acc + val, 0);
+    console.log("mean: ",sum / numbers.length)
     return sum / numbers.length;
   };
 
