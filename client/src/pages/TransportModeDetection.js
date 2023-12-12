@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Card, CardContent, Typography } from '@mui/material';
+import { Box, Card, CardContent, Typography, Button } from '@mui/material';
 import SideNavbar from '../components/SideNavbar';
 import { baseURL } from "../utils/constant";
 import { toast } from "react-toastify";
@@ -9,6 +9,8 @@ const TransportModeDetection = () => {
   const [gyroData, setGyroData] = useState({ alpha: 0, beta: 0, gamma: 0 });
   const [accelData, setAccelData] = useState({ x: 0, y: 0, z: 0 });
   const [currentSpeed, setCurrentSpeed] = useState(0);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [transportSummary, setTransportSummary] = useState('');
 
   const [sensorData, setSensorData] = useState({
     accelerometerData: [],
@@ -149,9 +151,13 @@ const TransportModeDetection = () => {
       window.removeEventListener('devicemotion', handleMotion);
     };
   }, []);
-
+  
+  // send data and get transport detection result
   useEffect(() => {
-    const intervalId = setInterval(() => {
+    let intervalId;
+  
+    if (isDetecting) {
+      intervalId = setInterval(() => {
       const { accelerometerData, gyroscopeData, noGravityAccelerationData } = sensorDataRef.current;
 
       // Only proceed if we have enough data
@@ -191,9 +197,9 @@ const TransportModeDetection = () => {
               setCurrentSpeed(meanAcceleration);
               console.log("current speed: ", currentSpeed);
 
-              let accurateMode = { 
-                mode: meanAcceleration < 1 ? "Still" : data.mode, 
-                time: new Date().toLocaleTimeString() 
+              let accurateMode = {
+                mode: meanAcceleration < 1 ? "Still" : data.mode,
+                time: new Date().toLocaleTimeString()
               };
 
               setTransportModes(modes => [accurateMode, ...modes]);
@@ -223,10 +229,17 @@ const TransportModeDetection = () => {
 
       }
     }, 7000);
+  }
 
-    // Clears the interval when the component unmounts
-    return () => clearInterval(intervalId);
-  }, [currentSpeed]);
+  return () => {
+    clearInterval(intervalId);
+    if (!isDetecting) {
+      // When stopping, create a summary of all detected modes
+      const summary = transportModes.map(mode => mode.mode).join(', ');
+      setTransportSummary(`Detected Modes: ${summary}`);
+    }
+  };
+}, [isDetecting, currentSpeed, transportModes]); 
 
   // To update the ref whenever sensorData state changes
   useEffect(() => {
@@ -245,6 +258,13 @@ const TransportModeDetection = () => {
         <Typography variant="h6">
           Accessing from: {deviceType}
         </Typography>
+        <Button variant="contained" color="primary" onClick={() => setIsDetecting(true)}>
+          Start Detection
+        </Button>
+        <Button variant="contained" color="secondary" onClick={() => setIsDetecting(false)}>
+          Stop Detection
+        </Button>
+        <Typography variant="h6">{transportSummary}</Typography>
         <Typography variant="h6">
           Testing purposes:
         </Typography>
@@ -279,7 +299,7 @@ const TransportModeDetection = () => {
         </Typography>
 
         {/* Display the history of transport modes */}
-        <Box sx={{ maxHeight: 300, overflowY: 'auto' }}> 
+        <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
           {transportModes.map((mode, index) => (
             <Card key={index} sx={{ mb: 2 }}>
               <CardContent>
