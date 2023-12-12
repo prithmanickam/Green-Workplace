@@ -96,11 +96,13 @@ const TransportModeDetection = () => {
         Math.pow(accelerationIncludingGravity.z || 0, 2)
       ).toFixed(5);
 
-      const noGravityAccelerationMagnitude = Math.sqrt(
-        Math.pow(acceleration.x || 0, 2) +
-        Math.pow(acceleration.y || 0, 2) +
-        Math.pow(acceleration.z || 0, 2)
-      ).toFixed(5);
+      const noGravityAccelerationValues = [
+        Math.abs(acceleration.x || 0),
+        Math.abs(acceleration.y || 0),
+        Math.abs(acceleration.z || 0)
+      ];
+      const noGravityAccelerationValue = Math.max(...noGravityAccelerationValues).toFixed(5);
+      
 
       //console.log("noGravityAccelerationMagnitude: ", noGravityAccelerationMagnitude)
 
@@ -134,7 +136,7 @@ const TransportModeDetection = () => {
       setSensorData(prevData => {
         const updatedAccelData = [...prevData.accelerometerData, accelerationMagnitude];
         const updatedGyroData = [...prevData.gyroscopeData, gyroscopeMagnitude];
-        const updatedNoGravityAccelData = [...prevData.noGravityAccelerationData, noGravityAccelerationMagnitude];
+        const updatedNoGravityAccelData = [...prevData.noGravityAccelerationData, noGravityAccelerationValue];
 
         return {
           ...prevData,
