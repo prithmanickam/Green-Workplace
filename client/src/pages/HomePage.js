@@ -110,21 +110,6 @@ export default function HomePage() {
       picture: greyBackground,
       link: "CompanyDashboard"
     },
-    {
-      id: 7,
-      name: "Book Floors",
-      description: "View floors current capacity based on days of the week. Team Owners will book on behalf of the team.",
-      picture: greyBackground,
-      link: "BookFloors"
-    },
-    {
-      id: 8,
-      name: "Transport Detector (Beta)",
-      description: "Under development. To track steps and mode of transport used.",
-      picture: greyBackground,
-      link: "TransportModeDetection"
-    },
-    
   ];
 
   //display the right cards for the type of user logged in

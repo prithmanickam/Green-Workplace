@@ -30,7 +30,6 @@ import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 import ChatIcon from '@mui/icons-material/Chat';
 import AppsIcon from '@mui/icons-material/Apps';
 import BusinessIcon from '@mui/icons-material/Business';
-import EventSeatIcon from '@mui/icons-material/EventSeat';
 
 const drawerWidth = 240;
 
@@ -48,8 +47,6 @@ const employeeMenuItems = [
   { text: 'Team Dashboard', route: '/TeamDashboard', icon: <AppsIcon /> },
   { text: 'Team Owner Functions', route: '/TeamOwnerFunctions', icon: <SettingsIcon /> },
   { text: 'Company Dashboard', route: '/CompanyDashboard', icon: <BusinessIcon /> },
-  { text: 'Book Floors', route: '/Book Floors', icon: <EventSeatIcon /> },
-  { text: '(Beta) Transport Detector', route: '/TransportModeDetection', icon: <EnergySavingsLeafIcon /> },
 ];
 
 const openedMixin = (theme) => ({
