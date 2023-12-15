@@ -117,7 +117,7 @@ const App = () => {
                 element={<ProtectedRoute element={<TeamOwnerFunctionsPage />} isLoggedIn={isLoggedIn} />}
               />
               <Route
-                path="/TransportModeDetection"
+                path="/SetCarbonFootprint/TransportModeDetection"
                 element={<ProtectedRoute element={<TransportModeDetection />} isLoggedIn={isLoggedIn} />}
               />
             </Routes>
