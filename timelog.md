@@ -239,4 +239,5 @@
 
 ### 16 Dec 2023
 * *5 hours*  Created the Manually Add Carbon Footprint Page.
+* *5 hours*  Started transport detector page for mobile app (displays predicted transport every ~ 10 sec and displays sensor data )
 
