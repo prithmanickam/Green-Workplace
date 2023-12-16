@@ -202,6 +202,41 @@
 ### 6 Nov 2023
 * *3 hours*  Fixed bug to display correct colours for dashboard cards based on carbon footprint. 
 
-### 7 Oct 2023
+### 7 Nov 2023
 * *3 hours*  Fixed UAT Bug Fixes: Notify user if incorrect login credentials entered, Shorten account created info in dashboard pages. Floating point error fixes in apis for dashboards. Added Icons in Team Ownership Page.
 * *0.5 hour*  Meeting with Supervisor.
+
+### 11 Nov 2023
+* *10 hours* Wrote code to train and save Machine Learning Model to predict transport mode.
+
+### 12 Nov 2023
+* *10 hours*  Created Backend API to use ML Model to predict transport mode. And started working on frontend to use phone motion sensors to send to the backend.
+
+### 13 Nov 2023
+* *4 hours*  Fixed frontend to get the right sensor data to send to the backend, to display predicted transport modes every 7 seconds.
+* *0.5 hour*  Meeting with Supervisor.
+
+### 20 Nov 2023
+* *3 hours*  Wrote a structure with headings on how my dissertion would be like to show to my Supervisor.
+
+### 21 Nov 2023
+* *0.5 hour*  Meeting with Supervisor.
+
+### 28 Nov 2023
+* *0.5 hour*  Meeting with Supervisor.
+
+### 9 Dec 2023
+* *1 hour*  Attempt to get GPS data in intervals to improve accuracy in predictions
+
+### 11 Dec 2023
+* *5 hours*  Attempt to calculate speed from accelerometer data.
+
+### 12 Dec 2023
+* *1 hours*  Added a start and stop detecting transport button.
+
+### 15 Dec 2023
+* *1 hours*  Decided to remove web app frontend code for transport detection after deciding interface only be on mobile app. Also added code from 11 Nov 2023 to train and save Machine Learning Model to predict transport mode in the backend.
+
+### 16 Dec 2023
+* *5 hours*  Created the Manually Add Carbon Footprint Page.
+

@@ -118,7 +118,7 @@ export default function SetCarbonFootprint() {
                 Add Using Google Maps
               </Button>
             </Link>
-            <Link to={"/SetCarbonFootprint/UseMap"}>
+            <Link to={"/SetCarbonFootprint/ManuallyAddFootprint"}>
               <Button
                 aria-label='center back'
                 sx={{
