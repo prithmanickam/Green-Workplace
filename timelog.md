@@ -232,12 +232,17 @@
 * *5 hours*  Attempt to calculate speed from accelerometer data.
 
 ### 12 Dec 2023
-* *1 hours*  Added a start and stop detecting transport button.
+* *1 hour*  Added a start and stop detecting transport button.
 
 ### 15 Dec 2023
-* *1 hours*  Decided to remove web app frontend code for transport detection after deciding interface only be on mobile app. Also added code from 11 Nov 2023 to train and save Machine Learning Model to predict transport mode in the backend.
+* *1 hour*  Decided to remove web app frontend code for transport detection after deciding interface only be on mobile app. Also added code from 11 Nov 2023 to train and save Machine Learning Model to predict transport mode in the backend.
 
 ### 16 Dec 2023
 * *5 hours*  Created the Manually Add Carbon Footprint Page.
-* *5 hours*  Started transport detector page for mobile app (displays predicted transport every ~ 10 sec and displays sensor data )
+* *5 hours*  Started transport detector page for mobile app (displays predicted transport every ~ 10 sec and displays sensor data)
+* *0.5 hour*  Created start and stop buttons for transport mode prediction.
+
+### 17 Dec 2023
+* *1.5 hours*  Created an algorithm to predict overall journey from the transport predicted data and display it.
+
 

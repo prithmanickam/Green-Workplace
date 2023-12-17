@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, StatusBar, Button } from 'react-native';
 import * as Location from 'expo-location';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import Toast from 'react-native-toast-message';
@@ -9,12 +9,11 @@ export default function App() {
   const [previousLocation, setPreviousLocation] = useState(null);
   const [distanceTraveled, setDistanceTraveled] = useState(0);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [count, setCount] = useState(0);
+
   const [currentAcceleration, setCurrentAcceleration] = useState({});
   const [currentGyroscope, setCurrentGyroscope] = useState({});
 
   const [transportModes, setTransportModes] = useState([]);
-  const [currTransport, setCurrTransport] = useState('');
 
   const [gyroscopeData, setGyroscopeData] = useState([]);
   const [accelerometerData, setAccelerometerData] = useState([]);
@@ -28,9 +27,24 @@ export default function App() {
 
   const [isFetching, setIsFetching] = useState(false);
 
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictionEnded, setPredictionEnded] = useState(false);
+
+  const startPredicting = () => {
+    setIsPredicting(true);
+    setPredictionEnded(false);
+    setTransportModes([]); // Reset transport modes
+    setDistanceTraveled(0);
+    setCurrentDistanceTravelled(0);
+  };
+
+  const stopPredicting = () => {
+    setIsPredicting(false);
+    setPredictionEnded(true);
+  };
 
   useEffect(() => {
-    Accelerometer.setUpdateInterval(1000); 
+    Accelerometer.setUpdateInterval(1000);
     Gyroscope.setUpdateInterval(1000);
 
     const accelSubscription = Accelerometer.addListener(data => {
@@ -87,9 +101,10 @@ export default function App() {
               newLocation.coords.latitude,
               newLocation.coords.longitude
             );
-            setDistanceTraveled(prevDistance => prevDistance + distance);
-            setCurrentDistanceTravelled(current => parseFloat(current) + distance);
-            setCount(c => c + 1);
+            if (isPredicting) {
+              setDistanceTraveled(prevDistance => prevDistance + distance);
+              setCurrentDistanceTravelled(current => parseFloat(current) + distance);
+            }
           }
 
           setPreviousLocation(newLocation);
@@ -165,90 +180,93 @@ export default function App() {
   // send data and get transport detection result
   useEffect(() => {
 
-    console.log(currentDistanceTravelledRef.current)
+    if (isPredicting) {
 
-    console.log("Accel Data Ref Length:", accelerometerDataRef.current.length);
-    console.log("Gyro Data Ref Length:", gyroscopeDataRef.current.length);
+      console.log(currentDistanceTravelledRef.current)
 
-    const latestAccelerometerData = accelerometerDataRef.current;
-    const latestGyroscopeData = gyroscopeDataRef.current;
+      console.log("Accel Data Ref Length:", accelerometerDataRef.current.length);
+      console.log("Gyro Data Ref Length:", gyroscopeDataRef.current.length);
 
-    // Only proceed if we have enough data
-    if (latestAccelerometerData.length > 10 && latestGyroscopeData.length > 10 && !isFetching) {
-      setIsFetching(true);
+      const latestAccelerometerData = accelerometerDataRef.current;
+      const latestGyroscopeData = gyroscopeDataRef.current;
 
-      fetchInProgress = true;
-      const accelerometerStats = calculateStats(latestAccelerometerData);
-      const gyroscopeStats = calculateStats(latestGyroscopeData);
+      // Only proceed if we have enough data
+      if (latestAccelerometerData.length > 8 && latestGyroscopeData.length > 8 && !isFetching) {
+        setIsFetching(true);
 
-      const newData = {
-        'android.sensor.accelerometer#mean': accelerometerStats.mean,
-        'android.sensor.accelerometer#min': accelerometerStats.min,
-        'android.sensor.accelerometer#max': accelerometerStats.max,
-        'android.sensor.accelerometer#std': accelerometerStats.std,
-        'android.sensor.gyroscope#mean': gyroscopeStats.mean,
-        'android.sensor.gyroscope#min': gyroscopeStats.min,
-        'android.sensor.gyroscope#max': gyroscopeStats.max,
-        'android.sensor.gyroscope#std': gyroscopeStats.std,
-      };
+        fetchInProgress = true;
+        const accelerometerStats = calculateStats(latestAccelerometerData);
+        const gyroscopeStats = calculateStats(latestGyroscopeData);
 
-      console.log("newData: ", newData)
+        const newData = {
+          'android.sensor.accelerometer#mean': accelerometerStats.mean,
+          'android.sensor.accelerometer#min': accelerometerStats.min,
+          'android.sensor.accelerometer#max': accelerometerStats.max,
+          'android.sensor.accelerometer#std': accelerometerStats.std,
+          'android.sensor.gyroscope#mean': gyroscopeStats.mean,
+          'android.sensor.gyroscope#min': gyroscopeStats.min,
+          'android.sensor.gyroscope#max': gyroscopeStats.max,
+          'android.sensor.gyroscope#std': gyroscopeStats.std,
+        };
+
+        console.log("newData: ", newData)
 
 
-      // Send this sensor data to the backend
-      fetch(`https://green-workplace.onrender.com/api/getTransportMode`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newData),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.status === "ok") {
+        // Send this sensor data to the backend
+        fetch(`https://green-workplace.onrender.com/api/getTransportMode`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newData),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "ok") {
 
-            let accurateMode = data.mode
+              let accurateMode = data.mode
 
-            if ((currentDistanceTravelledRef.current < 10) && (data.mode != "Walking")) {
-              accurateMode = "Still";
+              if ((currentDistanceTravelledRef.current < 10) && (data.mode != "Walking")) {
+                accurateMode = "Still";
+              }
+
+              const currentTime = new Date().toLocaleTimeString();
+              const modeWithTime = { mode: accurateMode, time: currentTime };
+
+              setTransportModes(modes => [modeWithTime, ...modes]);
+              Toast.show({
+                type: 'success',
+                text1: 'Transport Mode Fetched',
+                text2: 'Fetched transport mode: ' + accurateMode
+              });
+
+              // Resets the sensor data when mode fetched
+              setAccelerometerData([])
+              setGyroscopeData([])
+            } else {
+              Toast.show({
+                type: 'error',
+                text1: 'Fetch Failed',
+                text2: 'Failed to fetch user carbon data for teams.'
+              });
             }
-
-            const currentTime = new Date().toLocaleTimeString();
-            const modeWithTime = { mode: accurateMode, time: currentTime };
-
-            setTransportModes(modes => [modeWithTime, ...modes]);
-            Toast.show({
-              type: 'success',
-              text1: 'Transport Mode Fetched',
-              text2: 'Fetched transport mode: ' + accurateMode
-            });
-
-            // Resets the sensor data when mode fetched
-            setAccelerometerData([])
-            setGyroscopeData([])
-          } else {
+          })
+          .catch((error) => {
+            console.error('Error:', error);
             Toast.show({
               type: 'error',
-              text1: 'Fetch Failed',
-              text2: 'Failed to fetch user carbon data for teams.'
+              text1: 'Network Error',
+              text2: 'Error fetching transport mode.'
             });
-          }
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-          Toast.show({
-            type: 'error',
-            text1: 'Network Error',
-            text2: 'Error fetching transport mode.'
+          })
+          .finally(() => {
+            // Reset data and indicate fetch is complete
+            accelerometerDataRef.current = [];
+            gyroscopeDataRef.current = [];
+            currentDistanceTravelledRef.current = 0;
+            setIsFetching(false);
           });
-        })
-        .finally(() => {
-          // Reset data and indicate fetch is complete
-          accelerometerDataRef.current = [];
-          gyroscopeDataRef.current = [];
-          currentDistanceTravelledRef.current = 0;
-          setIsFetching(false);
-        });
+      }
     }
 
   }, [transportModes, accelerometerData, gyroscopeData]);
@@ -266,6 +284,52 @@ export default function App() {
   }, [currentDistanceTravelled]);
 
 
+  // Algorithm to predict overall journey from the transport predicted data
+  const getPrimaryTransportModes = (modes) => {
+    if (modes.length === 0) return [];
+
+    // Function to get the most frequent mode around a 'Still' mode
+    const getFrequentModeAround = (index) => {
+      const surroundingModes = [];
+      if (index > 0) surroundingModes.push(modes[index - 1].mode);
+      if (index < modes.length - 1) surroundingModes.push(modes[index + 1].mode);
+      return surroundingModes.sort((a, b) =>
+        surroundingModes.filter(v => v === a).length -
+        surroundingModes.filter(v => v === b).length
+      ).pop();
+    };
+
+    // to replace 'Still' modes
+    const replacedModes = modes.map((item, index) => ({
+      ...item,
+      mode: item.mode === 'Still' ? getFrequentModeAround(index) : item.mode
+    }));
+
+    // Group modes
+    const groupedModes = [];
+    let currentMode = null;
+    let modeStart = null;
+
+    replacedModes.forEach((item, index) => {
+      if (currentMode !== item.mode) {
+        if (currentMode !== null) {
+          groupedModes.push({ mode: currentMode, startTime: modeStart, endTime: replacedModes[index - 1].time });
+        }
+        currentMode = item.mode;
+        modeStart = item.time;
+      }
+    });
+
+    // Add the last segment
+    if (currentMode !== null) {
+      groupedModes.push({ mode: currentMode, startTime: modeStart, endTime: replacedModes[replacedModes.length - 1].time });
+    }
+
+    return groupedModes;
+  };
+
+
+
   return (
     <View style={styles.container}>
       <Toast ref={(ref) => Toast.setRef(ref)} />
@@ -274,12 +338,14 @@ export default function App() {
       <Text>Accelerometer Data:</Text>
       <Text>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
 
-
-
       <Text>Gyroscope Data:</Text>
       <Text>x: {currentGyroscope.x?.toFixed(2)}, y: {currentGyroscope.y?.toFixed(2)}, z: {currentGyroscope.z?.toFixed(2)}</Text>
 
-      <Text>Count: {count}</Text>
+
+      <Button
+        title={isPredicting ? "Stop Predicting" : "Start Predicting"}
+        onPress={isPredicting ? stopPredicting : startPredicting}
+      />
 
 
       <ScrollView style={styles.scrollView}>
@@ -290,8 +356,14 @@ export default function App() {
         ))}
       </ScrollView>
 
-
-      <Text>curr: {currTransport}</Text>
+      {predictionEnded && (
+        <View>
+          <Text>Primary Transport Modes:</Text>
+          {getPrimaryTransportModes(transportModes).map((mode, index) => (
+            <Text key={index}>{mode.mode} from {mode.endTime} to {mode.startTime}</Text>
+          ))}
+        </View>
+      )}
 
       <StatusBar style="auto" />
 
@@ -307,12 +379,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollView: {
-    maxHeight: 100, 
-    width: '80%', 
+    maxHeight: 100,
+    width: '80%',
     marginHorizontal: 20,
-    borderWidth: 1,   
-    borderColor: '#007bff', 
-    borderRadius: 10, 
+    borderWidth: 1,
+    borderColor: '#007bff',
+    borderRadius: 10,
   },
   textItem: {
     marginVertical: 5,
