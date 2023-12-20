@@ -250,3 +250,4 @@
 
 ### 20 Dec 2023
 * *5 hours*  Fixed algorithm by ignoring Still detections and closing vehicle group from consecutive Walking detections. Add entries automatically based on entire journey / primary transport modes.
+* *5 hours*  Improved UI with scrollable components, transport mode icons, appropriate colours, padding, dividers, and helpful text.

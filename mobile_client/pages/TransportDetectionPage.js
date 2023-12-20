@@ -5,6 +5,9 @@ import { Accelerometer, Gyroscope } from 'expo-sensors';
 import Toast from 'react-native-toast-message';
 import ModalDropdown from 'react-native-modal-dropdown';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+
+import { WaveIndicator } from 'react-native-indicators';
 
 const CO2_EMISSIONS_PER_MINUTE = {
 	Car: 0.009,
@@ -54,8 +57,37 @@ export default function TransportDetectionPage() {
 	const [teamPercentages, setTeamPercentages] = useState({});
 	const [totalPercentage, setTotalPercentage] = useState(0);
 
-	const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+	const dayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 	const transportOptions = ['Car', 'Bicycle', 'Bus', 'Train', 'Walking', 'Motorcycle', 'ElectricCar', 'Scooter', 'Subway', 'Tram'];
+
+	const getIconName = (mode) => {
+		switch (mode) {
+			case 'Car':
+				return 'car';
+			case 'Bicycle':
+				return 'bicycle';
+			case 'Bus':
+				return 'bus';
+			case 'Train':
+				return 'train';
+			case 'Still':
+				return 'male';
+			case 'Walking':
+				return 'walking';
+			case 'Motorcycle':
+				return 'motorcycle';
+			case 'ElectricCar':
+				return 'bolt';
+			case 'Scooter':
+				return 'street-view';
+			case 'Subway':
+				return 'subway';
+			case 'Tram':
+				return 'train';
+			default:
+				return 'question-circle';
+		}
+	};
 
 	const [userData, setUserData] = useState(null);
 
@@ -79,7 +111,7 @@ export default function TransportDetectionPage() {
 						console.log("Cannot get user data")
 					}
 				} catch (error) {
-						console.log("Execption occured when trying to get user data")
+					console.log("Execption occured when trying to get user data")
 				}
 			}
 		};
@@ -87,7 +119,7 @@ export default function TransportDetectionPage() {
 		fetchUserData();
 	}, []);
 
-	
+
 	const handleTeamPercentageChange = (teamName, newValue) => {
 		const newPercentages = { ...teamPercentages };
 		newPercentages[teamName] = newValue;
@@ -387,7 +419,7 @@ export default function TransportDetectionPage() {
 			const latestAccelerometerData = accelerometerDataRef.current;
 			const latestGyroscopeData = gyroscopeDataRef.current;
 
-			// Only proceed if we have enough data
+			// Only proceed if there is enough data
 			if (latestAccelerometerData.length > 8 && latestGyroscopeData.length > 8 && !isFetching) {
 				setIsFetching(true);
 
@@ -585,77 +617,124 @@ export default function TransportDetectionPage() {
 	return (
 		<View style={styles.container}>
 			<Toast ref={(ref) => Toast.setRef(ref)} />
-			<Text>{text}</Text>
-			<Text>Distance travelled since last detection: {currentDistanceTravelledRef.current?.toFixed(2)}</Text>
-			<Text>Accelerometer Data:</Text>
-			<Text>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
 
-			<Text>Gyroscope Data:</Text>
-			<Text>x: {currentGyroscope.x?.toFixed(2)}, y: {currentGyroscope.y?.toFixed(2)}, z: {currentGyroscope.z?.toFixed(2)}</Text>
+			<Text>Mobile Sensor Info</Text>
+			<ScrollView style={styles.scrollView}>
+
+				<Text>{text}</Text>
+				<Text>Distance travelled since last detection: {currentDistanceTravelledRef.current?.toFixed(2)}m</Text>
+				<Text>Accelerometer Data:</Text>
+				<Text>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
+
+				<Text>Gyroscope Data:</Text>
+				<Text>x: {currentGyroscope.x?.toFixed(2)}, y: {currentGyroscope.y?.toFixed(2)}, z: {currentGyroscope.z?.toFixed(2)}</Text>
+			</ScrollView>
 
 
 			<Button
 				title={isPredicting ? "Stop Predicting" : "Start Predicting"}
 				onPress={isPredicting ? stopPredicting : startPredicting}
+				color={isPredicting ? "#CC0000" : "green"}
 			/>
 
 
+			{isPredicting &&
+				<View style={styles.indicatorContainer}>
+					<WaveIndicator color="#1ED760" />
+				</View>
+			}
+
+			<Text>Transport Detection History</Text>
+
 			<ScrollView style={styles.scrollView}>
 				{transportModes.map((item, index) => (
-					<Text key={index} style={styles.textItem}>
-						{item.mode} - {item.time}
-					</Text>
+					<View key={index} style={styles.textAndIcon}>
+						<Icon name={getIconName(item.mode)} size={20} color="#000" />
+						<Text style={styles.textStyle}>
+							{item.mode} - {item.time}
+						</Text>
+					</View>
 				))}
 			</ScrollView>
 
 			{predictionEnded && (
-				<View>
-					<Text>Primary Transport Modes:</Text>
+				<Text>Ammend Your Predicted Commute Journey</Text>
+			)}
+
+			{predictionEnded && (
+				<ScrollView style={styles.largerScrollView}>
+
+					<Text style={styles.centeredBoldText}>Automatically Added Transport Entries:</Text>
 					{getPrimaryTransportModes(transportModes).map((mode, index) => (
 						<Text key={index}>{mode.mode} from {mode.endTime} to {mode.startTime}</Text>
 					))}
 
-					<Text style={styles.label}>Select Day:</Text>
-					<ModalDropdown
-						options={daysOfWeek}
-						onSelect={(index, value) => setSelectedDay(value)}
-						style={styles.dropdown}
-						textStyle={styles.dropdownText}
-						dropdownTextStyle={styles.dropdownTextStyle}
-					/>
-					<Text style={styles.label}>{userData?.firstname}:</Text>
+					<View style={styles.divider} />
 
-					<Text style={styles.label}>Select Transport Mode:</Text>
-					<ModalDropdown
-						options={transportOptions}
-						onSelect={(index, value) => setTransportMode(value)}
-						style={styles.dropdown}
-						textStyle={styles.dropdownText}
-						dropdownTextStyle={styles.dropdownTextStyle}
-					/>
+					<Text style={styles.centeredBoldText}>Add/Delete Transport Entries:</Text>
 
+					<View style={styles.row}>
+						<Text style={styles.label}>Select Day:</Text>
+						<ModalDropdown
+							options={dayOptions}
+							onSelect={(index, value) => setSelectedDay(value)}
+							style={styles.dropdown}
+							textStyle={styles.dropdownText}
+							dropdownTextStyle={styles.dropdownTextStyle}
+						/>
+					</View>
 
-					<TextInput
-						placeholder="Duration (HH:MM)"
-						value={duration}
-						onChangeText={setDuration}
-						style={styles.textInput}
-					/>
+					<View style={styles.row}>
+						<Text style={styles.label}>Select Transport Mode:</Text>
+						<ModalDropdown
+							options={transportOptions}
+							onSelect={(index, value) => setTransportMode(value)}
+							style={styles.dropdown}
+							textStyle={styles.dropdownText}
+							dropdownTextStyle={styles.dropdownTextStyle}
+						/>
+					</View>
+
+					<View style={styles.row}>
+						<Text style={styles.label}>Duration of Mode:</Text>
+						<TextInput
+							placeholder="(HH:MM)"
+							value={duration}
+							onChangeText={setDuration}
+							style={styles.textInput}
+						/>
+					</View>
+
 
 					<Button title="Add Entry" onPress={addEntry} />
 
 					{entries.map((entry, index) => (
 						<View key={index} style={styles.entryContainer}>
+							<Icon
+								name={getIconName(entry.mode)}
+								size={20}
+								color="black"
+								onPress={() => deleteEntry(index)}
+							/>
 							<Text style={styles.entryText}>{entry.mode} - {entry.time} - {entry.carbonFootprint} kg CO2</Text>
-							<Button title="Delete" onPress={() => deleteEntry(index)} />
+							<Icon
+								name="trash"
+								size={20}
+								color="red"
+								onPress={() => deleteEntry(index)}
+							/>
 						</View>
 					))}
 
 					<Text>Total Carbon Footprint: {totalCarbonFootprint} kg CO2</Text>
 
+					<View style={styles.divider} />
+
+					<Text style={styles.centeredBoldText}>Distribute Footprint to Your Teams</Text>
+
 					{/* Team Fields */}
 					{teams.map((team, index) => (
-						<View key={index} style={styles.teamContainer}>
+						<View key={index} >
 							<Text style={styles.teamName}>{team.teamName}</Text>
 							<TextInput
 								style={styles.teamInput}
@@ -674,14 +753,12 @@ export default function TransportDetectionPage() {
 					<Button
 						title="Submit"
 						onPress={handleSubmit}
-						color="green" // Or your preferred color
+						color="green"
 					/>
 
-				</View>
+				</ScrollView>
 			)}
-
 			<StatusBar style="auto" />
-
 		</View>
 	);
 }
@@ -689,7 +766,7 @@ export default function TransportDetectionPage() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#fff',
+		backgroundColor: '#F5F5F5',
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
@@ -697,11 +774,75 @@ const styles = StyleSheet.create({
 		maxHeight: 100,
 		width: '80%',
 		marginHorizontal: 20,
+		marginVertical: 10,
 		borderWidth: 1,
-		borderColor: '#007bff',
+		borderColor: 'grey',
 		borderRadius: 10,
+		backgroundColor: '#fff',
+	},
+	largerScrollView: {
+		maxHeight: 250,
+		width: '80%',
+		marginHorizontal: 20,
+		marginVertical: 10,
+		borderWidth: 1,
+		borderColor: 'grey',
+		borderRadius: 10,
+		backgroundColor: '#fff',
 	},
 	textItem: {
 		marginVertical: 5,
-	}
+	},
+
+	indicatorContainer: {
+		width: 50,
+		height: 50,
+		justifyContent: 'center',
+		alignItems: 'center',
+
+	},
+
+	textAndIcon: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		marginVertical: 4,
+	},
+
+	// space between icon and text
+	textStyle: {
+		marginLeft: 10,
+		marginRight: 10,
+	},
+
+	entryContainer: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		padding: 10,
+	},
+
+	row: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		padding: 10,
+	},
+
+	label: {
+		marginRight: 10,
+	},
+
+	divider: {
+		width: '90%',
+		alignSelf: 'center',
+		height: 1,
+		backgroundColor: 'grey',
+		marginVertical: 10,
+	},
+	centeredBoldText: {
+		textAlign: 'center',
+		fontWeight: 'bold',
+	},
+
+
 });
