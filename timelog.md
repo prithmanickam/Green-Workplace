@@ -48,29 +48,29 @@
 
 ### 27 Sep 2023
 * *5 hours* Created dynamic side navbar and padding so contents aren't hidden underneath
-* *1 hours* Created template pages for Company Dashboard (with grid layout), Add Employees, Add Teams, Admin Functions.
+* *1 hour* Created template pages for Company Dashboard (with grid layout), Add Employees, Add Teams, Admin Functions.
 
 ### 28 Sep 2023
 * *4 hours* Create Light and Darkmode, which can be toggled in both navbars.
-* *1 hours* Created Add Employee Page
+* *1 hour* Created Add Employee Page
 * *3 hours* Created Send Registration Email API  
-* *1 hours* Created Register Page
+* *1 hour* Created Register Page
 * *2 hours* Started Retrieve email from Registration URL Token API 
 
 ### 29 Sep 2023
 * *1.5 hours* Created Register User API
-* *1 hours* Edited homepage so different user types are displayed different menu cards
+* *1 hour* Edited homepage so different user types are displayed different menu cards
 * *2 hours* Fixed Bug / Completed Retrieve email from Registration URL Token API
 * *2.5 hours* Created passing tests for Send Registation Emails API and Get Users Email From URL Token API (currently 98% code coverage)
 
 ### 30 Sep 2023
-* *1 hours* Ensure users are logged out when in login / registration pages
-* *1 hours* Allowed private routing for user type
-* *1 hours* Fixed api bugs to allow frontend toasts (pop-ups) for for api requests
+* *1 hour* Ensure users are logged out when in login / registration pages
+* *1 hour* Allowed private routing for user type
+* *1 hour* Fixed api bugs to allow frontend toasts (pop-ups) for for api requests
 
 ### 1 Oct 2023
-* *1 hours* Fixed overlapping cards bug in Homepage and added side navbar menu options for Team Members and Team Owners
-* *1 hours* Created Set Carbon Footprint Page (Navigation for Use Map and Manual)
+* *1 hour* Fixed overlapping cards bug in Homepage and added side navbar menu options for Team Members and Team Owners
+* *1 hour* Created Set Carbon Footprint Page (Navigation for Use Map and Manual)
 * *6 hours* Started Creating the Use Map function for Set Carbon Footprint Page (UI Completed and used Google Maps API for operations e.g. displaying route and calculating distance and time)
 
 ## Week 3
@@ -79,11 +79,11 @@
 * *6 hours* Finished creating the Use Map function for Set Carbon Footprint Page (Can calculate carbon footprint for all travel modes, created APIs for posting and reseting user's current Week carbon stats, passing tests for all APIs)
 
 ### 3 Oct 2023
-* *0.5 hours* Fixed Bug in accessing unauthorised pages by modifying URL
+* *0.5 hour* Fixed Bug in accessing unauthorised pages by modifying URL
 * *0.5 hour*  Meeting with Supervisor
 
 ### 4 Oct 2023
-* *1 hours* Fetched all employees and displayed them in a table
+* *1 hour* Fetched all employees and displayed them in a table
 * *4 hours* Started Add Team Page & Add Team API. Worked on fixed User Schema to allow being in multiple teams. Started creating team schema.
 
 ### 5 Oct 2023
@@ -93,8 +93,8 @@
 * *5 hours* Completed Delete Team API (which also changes respective user relations), update Add Team Page UI based on API calls.
 
 ### 7 Oct 2023
-* *1 hours* Organised Backend controllers, routes, and tests (created respective files and moved code). Also commented out console logs in apis to remove error messages when testing.
-* *1 hours*  Added tests get all users and get non team owners APIs
+* *1 hour* Organised Backend controllers, routes, and tests (created respective files and moved code). Also commented out console logs in apis to remove error messages when testing.
+* *1 hour*  Added tests get all users and get non team owners APIs
 * *6 hours*  Edited the Footprint Map Page to allow users to enter percentages to distrubute their carbon footprint value to the teams users are in.
 
 ### 8 Oct 2023
@@ -104,9 +104,9 @@
 ## Week 4
 
 ### 9 Oct 2023
-* *1 hours*  Deploy backend to 'render' and deployed frontend to 'vercel'. Performed functionality and worked fine.
-* *1 hours*  Created User Acceptance Testing (UAT) Instructions.
-* *1 hours*  Created Your Dashboard Page UI
+* *1 hour*  Deploy backend to 'render' and deployed frontend to 'vercel'. Performed functionality and worked fine.
+* *1 hour*  Created User Acceptance Testing (UAT) Instructions.
+* *1 hour*  Created Your Dashboard Page UI
 * *2 hours*  Created API to fetch your Dashboard information.
 
 ### 10 Oct 2023
@@ -166,10 +166,10 @@
 * *1 hour*  Pipeline Fix and Changes due to database stubbing. Fixed fetching team dashboard data bug by first check if team has been selected. 
 
 ### 27 Oct 2023
-* *6 hour*  Started working on the Team Chat Page. 
+* *6 hours*  Started working on the Team Chat Page. 
 
 ### 28 Oct 2023
-* *8 hour*  Team Chat page has an improved layout, now displays name and date of message, and can scroll through past messages. Real-time connection been established. Can switch between chats from the team dropdown.
+* *8 hours*  Team Chat page has an improved layout, now displays name and date of message, and can scroll through past messages. Real-time connection been established. Can switch between chats from the team dropdown.
 
 ## Week 7
 
@@ -245,4 +245,8 @@
 ### 17 Dec 2023
 * *1.5 hours*  Created an algorithm to predict overall journey from the transport predicted data and display it.
 
+### 19 Dec 2023
+* *10 hours*  Added mobile login page, allows users to maually edit journey, fetches users team to distribute the footprint total, and submits and values to the database.
 
+### 20 Dec 2023
+* *5 hours*  Fixed algorithm by ignoring Still detections and closing vehicle group from consecutive Walking detections. Add entries automatically based on entire journey / primary transport modes.
