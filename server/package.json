@@ -24,6 +24,7 @@
     "ml-matrix": "^6.11.0",
     "ml-random-forest": "^2.1.0",
     "mongoose": "^7.5.2",
+    "node-schedule": "^2.1.1",
     "nodemailer": "^6.9.5",
     "papaparse": "^5.4.1",
     "path": "^0.12.7",

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
-import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, Divider } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, Divider, Button } from '@mui/material';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
@@ -9,6 +9,8 @@ import { getGradientColors } from "../utils/gradientConstants";
 import Avatar from '@mui/material/Avatar';
 import InfoIcon from '@mui/icons-material/Info';
 import InputLabel from '@mui/material/InputLabel';
+import { LineChart } from '@mui/x-charts/LineChart';
+import { styled } from '@mui/material/styles';
 
 export default function TeamDashboard() {
   const { userData } = useUser();
@@ -24,6 +26,8 @@ export default function TeamDashboard() {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [userTeams, setUserTeams] = useState([]);
+  const [lineChartLength, setLineChartLength] = useState('week');
+  const [lineChartData, setLineChartData] = useState({});
   const [companyCarbonStandard, setCompanyCarbonStandard] = useState({});
   const { green_gradient, amber_gradient, red_gradient } = getGradientColors();
   const [gradient, setGradient] = useState('');
@@ -72,6 +76,39 @@ export default function TeamDashboard() {
   }, [userData, selectedTeam]);
 
   useEffect(() => {
+    if (selectedTeamId && userData) {
+      fetch(`${baseURL}/getLineChartData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "team",
+          lineChartLength: lineChartLength,
+          team_id: selectedTeamId,
+          company_id: userData.company_id
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setLineChartData(data.data);
+
+          } else {
+            toast.error("Failed to fetch line chart data.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching line chart data.");
+        });
+    }
+  }, [userData, selectedTeamId, lineChartLength]);
+
+  const handleLineChartLengthChange = (length) => {
+    setLineChartLength(length);
+  };
+
+  useEffect(() => {
     if (selectedTeamId) {
       fetch(`${baseURL}/getTeamDashboardData`, {
         method: "POST",
@@ -86,6 +123,8 @@ export default function TeamDashboard() {
         .then((data) => {
           if (data.status === "ok") {
             setTeamDashboardData(data.data);
+
+            //console.log(data.data.line_graph_values)
           } else {
             toast.error("Failed to fetch team dashboard data.");
           }
@@ -94,6 +133,7 @@ export default function TeamDashboard() {
           toast.error("An error occurred while fetching team dashboard data.");
         });
     }
+
 
     fetch(`${baseURL}/getCompanyCarbonStandard`, {
       method: "POST",
@@ -129,7 +169,23 @@ export default function TeamDashboard() {
         setGradient(red_gradient);
       }
     }
-  }, [companyCarbonStandard, teamDashboardData, green_gradient, amber_gradient, red_gradient]);
+  }, [companyCarbonStandard, teamDashboardData, green_gradient, amber_gradient, red_gradient])
+
+  const LineChartButton = styled(Button)(({ theme, active }) => ({
+    margin: theme.spacing(1),
+    padding: theme.spacing(0.75), 
+    fontSize: '0.75rem', 
+    minWidth: 'auto', 
+    height: '30px', 
+    borderColor: active ? '#02B2AF' : 'grey',
+    backgroundColor: 'transparent', 
+    color: active ? '#02B2AF' : 'grey',
+    borderWidth: 2,
+    '&:hover': {
+      borderColor: active ? '#02B2AF' : 'grey',
+      backgroundColor: 'transparent',
+    },
+  }));
 
 
   if (!userData || (userData.type !== 'Employee')) {
@@ -195,7 +251,7 @@ export default function TeamDashboard() {
               <Card sx={{ height: '100%', backgroundImage: gradient }} >
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <Typography variant="h6" paragraph>
-                    Teams Average Weekly Commuting Carbon Footprint:
+                    This Weeks Teams Average Commuting Carbon Footprint:
                   </Typography>
                   <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
                     {teamDashboardData.carbon_footprint_metric} kg CO2
@@ -213,12 +269,41 @@ export default function TeamDashboard() {
             <Grid item xs={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
-                  <Typography variant="h6" paragraph>
-                    Teams Total Weekly Commuting Carbon Footprint:
-                  </Typography>
-                  <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {teamDashboardData.carbon_footprint_total} kg CO2
-                  </Typography>
+                  {lineChartData?.footprintList && (
+                    <LineChart
+                      width={300}
+                      height={230}
+                      series={[
+                        { data: lineChartData.footprintList, label: 'Team Avg CF' },
+                      ]}
+                      xAxis={[{
+                        scaleType: 'point',
+                        data: lineChartData.dates,
+                        label: 'Last 4 ' + lineChartLength + 's',
+                      }]}
+                    />
+                  )}
+                  {!lineChartData?.footprintList && (
+                    <Typography>Loading line chart...</Typography>
+                  )}
+                  <div>
+                    <LineChartButton
+                      variant="outlined"
+                      size="small"
+                      active={lineChartLength === 'week'}
+                      onClick={() => handleLineChartLengthChange('week')}
+                    >
+                      Week
+                    </LineChartButton>
+                    <LineChartButton
+                      variant="outlined"
+                      size="small"
+                      active={lineChartLength === 'month'}
+                      onClick={() => handleLineChartLengthChange('month')}
+                    >
+                      Month
+                    </LineChartButton>
+                  </div>
                 </CardContent>
               </Card>
             </Grid>

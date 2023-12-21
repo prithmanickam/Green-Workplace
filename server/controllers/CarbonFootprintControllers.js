@@ -4,10 +4,59 @@ const { Matrix } = require('ml-matrix');
 const { readFileSync } = require('fs');
 const path = require('path');
 
+const schedule = require('node-schedule');
+
+const job = schedule.scheduleJob('0 0 * * 0', async function () {
+  try {
+    console.log('Executing the scheduled task every Sunday at midnight');
+
+    // Fetch data from Team_Member
+    const { data: usersTeams, error: getUsersTeamsError } = await supabase
+      .from("Team_Member")
+      .select(`team_id, user_id, monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf`);
+
+    if (getUsersTeamsError) {
+      throw getUsersTeamsError;
+    }
+
+    // Calculate the date of the last Monday
+    const lastMonday = new Date();
+    lastMonday.setDate(lastMonday.getDate() - (lastMonday.getDay() + 6) % 7);
+
+    const day = String(lastMonday.getDate()).padStart(2, '0');
+    const month = String(lastMonday.getMonth() + 1).padStart(2, '0'); 
+    const year = lastMonday.getFullYear().toString().substr(-2);
+    const formattedDate = `${day}-${month}-${year}`;
+
+    // For each user-team pair insert into Team_Member_History table
+    for (const entry of usersTeams) {
+      const totalCarbonFootprint = entry.monday_cf + entry.tuesday_cf + entry.wednesday_cf + entry.thursday_cf + entry.friday_cf;
+
+      const { error: insertError } = await supabase
+        .from("Team_Member_History")
+        .insert([
+          {
+            user_id: entry.user_id,
+            team_id: entry.team_id,
+            week: formattedDate,
+            carbon_footprint: totalCarbonFootprint
+          }
+        ]);
+
+      if (insertError) {
+        console.error('Error inserting into Team_Member_History:', insertError);
+      }
+    }
+  } catch (error) {
+    console.error('Error in scheduled task:', error);
+  }
+});
+
+
+
 const modelPath = path.join(__dirname, 'model.json');
 
 // Load the model and targetMap 
-
 const loadModel = (filePath) => {
   const data = readFileSync(filePath, 'utf8');
   const modelState = JSON.parse(data);

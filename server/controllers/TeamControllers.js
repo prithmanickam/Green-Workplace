@@ -322,7 +322,7 @@ module.exports.getYourDashboardData = async (req, res) => {
 
       yourDashboardInfo.teams.push([teamInfo, teamCarbonFootprint]);
     }
-    
+
     yourDashboardInfo.totalCarbonFootprint = yourDashboardInfo.totalCarbonFootprint.toFixed(2)
 
     res.status(200).json({ status: "ok", data: yourDashboardInfo });
@@ -470,7 +470,6 @@ module.exports.getTeamOwnerFunctionsData = async (req, res) => {
 module.exports.editTeamName = async (req, res) => {
   const { team_id, new_team_name } = req.body;
 
-  console.log("hi")
   try {
 
     const { editTeamNameError } = await supabase
@@ -494,7 +493,6 @@ module.exports.editTeamName = async (req, res) => {
 module.exports.editTeamWAODays = async (req, res) => {
   const { team_id, selected_days } = req.body;
 
-  console.log("hi")
   try {
 
     const { editTeamWAODaysError } = await supabase
@@ -608,6 +606,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
       return res.status(500).json({ status: "error" });
     }
 
+    
     const teamInfo = {
       id: team[0].id,
       name: team[0].name,
@@ -664,6 +663,72 @@ module.exports.getTeamDashboardData = async (req, res) => {
     }
 
     res.status(200).json({ status: "ok", data: teamInfo });
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ status: "error" });
+  }
+};
+
+
+module.exports.getLineChartData = async (req, res) => {
+  const { type, lineChartLength, team_id, company_id } = req.body;
+
+  try {
+
+    function formatAsDDMMYY(date) {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear().toString().substr(-2);
+      return `${day}-${month}-${year}`;
+    }
+
+    function getLast4Mondays() {
+      const mondays = [];
+      let date = new Date();
+
+      for (let i = 0; i < 4; i++) {
+        date.setDate(date.getDate() - (date.getDay() + 6) % 7);
+        mondays.push(formatAsDDMMYY(date));
+        date.setDate(date.getDate() - 1);
+      }
+
+      return mondays;
+    }
+
+    let footprintList = [];
+    let dates = [];
+
+    if (type === "team") {
+      if ((lineChartLength === "week") || (lineChartLength === "month")) {
+        dates = getLast4Mondays();
+        dates.reverse();
+
+        for (const monday of dates) {
+          const { data, error } = await supabase
+            .from("Team_Member_History")
+            .select("carbon_footprint")
+            .eq("team_id", team_id)
+            .eq("week", monday);
+
+          if (error) {
+            console.error("Error fetching carbon footprint:", error);
+            throw error;
+          }
+
+          const weeklyFootprint = data.reduce((sum, record) => sum + record.carbon_footprint, 0) / data.length;
+          const validWeeklyFootprint = isNaN(weeklyFootprint) ? 0 : weeklyFootprint;
+          footprintList.push(validWeeklyFootprint);
+
+        }
+      }
+    }
+
+    const lineChartData = {
+      footprintList: footprintList,
+      dates: dates,
+    }
+
+    res.status(200).json({ status: "ok", data: lineChartData });
   } catch (error) {
     console.log(error)
     res.status(500).json({ status: "error" });
