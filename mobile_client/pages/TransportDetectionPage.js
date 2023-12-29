@@ -312,7 +312,7 @@ export default function TransportDetectionPage() {
 			locationSubscription = await Location.watchPositionAsync(
 				{
 					accuracy: Location.Accuracy.High,
-					timeInterval: 3000,
+					timeInterval: 2000,
 					distanceInterval: 1,
 				},
 				(newLocation) => {
@@ -350,7 +350,7 @@ export default function TransportDetectionPage() {
 	}, [previousLocation]);
 
 	function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
-		var R = 6371; // Radius of the Earth in km
+		var R = 6371000; // Radius of the Earth in meters
 		var dLat = deg2rad(lat2 - lat1);
 		var dLon = deg2rad(lon2 - lon1);
 		var a =
@@ -358,8 +358,8 @@ export default function TransportDetectionPage() {
 			Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
 			Math.sin(dLon / 2) * Math.sin(dLon / 2);
 		var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		var d = R * c; // Distance in km
-		return d * 1000; // Convert to meters
+		var d = R * c; // Distance in meters
+		return d;
 	}
 
 	function deg2rad(deg) {
@@ -406,26 +406,18 @@ export default function TransportDetectionPage() {
 		};
 	};
 
-	// send data and get transport detection result
+	// every 10 seconds it send data and get transport detection result
 	useEffect(() => {
-
-		if (isPredicting) {
-
-			console.log(currentDistanceTravelledRef.current)
-
+		const fetchData = () => {
+			console.log(currentDistanceTravelledRef.current);
 			console.log("Accel Data Ref Length:", accelerometerDataRef.current.length);
 			console.log("Gyro Data Ref Length:", gyroscopeDataRef.current.length);
 
-			const latestAccelerometerData = accelerometerDataRef.current;
-			const latestGyroscopeData = gyroscopeDataRef.current;
-
-			// Only proceed if there is enough data
-			if (latestAccelerometerData.length > 8 && latestGyroscopeData.length > 8 && !isFetching) {
+			if (!isFetching) {
 				setIsFetching(true);
 
-				fetchInProgress = true;
-				const accelerometerStats = calculateStats(latestAccelerometerData);
-				const gyroscopeStats = calculateStats(latestGyroscopeData);
+				const accelerometerStats = calculateStats(accelerometerDataRef.current);
+				const gyroscopeStats = calculateStats(gyroscopeDataRef.current);
 
 				const newData = {
 					'android.sensor.accelerometer#mean': accelerometerStats.mean,
@@ -438,8 +430,7 @@ export default function TransportDetectionPage() {
 					'android.sensor.gyroscope#std': gyroscopeStats.std,
 				};
 
-				console.log("newData: ", newData)
-
+				console.log("newData: ", newData);
 
 				// Send this sensor data to the backend
 				fetch(`https://green-workplace.onrender.com/api/getTransportMode`, {
@@ -452,16 +443,13 @@ export default function TransportDetectionPage() {
 					.then((response) => response.json())
 					.then((data) => {
 						if (data.status === "ok") {
-
-							let accurateMode = data.mode
-
-							if ((currentDistanceTravelledRef.current < 15) && (data.mode != "Walking")) {
+							let accurateMode = data.mode;
+							if (currentDistanceTravelledRef.current < 20 && data.mode !== "Walking") {
 								accurateMode = "Still";
 							}
 
 							const currentTime = new Date().toLocaleTimeString();
 							const modeWithTime = { mode: accurateMode, time: currentTime };
-
 							setTransportModes(modes => [modeWithTime, ...modes]);
 							Toast.show({
 								type: 'success',
@@ -469,9 +457,8 @@ export default function TransportDetectionPage() {
 								text2: 'Fetched transport mode: ' + accurateMode
 							});
 
-							// Resets the sensor data when mode fetched
-							setAccelerometerData([])
-							setGyroscopeData([])
+							setAccelerometerData([]);
+							setGyroscopeData([]);
 						} else {
 							Toast.show({
 								type: 'error',
@@ -496,9 +483,21 @@ export default function TransportDetectionPage() {
 						setIsFetching(false);
 					});
 			}
+		};
+
+		let interval;
+
+		if (isPredicting) {
+			interval = setInterval(fetchData, 10000);
 		}
 
-	}, [transportModes, accelerometerData, gyroscopeData]);
+		return () => {
+			if (interval) {
+				clearInterval(interval);
+			}
+		};
+	}, [isPredicting, isFetching]);
+
 
 	useEffect(() => {
 		accelerometerDataRef.current = accelerometerData;
@@ -515,66 +514,53 @@ export default function TransportDetectionPage() {
 
 	// Algorithm to predict overall journey from the transport predicted data
 	const getPrimaryTransportModes = (modes) => {
-		if (modes.length === 0) return [];
-
-		const vehicleModes = ['Car', 'Bus', 'Train'];
-		const isWalking = (mode) => mode === 'Walking';
-		const isVehicle = (mode) => vehicleModes.includes(mode);
-
-		let currentGroup = [];
-		let groupedModes = [];
-		let walkingCountAfterVehicle = 0;
-		let groupStartIndex = 0;
-
-		const addGroup = (groupModes, start, end) => {
-			if (groupModes.length === 0) return;
-
-			const mode = getMostFrequentVehicleMode(groupModes);
-			groupedModes.push({ mode: mode || 'Walking', startTime: modes[start].time, endTime: modes[end].time });
+		const addSummaryEntry = (mode, start, end) => {
+			summary.push({ mode, startTime: start, endTime: end });
 		};
 
-		modes.forEach((item, index) => {
-			if (isWalking(item.mode)) {
-				if (currentGroup.some(isVehicle)) {
-					walkingCountAfterVehicle++;
+		const vehicleModes = ["Car", "Bus", "Train"];
+		let summary = [];
+		let currentMode = modes[0].mode === 'Still' ? 'Walking' : modes[0].mode;
+		let startTime = modes[0].time;
+		let walkingCounter = 0;
+		let modeSequence = [];
+
+		modes.forEach((entry, index) => {
+			let mode = entry.mode === 'Still' ? 'Walking' : entry.mode;
+			let time = entry.time;
+
+			if (vehicleModes.includes(mode)) {
+				walkingCounter = 0;
+				modeSequence.push(mode);
+				if (currentMode === 'Walking') {
+					addSummaryEntry(currentMode, startTime, modes[index - 1].time);
+					currentMode = mode;
+					startTime = time;
 				}
-			} else if (isVehicle(item.mode)) {
-				walkingCountAfterVehicle = 0;
-			}
-
-			currentGroup.push(item.mode);
-
-			if (walkingCountAfterVehicle >= 4 || index === modes.length - 1) {
-				addGroup(currentGroup, groupStartIndex, index - walkingCountAfterVehicle);
-				currentGroup = [];
-				groupStartIndex = index + 1 - walkingCountAfterVehicle;
-				walkingCountAfterVehicle = 0;
+			} else if (mode === 'Walking') {
+				walkingCounter++;
+				if (walkingCounter >= 5 && vehicleModes.includes(currentMode)) {
+					let mostCommonMode = modeSequence.sort((a, b) =>
+						modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
+					).pop();
+					addSummaryEntry(mostCommonMode, startTime, modes[index - 5].time);
+					currentMode = 'Walking';
+					startTime = modes[index - 4].time;
+					modeSequence = [];
+				}
+			} else {
+				walkingCounter = 0;
 			}
 		});
 
-		return groupedModes;
-	};
-
-	const getMostFrequentVehicleMode = (groupModes) => {
-		const vehicleModes = ['Car', 'Bus', 'Train'];
-		const modeCounts = groupModes.reduce((acc, mode) => {
-			if (vehicleModes.includes(mode)) {
-				acc[mode] = (acc[mode] || 0) + 1;
-			}
-			return acc;
-		}, {});
-
-		let mostFrequentMode = null;
-		let maxCount = 0;
-
-		for (const mode in modeCounts) {
-			if (modeCounts[mode] > maxCount) {
-				mostFrequentMode = mode;
-				maxCount = modeCounts[mode];
-			}
+		if (currentMode === 'Walking' || modeSequence.length) {
+			let mostCommonMode = modeSequence.length ? modeSequence.sort((a, b) =>
+				modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
+			).pop() : currentMode;
+			addSummaryEntry(mostCommonMode, startTime, modes[modes.length - 1].time);
 		}
 
-		return mostFrequentMode;
+		return summary;
 	};
 
 
@@ -618,7 +604,7 @@ export default function TransportDetectionPage() {
 		<View style={styles.container}>
 			<Toast ref={(ref) => Toast.setRef(ref)} />
 
-			<Text>Mobile Sensor Info</Text>
+			<Text>Mobile Sensor and GPS Data</Text>
 			<ScrollView style={styles.scrollView}>
 
 				<Text>{text}</Text>

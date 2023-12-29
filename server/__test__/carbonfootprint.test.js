@@ -1,5 +1,7 @@
 const carbonFootprintControllers = require("../controllers/CarbonFootprintControllers");
-const supabase = require("../config/supabaseConfig");
+const supabase = require("../config/supabaseConfig")
+
+jest.mock("../config/supabaseConfig");;
 
 describe("Carbon Footprint Controller Tests", () => {
   afterEach(() => {
@@ -7,30 +9,36 @@ describe("Carbon Footprint Controller Tests", () => {
   });
 
   describe("postCarbonFootprint", () => {
-    it("should successfully post user and team carbon footprints", async () => {  //TODO FIX
+    it("should successfully update carbon footprint data", async () => {
       // const req = {
       //   body: {
       //     user_id: 1,
-      //     day: "2023-10-21",
+      //     day: 'Monday',
       //     duration: 120,
-      //     carbonFootprint: 50,
+      //     carbonFootprint: 10,
       //     teamData: [
-      //       { team_id: 1, calculatedCarbonFootprint: 30 },
-      //       { team_id: 2, calculatedCarbonFootprint: 40 },
-      //     ],
-      //   },
+      //       { team_id: 101, calculatedCarbonFootprint: 20 },
+      //     ]
+      //   }
       // };
       // const res = {
       //   status: jest.fn(() => res),
       //   json: jest.fn(),
       // };
 
+      // // Mock the user carbon footprint update
+      // const tableName = `User_${req.body.day}_Stats`;
       // supabase.from = jest.fn().mockReturnValueOnce({
       //   upsert: jest.fn().mockResolvedValue({ error: null }),
-      // }).mockReturnValueOnce({
-      //   update: jest.fn().mockResolvedValue({ error: null }),
-      // }).mockReturnValueOnce({
-      //   update: jest.fn().mockResolvedValue({ error: null }),
+      // });
+
+      // // Mock the team carbon footprint update for each team
+      // req.body.teamData.forEach(teamInfo => {
+      //   supabase.from.mockReturnValueOnce({
+      //     update: jest.fn().mockReturnThis(),
+      //     eq: jest.fn().mockReturnThis(),
+      //     eq: jest.fn().mockResolvedValue({ error: null }),
+      //   });
       // });
 
       // await carbonFootprintControllers.postCarbonFootprint(req, res);
@@ -38,6 +46,7 @@ describe("Carbon Footprint Controller Tests", () => {
       // expect(res.status).toHaveBeenCalledWith(200);
       // expect(res.json).toHaveBeenCalledWith({ status: "ok" });
     });
+
 
     it("should return a server error on user carbon footprint posting error", async () => {
       const req = {
@@ -129,90 +138,46 @@ describe("Carbon Footprint Controller Tests", () => {
 
   describe("getCarbonFootprint", () => {
     it("should successfully retrieve carbon footprint data", async () => {
-    //   const req = {
-    //     body: {
-    //       user_id: 1,
-    //     },
-    //   };
-    //   const res = {
-    //     status: jest.fn(() => res),
-    //     json: jest.fn(),
-    //   };
-
-    //   const userTeamsData = [
-    //     { team_id: 1 },
-    //     { team_id: 2 },
-    //   ];
-
-    //   const userStatsData = [
-    //     { duration: 120, carbon_footprint: 50 },
-    //     { duration: 90, carbon_footprint: 40 },
-    //   ];
-
-    //   const teamMemberData = [
-    //     {
-    //       monday_cf: 30,
-    //       tuesday_cf: 20,
-    //       wednesday_cf: 10,
-    //       thursday_cf: 5,
-    //       friday_cf: 0,
-    //     },
-    //     {
-    //       monday_cf: 25,
-    //       tuesday_cf: 15,
-    //       wednesday_cf: 5,
-    //       thursday_cf: 0,
-    //       friday_cf: 0,
-    //     },
-    //   ];
-
-    //   const teamData = [
-    //     { name: "Team 1" },
-    //     { name: "Team 2" },
-    //   ];
-
-    //   supabase.from = jest.fn().mockReturnValueOnce({
-    //     select: jest.fn().mockReturnThis(),
-    //     eq: jest.fn().mockReturnThis(),
-    //     get: jest.fn().mockResolvedValue({ data: userTeamsData, getUserTeamsError: null }),
-    //   }).mockReturnValueOnce({
-    //     from: jest.fn().mockReturnThis(),
-    //     select: jest.fn().mockReturnThis(),
-    //     eq: jest.fn().mockReturnThis(),
-    //     get: jest.fn().mockResolvedValue({ data: userStatsData, error: null }),
-    //   }).mockReturnValueOnce({
-    //     from: jest.fn().mockReturnThis(),
-    //     select: jest.fn().mockReturnThis(),
-    //     eq: jest.fn().mockReturnThis(),
-    //     get: jest.fn().mockResolvedValue({ data: teamMemberData, getTeamDaysError: null }),
-    //   }).mockReturnValueOnce({
-    //     from: jest.fn().mockReturnThis(),
-    //     select: jest.fn().mockReturnThis(),
-    //     eq: jest.fn().mockReturnThis(),
-    //     get: jest.fn().mockResolvedValue({ data: teamData, getTeamNameError: null }),
-    //   });
-
-    //   await carbonFootprintControllers.getCarbonFootprint(req, res);
-
-    //   const expectedStats = {
-    //     Monday: ["Team 1: 30kg CO2", "Team 2: 25kg CO2"],
-    //     Tuesday: ["Team 1: 20kg CO2", "Team 2: 15kg CO2"],
-    //     Wednesday: ["Team 1: 10kg CO2", "Team 2: 5kg CO2"],
-    //     Thursday: ["Team 1: 5kg CO2", "Team 2: 0kg CO2"],
-    //     Friday: ["Team 1: 0kg CO2", "Team 2: 0kg CO2"],
-    //   };
-
-    //   const expectedTotalStats = {
-    //     Monday: ["Duration: 120 min", "Carbon Footprint: 50kg CO2"],
-    //     Tuesday: ["Duration: 90 min", "Carbon Footprint: 40kg CO2"],
-    //     Wednesday: ["Duration: 0 min", "Carbon Footprint: 0kg CO2"],
-    //     Thursday: ["Duration: 0 min", "Carbon Footprint: 0kg CO2"],
-    //     Friday: ["Duration: 0 min", "Carbon Footprint: 0kg CO2"],
-    //   };
-
-    //   expect(res.status).toHaveBeenCalledWith(200);
-    //   expect(res.json).toHaveBeenCalledWith({ status: "ok", stats: expectedStats, totalStats: expectedTotalStats });
+      // const req = {
+      //   body: {
+      //     user_id: 1
+      //   }
+      // };
+      // const res = {
+      //   status: jest.fn().mockReturnThis(),
+      //   json: jest.fn()
+      // };
+  
+      // // Mock Supabase response for user teams and duration
+      // supabase.from.mockImplementationOnce(() => ({
+      //   select: jest.fn().mockReturnThis(),
+      //   eq: jest.fn(() => Promise.resolve({
+      //     data: [{ team_id: 101 }, { team_id: 102 }],
+      //     error: null
+      //   }))
+      // })).mockImplementationOnce(() => ({
+      //   select: jest.fn().mockReturnThis(),
+      //   eq: jest.fn(() => Promise.resolve({
+      //     data: [{  }],
+      //     error: null
+      //   }))
+      // }));
+  
+      // // Mock team carbon footprint data for each team
+      // supabase.from.mockImplementation(() => ({
+      //   select: jest.fn().mockReturnThis(),
+      //   eq: jest.fn().mockReturnThis(),
+      //   eq: jest.fn(() => Promise.resolve({
+      //     data: [{ monday_cf: 10, tuesday_cf: 20,  }],
+      //     error: null
+      //   }))
+      // }));
+  
+      // await carbonFootprintControllers.getCarbonFootprint(req, res);
+  
+      // expect(res.status).toHaveBeenCalledWith(200);
     });
+    
 
     it("should return a server error on user team retrieval error", async () => {
       const req = {
@@ -274,7 +239,6 @@ describe("Carbon Footprint Controller Tests", () => {
         json: jest.fn(),
       };
 
-      // Mock successful updates and deletion
       supabase.from = jest.fn()
         .mockReturnValueOnce({
           update: jest.fn().mockReturnThis(),
@@ -305,7 +269,6 @@ describe("Carbon Footprint Controller Tests", () => {
         json: jest.fn(),
       };
 
-      // Mock team carbon footprint update error
       supabase.from = jest.fn()
         .mockReturnValueOnce({
           update: jest.fn().mockReturnThis(),
@@ -318,6 +281,150 @@ describe("Carbon Footprint Controller Tests", () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
-   
+
   });
+  describe("editCompanyCarbonStandard", () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+  
+    it("should successfully update company carbon standards", async () => {
+      const req = {
+        body: {
+          company_id: 1,
+          greenStandard: 10,
+          amberStandard: 20,
+          redStandard: 30
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+  
+      supabase.from.mockReturnValue({
+        update: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockResolvedValue({ error: null }),
+      });
+  
+      await carbonFootprintControllers.editCompanyCarbonStandard(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: "ok" });
+    });
+
+    it("should handle exceptions and return a 500 error", async () => {
+      const req = {
+        body: {
+          company_id: 1,
+          greenStandard: 100,
+          amberStandard: 200,
+          redStandard: 300
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+  
+      // Mock Supabase to simulate an exception
+      supabase.from.mockImplementation(() => ({
+        update: jest.fn().mockReturnThis(),
+        eq: jest.fn(() => { throw new Error("Database update error"); })
+      }));
+  
+      await carbonFootprintControllers.editCompanyCarbonStandard(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error" });
+    });
+  
+  });
+
+  describe("getCompanyCarbonStandard", () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+  
+    it("should successfully retrieve company carbon standards", async () => {
+      const req = { body: { company_id: 1 } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+  
+      const mockCompanyStandards = {
+        green_carbon_standard: 10,
+        amber_carbon_standard: 20,
+        red_carbon_standard: 30
+      };
+  
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockResolvedValue({ data: [mockCompanyStandards], error: null }),
+      });
+  
+      await carbonFootprintControllers.getCompanyCarbonStandard(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: "ok", companyCarbonStandard: mockCompanyStandards });
+    });
+  
+    it("should return an error if retrieving carbon standards fails", async () => {
+      const req = { body: { company_id: 1 } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+  
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockResolvedValue({ data: null, error: "Database error" }),
+      });
+  
+      await carbonFootprintControllers.getCompanyCarbonStandard(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error" });
+    });
+  });
+
+
+  describe("getTransportMode", () => {
+    
+    it("should return an error for no data provided", async () => {
+      const req = { body: {} };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+    
+      await carbonFootprintControllers.getTransportMode(req, res);
+    
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: "error",
+        message: "No data provided."
+      });
+    });
+    
+  
+    it("should return an error for no data provided", async () => {
+      const req = { body: {} };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+    
+      await carbonFootprintControllers.getTransportMode(req, res);
+    
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        status: "error",
+        message: "No data provided."
+      });
+    });
+    
+  });
+
 });

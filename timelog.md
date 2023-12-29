@@ -253,4 +253,10 @@
 * *5 hours*  Improved UI with scrollable components, transport mode icons, appropriate colours, padding, dividers, and helpful text.
 
 ### 21 Dec 2023
-* *6 hours* Weekly (every sunday evening) automatic scheduling storing every users carbon footprint. Added line chart for team dashboard.
+* *6 hours* Weekly (every sunday midnight) automatic scheduling storing every users carbon footprint. Added line chart for team dashboard.
+
+### 26 Dec 2023
+* *6 hours* Improved transport journey algorithm for phone app.
+
+### 28 Dec 2023
+* *6 hours* Updated Unit tests to increase coverage (currently 75%)

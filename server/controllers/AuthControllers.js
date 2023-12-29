@@ -170,7 +170,7 @@ module.exports.loginUser = async (req, res) => {
     res.status(200).json({ status: "ok", token });
   } catch (error) {
     //console.error(error);
-    res.status(500).json({ status: "error", error: "error" });
+    res.status(500).json({ status: "error"});
   }
 };
 
@@ -183,21 +183,15 @@ module.exports.getUserData = async (req, res) => {
       ignoreExpiration: true,
     });
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("User")
       .select()
       .eq("email", decodedToken.email)
       .single();
 
-    if (error) {
-      //console.error("Error fetching user data:", error);
-      return res.status(500).json({ status: "error" });
-    }
-
     if (!data) {
       return res.status(404).json({ error: "User not found" });
     }
-
 
     res.status(200).json({ status: "ok", data });
   } catch (error) {

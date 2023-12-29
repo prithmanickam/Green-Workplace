@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "mobile_client",
-    "slug": "mobile_client",
+    "slug": "green-workplace",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,6 +25,18 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a90a1bf3-f6d1-4403-83f2-f6a85cd2f33f"
+      }
+    },
+    "owner": "green-workplace",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a90a1bf3-f6d1-4403-83f2-f6a85cd2f33f"
     }
   }
 }
