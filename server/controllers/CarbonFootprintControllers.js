@@ -83,6 +83,9 @@ module.exports.getTransportMode = async (req, res) => {
     const mode = Object.keys(targetMap).find(key => targetMap[key] === prediction[0]);
 
     console.log(mode)
+    console.log(distance)
+
+    console.log(newData['android.sensor.accelerometer#mean'])
 
     const { error: insertError } = await supabase
       .from("Dataset")
@@ -100,6 +103,11 @@ module.exports.getTransportMode = async (req, res) => {
           'distance_meters_ten_sec': distance,
         }
       ]);
+    
+    if (insertError) {
+      console.error("Error adding tmd stats:", insertError);
+      //return res.status(500).json({ status: "error" });
+    }
 
     res.status(200).json({ status: "ok", mode });
   } catch (error) {
