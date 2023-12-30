@@ -438,7 +438,11 @@ export default function TransportDetectionPage() {
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify(newData),
+					body: JSON.stringify({
+						newData,
+						distance:currentDistanceTravelledRef.current,
+					}),
+						
 				})
 					.then((response) => response.json())
 					.then((data) => {

@@ -24,7 +24,7 @@ const job = schedule.scheduleJob('59 23 * * 0', async function () {
     lastMonday.setDate(lastMonday.getDate() - (lastMonday.getDay() + 6) % 7);
 
     const day = String(lastMonday.getDate()).padStart(2, '0');
-    const month = String(lastMonday.getMonth() + 1).padStart(2, '0'); 
+    const month = String(lastMonday.getMonth() + 1).padStart(2, '0');
     const year = lastMonday.getFullYear().toString().substr(-2);
     const formattedDate = `${day}-${month}-${year}`;
 
@@ -53,7 +53,6 @@ const job = schedule.scheduleJob('59 23 * * 0', async function () {
 });
 
 
-
 const modelPath = path.join(__dirname, 'model.json');
 
 // Load the model and targetMap 
@@ -71,8 +70,8 @@ const { classifier, targetMap } = loadModel(modelPath);
 
 module.exports.getTransportMode = async (req, res) => {
   try {
-    const newData = req.body;
-
+    const { newData, distance } = req.body;
+    
     if (!newData || Object.keys(newData).length === 0) {
       return res.status(400).json({ status: "error", message: "No data provided." });
     }
@@ -85,6 +84,23 @@ module.exports.getTransportMode = async (req, res) => {
 
     console.log(mode)
 
+    const { error: insertError } = await supabase
+      .from("Dataset")
+      .insert([
+        {
+          'android.sensor.accelerometer#mean': newData['android.sensor.accelerometer#mean'],
+          'android.sensor.accelerometer#min': newData['android.sensor.accelerometer#min'],
+          'android.sensor.accelerometer#max': newData['android.sensor.accelerometer#max'],
+          'android.sensor.accelerometer#std': newData['android.sensor.accelerometer#std'],
+          'android.sensor.gyroscope#mean': newData['android.sensor.gyroscope#mean'],
+          'android.sensor.gyroscope#min': newData['android.sensor.gyroscope#min'],
+          'android.sensor.gyroscope#max': newData['android.sensor.gyroscope#max'],
+          'android.sensor.gyroscope#std': newData['android.sensor.gyroscope#std'],
+          'target': mode,
+          'distance_meters_ten_sec': distance,
+        }
+      ]);
+
     res.status(200).json({ status: "ok", mode });
   } catch (error) {
     console.error(error);
@@ -93,7 +109,7 @@ module.exports.getTransportMode = async (req, res) => {
 };
 
 module.exports.postCarbonFootprint = async (req, res) => {
-  const { user_id, day, duration, teamData } = req.body; 
+  const { user_id, day, duration, teamData } = req.body;
 
   try {
     const tableName = `User_${day}_Stats`;

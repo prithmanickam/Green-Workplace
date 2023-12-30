@@ -259,4 +259,7 @@
 * *6 hours* Improved transport journey algorithm for phone app.
 
 ### 28 Dec 2023
-* *6 hours* Updated Unit tests to increase coverage (currently 75%)
+* *6 hours* Updated Unit tests to increase coverage (currently 75%).
+
+### 30 Dec 2023
+* *0.5 hour* Added code to add data to Transport Mode Detection Machine Learning dataset in mobile app.
