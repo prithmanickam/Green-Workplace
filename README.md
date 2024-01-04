@@ -1,5 +1,5 @@
 # Green-Workplace
-Web app to support companies in managing agile teams’ hybrid working patterns and commuting carbon footprint
+Web and Mobile app to support companies in managing agile teams’ hybrid working patterns and commuting carbon footprint
 
 # Installation
 ## Frontend
@@ -7,10 +7,18 @@ Web app to support companies in managing agile teams’ hybrid working patterns 
 - `npm start`
 
 ## Backend
-- make sure to add the Mongo URI string to .env in server folder
+- make sure to add the Supabase URI string to .env in server folder
 - `cd server`
 - `npm run dev`
 
 ### Backend testing
 - `npm test`
 - for code coverage: `npm test -- --coverage`
+
+## Mobile Frontend
+- `cd mobile_client`
+- `npx expo start`
+
+### Mobile Publish Update (for developers)
+- `expo login`
+- `eas update --channel production`
