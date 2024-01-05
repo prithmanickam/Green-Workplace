@@ -266,3 +266,6 @@
 
 ### 4 Jan 2023
 * *8 hours* Created all the dashboard line charts for last 4 weeks and months.
+
+### 5 Jan 2023
+* *3 hours* Office now added for employee registration by Admin accounts.

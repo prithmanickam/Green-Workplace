@@ -100,6 +100,35 @@ export default function CompanyDashboard() {
 
   useEffect(() => {
     if (userData) {
+      console.log("hi in useeffect")
+      fetch(`${baseURL}/getBarChartData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+
+          company_id: userData.company_id
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            console.log("hi status ok")
+            //setLineChartData(data.data);
+
+          } else {
+            toast.error("Failed to fetch line chart data.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching line chart data.");
+        });
+    }
+  }, [userData, lineChartLength]);
+
+  useEffect(() => {
+    if (userData) {
       fetch(`${baseURL}/getLineChartData`, {
         method: "POST",
         headers: {

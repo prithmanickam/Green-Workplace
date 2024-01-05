@@ -37,6 +37,7 @@ module.exports.sendRegistrationEmails = async (req, res) => {
   try {
     const emails = req.body.emails;
     const company = req.body.company;
+    const office = req.body.office;
 
     if (!Array.isArray(emails)) {
       emails = [emails];
@@ -47,6 +48,7 @@ module.exports.sendRegistrationEmails = async (req, res) => {
       const payload = {
         email,
         company,
+        office,
         registrationToken: uuid.v4(), // You can still include a unique token
       };
 
@@ -101,8 +103,9 @@ module.exports.getEmailFromToken = async (req, res) => {
 
     const email = decodedToken.email;
     const company = decodedToken.company;
+    const office = decodedToken.office;
 
-    res.status(200).json({ status: "ok", email, company });
+    res.status(200).json({ status: "ok", email, company, office });
   } catch (error) {
     //console.error('Error fetching email from token:', error);
     res.status(500).json({ status: 'error', error: 'Internal server error' });
@@ -112,7 +115,7 @@ module.exports.getEmailFromToken = async (req, res) => {
 // Register the user to the database
 
 module.exports.registerUser = async (req, res) => {
-  const { firstname, lastname, email, password, company } = req.body;
+  const { firstname, lastname, email, password, company, office } = req.body;
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -124,6 +127,7 @@ module.exports.registerUser = async (req, res) => {
         email,
         password: hashedPassword,
         company_id: company,
+        office_id: office,
       },
     ]);
 

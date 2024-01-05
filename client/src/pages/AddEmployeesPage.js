@@ -16,12 +16,45 @@ import { toast } from "react-toastify";
 import { Navigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
+import { Select, MenuItem, FormControl, InputLabel  } from '@mui/material';
 //import axios from "axios";
 
 export default function AddEmployees() {
   const [emailInput, setEmailInput] = useState('');
   const [registeredAccounts, setRegisteredAccounts] = useState([]);
+  const [selectedOffice, setSelectedOffice] = useState('');
+  const [offices, setOffices] = useState([]);
   const { userData } = useUser();
+
+  useEffect(() => {
+
+    if (userData) {
+      // to get all offices in the company
+      fetch(`${baseURL}/getOffices`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ company: userData.company_id }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            console.log("offices: ", data.data)
+            setOffices(data.data);
+          } else {
+            toast.error("Failed to fetch office data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching office data.");
+        });
+    }
+  }, [userData]);
+
+  const handleOfficeChange = (event) => {
+    setSelectedOffice(event.target.value);
+  };
 
   useEffect(() => {
     fetch(`${baseURL}/getAllUsers`, {
@@ -29,7 +62,7 @@ export default function AddEmployees() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({company: userData.company_id}),
+      body: JSON.stringify({ company: userData.company_id }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -68,7 +101,7 @@ export default function AddEmployees() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ emails, company: userData.company_id }), // Send the list of emails to the server
+      body: JSON.stringify({ emails, company: userData.company_id, office: selectedOffice }), // Send the list of emails to the server
     })
       .then((res) => res.json())
       .then((data) => {
@@ -84,6 +117,8 @@ export default function AddEmployees() {
 
     setEmailInput('');
   };
+
+
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -102,6 +137,20 @@ export default function AddEmployees() {
                     value={emailInput}
                     onChange={handleEmailInputChange}
                   />
+                  <FormControl fullWidth>
+                    <InputLabel id="office-select-label">Select Office</InputLabel>
+                    <Select
+                      labelId="office-select-label"
+                      id="office-select"
+                      value={selectedOffice}
+                      label="Select Office"
+                      onChange={handleOfficeChange}
+                    >
+                      {offices.map((office) => (
+                        <MenuItem key={office.id} value={office.id}>{office.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                   <Button
                     variant="contained"
                     color="primary"
