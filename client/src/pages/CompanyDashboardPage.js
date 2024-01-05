@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
-import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Divider } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Divider, Button } from '@mui/material';
+import { LineChart } from '@mui/x-charts/LineChart';
 import IconButton from '@mui/material/IconButton';
 import Popover from '@mui/material/Popover';
 import InfoIcon from '@mui/icons-material/Info';
@@ -24,6 +25,8 @@ export default function CompanyDashboard() {
   const [sortBy, setSortBy] = useState('carbonFootprintAverage');
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
+  const [lineChartLength, setLineChartLength] = useState('week');
+  const [lineChartData, setLineChartData] = useState({});
 
   const handleInfoPopoverOpen = (event) => {
     setInfoPopoverAnchorEl(event.currentTarget);
@@ -95,6 +98,40 @@ export default function CompanyDashboard() {
     }
   }, [companyCarbonStandard, companyData, green_gradient, amber_gradient, red_gradient]);
 
+  useEffect(() => {
+    if (userData) {
+      fetch(`${baseURL}/getLineChartData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "company",
+          lineChartLength: lineChartLength,
+          user_id: userData.id,
+          team_id: 0,
+          company_id: userData.company_id
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setLineChartData(data.data);
+
+          } else {
+            toast.error("Failed to fetch line chart data.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching line chart data.");
+        });
+    }
+  }, [userData, lineChartLength]);
+
+  const handleLineChartLengthChange = (length) => {
+    setLineChartLength(length);
+  };
+
   const handleSortChange = (event) => {
     const sortKey = event.target.value;
     setSortBy(sortKey);
@@ -121,6 +158,8 @@ export default function CompanyDashboard() {
     const filteredTeams = teamsData.filter((team) => team.division.toLowerCase().includes(divisionTerm.toLowerCase()));
     setSortedTeamsData(filteredTeams);
   };
+
+
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -162,12 +201,48 @@ export default function CompanyDashboard() {
             <Grid item xs={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
-                  <Typography variant="h7" paragraph>
-                    Company Total Weekly Commuting Carbon Footprint:
-                  </Typography>
-                  <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {companyData.totalCarbonFootprint} kg CO2
-                  </Typography>
+                  {lineChartData?.footprintList && (
+                    <LineChart
+                      width={300}
+                      height={230}
+                      series={[
+                        { data: lineChartData.footprintList, label: 'Company Avg CF' },
+                      ]}
+                      xAxis={[{
+                        scaleType: 'point',
+                        data: lineChartData.dates,
+                        label: 'Last 4 ' + lineChartLength + 's',
+                      }]}
+                    />
+                  )}
+                  {!lineChartData?.footprintList && (
+                    <Typography>Loading line chart...</Typography>
+                  )}
+                  <div>
+                  <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => handleLineChartLengthChange('week')}
+                      style={{
+                        borderColor: lineChartLength === 'week' ? '#02B2AF' : 'grey',
+                        color: lineChartLength === 'week' ? '#02B2AF' : 'grey',
+                        marginRight: '10px'
+                      }}
+                    >
+                      Week
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => handleLineChartLengthChange('month')}
+                      style={{
+                        borderColor: lineChartLength === 'month' ? '#02B2AF' : 'grey',
+                        color: lineChartLength === 'month' ? '#02B2AF' : 'grey'
+                      }}
+                    >
+                      Month
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </Grid>

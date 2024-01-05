@@ -7,6 +7,8 @@ import { useUser } from '../context/UserContext';
 import InfoIcon from '@mui/icons-material/Info';
 import { baseURL } from "../utils/constant";
 import { getGradientColors } from "../utils/gradientConstants";
+import { LineChart } from '@mui/x-charts/LineChart';
+import { styled } from '@mui/material/styles';
 
 export default function YourDashboard() {
   const { userData } = useUser();
@@ -19,6 +21,8 @@ export default function YourDashboard() {
   const [gradient, setGradient] = useState('');
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
+  const [lineChartLength, setLineChartLength] = useState('week');
+  const [lineChartData, setLineChartData] = useState({});
 
   const handleInfoPopoverOpen = (event) => {
     setInfoPopoverAnchorEl(event.currentTarget);
@@ -26,6 +30,41 @@ export default function YourDashboard() {
 
   const handleInfoPopoverClose = () => {
     setInfoPopoverAnchorEl(null);
+  };
+
+  useEffect(() => {
+    if (userData) {
+      fetch(`${baseURL}/getLineChartData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "user",
+          lineChartLength: lineChartLength,
+          user_id: userData.id,
+          team_id: 0,
+          company_id: userData.company_id
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setLineChartData(data.data);
+
+          } else {
+            toast.error("Failed to fetch line chart data.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching line chart data.");
+        });
+    }
+  }, [userData, lineChartLength]);
+
+  const handleLineChartLengthChange = (length) => {
+    console.log("pressed")
+    setLineChartLength(length);
   };
 
   useEffect(() => {
@@ -83,6 +122,8 @@ export default function YourDashboard() {
       });
 
   }, [userData, confirmedPreferences, firstLoad]);
+
+
 
   useEffect(() => {
     if (companyCarbonStandard && dashboardData) {
@@ -145,6 +186,7 @@ export default function YourDashboard() {
       });
   };
 
+
   return (
     <Box sx={{ display: 'flex' }}>
       <SideNavbar />
@@ -153,7 +195,7 @@ export default function YourDashboard() {
         <div style={{ flex: 1, display: 'flex' }}>
           <Grid container spacing={3}>
             {/* First row */}
-            <Grid item xs={6}>
+            <Grid item xs={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px' }}>
                   <Typography variant="h6" paragraph>
@@ -174,7 +216,7 @@ export default function YourDashboard() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={4}>
               <Card sx={{ height: '100%', backgroundImage: gradient }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <Typography variant="h6" paragraph>
@@ -193,6 +235,56 @@ export default function YourDashboard() {
                 </CardContent>
               </Card>
             </Grid>
+
+            <Grid item xs={4}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
+                  {lineChartData?.footprintList && (
+                    <LineChart
+                      width={300}
+                      height={230}
+                      series={[
+                        { data: lineChartData.footprintList, label: 'Your Avg CF' },
+                      ]}
+                      xAxis={[{
+                        scaleType: 'point',
+                        data: lineChartData.dates,
+                        label: 'Last 4 ' + lineChartLength + 's',
+                      }]}
+                    />
+                  )}
+                  {!lineChartData?.footprintList && (
+                    <Typography>Loading line chart...</Typography>
+                  )}
+                  <div>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => handleLineChartLengthChange('week')}
+                      style={{
+                        borderColor: lineChartLength === 'week' ? '#02B2AF' : 'grey',
+                        color: lineChartLength === 'week' ? '#02B2AF' : 'grey',
+                        marginRight: '10px'
+                      }}
+                    >
+                      Week
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => handleLineChartLengthChange('month')}
+                      style={{
+                        borderColor: lineChartLength === 'month' ? '#02B2AF' : 'grey',
+                        color: lineChartLength === 'month' ? '#02B2AF' : 'grey'
+                      }}
+                    >
+                      Month
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </Grid>
+
 
             {/* Third row */}
             <Grid item xs={12}>

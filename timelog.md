@@ -263,3 +263,6 @@
 
 ### 30 Dec 2023
 * *0.5 hour* Added code to add data to Transport Mode Detection Machine Learning dataset in mobile app.
+
+### 4 Jan 2023
+* *8 hours* Created all the dashboard line charts for last 4 weeks and months.

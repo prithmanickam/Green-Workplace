@@ -6,14 +6,14 @@ const path = require('path');
 
 const schedule = require('node-schedule');
 
-const job = schedule.scheduleJob('59 23 * * 0', async function () {
+const job = schedule.scheduleJob('00 23 * * 0', async function () {
   try {
-    console.log('Executing the scheduled task every Sunday at midnight');
+    console.log('Executing the scheduled task every Sunday at evening');
 
     // Fetch data from Team_Member
     const { data: usersTeams, error: getUsersTeamsError } = await supabase
       .from("Team_Member")
-      .select(`team_id, user_id, monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf`);
+      .select(`team_id, user_id, monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf, Team(company_id)`);
 
     // if (getUsersTeamsError) {
     //   throw getUsersTeamsError;
@@ -39,7 +39,8 @@ const job = schedule.scheduleJob('59 23 * * 0', async function () {
             user_id: entry.user_id,
             team_id: entry.team_id,
             week: formattedDate,
-            carbon_footprint: totalCarbonFootprint
+            carbon_footprint: totalCarbonFootprint,
+            company_id: Team.company_id,
           }
         ]);
 

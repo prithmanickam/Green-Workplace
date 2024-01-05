@@ -10,7 +10,6 @@ import Avatar from '@mui/material/Avatar';
 import InfoIcon from '@mui/icons-material/Info';
 import InputLabel from '@mui/material/InputLabel';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { styled } from '@mui/material/styles';
 
 export default function TeamDashboard() {
   const { userData } = useUser();
@@ -85,6 +84,7 @@ export default function TeamDashboard() {
         body: JSON.stringify({
           type: "team",
           lineChartLength: lineChartLength,
+          user_id: userData.id,
           team_id: selectedTeamId,
           company_id: userData.company_id
         }),
@@ -170,23 +170,6 @@ export default function TeamDashboard() {
       }
     }
   }, [companyCarbonStandard, teamDashboardData, green_gradient, amber_gradient, red_gradient])
-
-  const LineChartButton = styled(Button)(({ theme, active }) => ({
-    margin: theme.spacing(1),
-    padding: theme.spacing(0.75), 
-    fontSize: '0.75rem', 
-    minWidth: 'auto', 
-    height: '30px', 
-    borderColor: active ? '#02B2AF' : 'grey',
-    backgroundColor: 'transparent', 
-    color: active ? '#02B2AF' : 'grey',
-    borderWidth: 2,
-    '&:hover': {
-      borderColor: active ? '#02B2AF' : 'grey',
-      backgroundColor: 'transparent',
-    },
-  }));
-
 
   if (!userData || (userData.type !== 'Employee')) {
     return <Navigate to="/homepage" replace />;
@@ -287,22 +270,29 @@ export default function TeamDashboard() {
                     <Typography>Loading line chart...</Typography>
                   )}
                   <div>
-                    <LineChartButton
+                  <Button
                       variant="outlined"
                       size="small"
-                      active={lineChartLength === 'week'}
                       onClick={() => handleLineChartLengthChange('week')}
+                      style={{
+                        borderColor: lineChartLength === 'week' ? '#02B2AF' : 'grey',
+                        color: lineChartLength === 'week' ? '#02B2AF' : 'grey',
+                        marginRight: '10px'
+                      }}
                     >
                       Week
-                    </LineChartButton>
-                    <LineChartButton
+                    </Button>
+                    <Button
                       variant="outlined"
                       size="small"
-                      active={lineChartLength === 'month'}
                       onClick={() => handleLineChartLengthChange('month')}
+                      style={{
+                        borderColor: lineChartLength === 'month' ? '#02B2AF' : 'grey',
+                        color: lineChartLength === 'month' ? '#02B2AF' : 'grey'
+                      }}
                     >
                       Month
-                    </LineChartButton>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

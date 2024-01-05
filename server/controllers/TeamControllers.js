@@ -606,7 +606,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
     //   return res.status(500).json({ status: "error" });
     // }
 
-    
+
     const teamInfo = {
       id: team[0].id,
       name: team[0].name,
@@ -671,7 +671,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
 
 
 module.exports.getLineChartData = async (req, res) => {
-  const { type, lineChartLength, team_id, company_id } = req.body;
+  const { type, lineChartLength, user_id, team_id, company_id } = req.body;
 
   try {
 
@@ -686,39 +686,105 @@ module.exports.getLineChartData = async (req, res) => {
       const mondays = [];
       let date = new Date();
 
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 5; i++) {
         date.setDate(date.getDate() - (date.getDay() + 6) % 7);
         mondays.push(formatAsDDMMYY(date));
         date.setDate(date.getDate() - 1);
       }
+      mondays.reverse();
+      mondays.pop();
 
       return mondays;
     }
 
+    function getFirstDayOfLast4Months() {
+      const monthNumbers = [];
+      let date = new Date();
+
+      for (let i = 0; i < 5; i++) {
+        // Set the date to the first day of the current month
+        date.setDate(1);
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Get the month number as two digits
+        monthNumbers.unshift(month); // Add to the beginning of the array
+        // Move to the first day of the previous month
+        date.setMonth(date.getMonth() - 1);
+      }
+      monthNumbers.pop();
+
+      return monthNumbers;
+    }
+
+    let weeklyFootprint = 0;
+    let monthlyFootprint = 0;
     let footprintList = [];
     let dates = [];
 
+    let field_name = "";
+    let id_name = "";
+
     if (type === "team") {
-      if ((lineChartLength === "week") || (lineChartLength === "month")) {
-        dates = getLast4Mondays();
-        dates.reverse();
+      field_name = "team_id";
+      id_name = team_id;
+    } else if (type === "company") {
+      field_name = "company_id";
+      id_name = company_id;
+    } else if (type === "user") {
+      field_name = "user_id";
+      id_name = user_id;
+    }
 
-        for (const monday of dates) {
-          const { data, error } = await supabase
-            .from("Team_Member_History")
-            .select("carbon_footprint")
-            .eq("team_id", team_id)
-            .eq("week", monday);
+    if (lineChartLength === "week") {
+      dates = getLast4Mondays();
 
-          // if (error) {
-          //   console.error("Error fetching carbon footprint:", error);
-          //   throw error;
-          // }
+      for (const monday of dates) {
 
-          const weeklyFootprint = data.reduce((sum, record) => sum + record.carbon_footprint, 0) / data.length;
-          const validWeeklyFootprint = isNaN(weeklyFootprint) ? 0 : weeklyFootprint;
-          footprintList.push(validWeeklyFootprint);
+        const { data, error } = await supabase
+          .from("Team_Member_History")
+          .select("carbon_footprint")
+          .eq(field_name, id_name)
+          .eq("week", monday);
 
+        if (type === "user") {
+          weeklyFootprint = data.reduce((sum, record) => sum + record.carbon_footprint, 0);
+        } else {
+          weeklyFootprint = data.reduce((sum, record) => sum + record.carbon_footprint, 0) / data.length;
+        }
+        const validWeeklyFootprint = isNaN(weeklyFootprint) ? 0 : weeklyFootprint;
+        footprintList.push(validWeeklyFootprint);
+
+      }
+    } else if (lineChartLength === "month") {
+      dates = getFirstDayOfLast4Months();
+
+      for (const month of dates) {
+        const { data, error } = await supabase
+          .from("Team_Member_History")
+          .select("carbon_footprint, week")
+          .eq(field_name, id_name)
+          .gte("week", `01-${month}-23`)
+          .lte("week", `31-${month}-23`);
+
+        if (data && data.length > 0) {
+          const filteredData = data.filter(record => record.week.includes(`-${month}-`));
+
+          if (type === "user") {
+            let weeklySums = {};
+            for (const record of filteredData) {
+              if (!weeklySums[record.week]) {
+                weeklySums[record.week] = 0;
+              }
+              weeklySums[record.week] += record.carbon_footprint;
+            }
+            // Sum the weekly sums and then divide by the number of unique weeks
+            monthlyFootprint = Object.values(weeklySums).reduce((sum, weekSum) => sum + weekSum, 0) / Object.keys(weeklySums).length;
+          } else {
+            monthlyFootprint = filteredData.reduce((sum, record) => sum + record.carbon_footprint, 0) / filteredData.length;
+          }
+
+          footprintList.push(monthlyFootprint);
+        } else {
+          console.log(`No data found for month: ${month}`);
+          footprintList.push(0);
         }
       }
     }
@@ -757,7 +823,7 @@ module.exports.getCompanyDashboardData = async (req, res) => {
 
     //if (getTeamsError) {
     //  console.error("Error finding teams:", getTeamsError);
-      //return res.status(500).json({ status: "error" });
+    //return res.status(500).json({ status: "error" });
     //}
 
     const teamsInfo = [];
@@ -808,8 +874,8 @@ module.exports.getCompanyDashboardData = async (req, res) => {
       .eq("id", company_id);
 
     //if (getCompanyNameError) {
-      //console.error("Error finding teams:", getCompanyNameError);
-      //return res.status(500).json({ status: "error" });
+    //console.error("Error finding teams:", getCompanyNameError);
+    //return res.status(500).json({ status: "error" });
     //}
 
     companyInfo.name = companyName[0].name
