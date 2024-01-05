@@ -8,7 +8,6 @@ import InfoIcon from '@mui/icons-material/Info';
 import { baseURL } from "../utils/constant";
 import { getGradientColors } from "../utils/gradientConstants";
 import { LineChart } from '@mui/x-charts/LineChart';
-import { styled } from '@mui/material/styles';
 
 export default function YourDashboard() {
   const { userData } = useUser();
