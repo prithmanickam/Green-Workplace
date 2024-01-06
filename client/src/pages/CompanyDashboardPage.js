@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
-import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Divider, Button } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Divider, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
 import IconButton from '@mui/material/IconButton';
 import Popover from '@mui/material/Popover';
@@ -31,6 +31,19 @@ export default function CompanyDashboard() {
   const [barChartData, setBarChartData] = useState({});
   const [selectedOffice, setSelectedOffice] = useState('');
   const [officeChartData, setOfficeChartData] = useState([0, 0, 0, 0, 0]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(8);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const paginatedTeamsData = sortedTeamsData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const handleInfoPopoverOpen = (event) => {
     setInfoPopoverAnchorEl(event.currentTarget);
@@ -129,7 +142,7 @@ export default function CompanyDashboard() {
           toast.error("An error occurred while fetching line chart data.");
         });
     }
-  }, [userData, lineChartLength]);
+  }, [userData, barChartData]);
 
   useEffect(() => {
     if (barChartData && selectedOffice) {
@@ -233,16 +246,16 @@ export default function CompanyDashboard() {
                     height={200}
                   />
 
-                  <Stack direction="row" spacing={2}  alignItems="center">
+                  <Stack direction="row" spacing={2} alignItems="center">
                     <Typography variant="h8" paragraph>
                       Select Office:
                     </Typography>
 
                     <Select
                       value={selectedOffice}
-                      onChange={handleOfficeChange}           
+                      onChange={handleOfficeChange}
                     >
-              
+
                       {Object.keys(barChartData).map((office) => (
                         <MenuItem key={office} value={office}>{office}</MenuItem>
                       ))}
@@ -255,13 +268,13 @@ export default function CompanyDashboard() {
             <Grid item xs={4}>
               <Card sx={{ height: '100%', backgroundImage: gradient }} >
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
-                <Typography variant="h6" paragraph>
-                      Company Info: 
+                  <Typography variant="h6" paragraph>
+                    Company Info:
                   </Typography>
                   <Typography variant="h7" paragraph>
-                      Name: {companyData.name}
+                    Name: {companyData.name}
                   </Typography>
-                  
+
                   <Typography variant="h7" paragraph>
                     Company Average Weekly Commuting Carbon Footprint:
                   </Typography>
@@ -365,24 +378,46 @@ export default function CompanyDashboard() {
                   onChange={handleDivisionSearchChange}
                 />
               </Stack>
-              <Grid container direction="column" spacing={2}>
-                {sortedTeamsData.map((team) => (
-                  <Grid item key={team.id}>
-                    <Card sx={{ height: 'auto' }}>
-                      <CardContent>
-                        {team.name}
-                        <br />
-                        Owner Email: {team.ownerEmail}
-                        <br />
-                        Division: {team.division}
-                        <br />
-                        Average Weekly Commuting Carbon Footprint: {team.carbonFootprintAverage}
-                        <br />
-                        Number of Members: {team.numberOfMembers}
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+              <Grid container direction="column" spacing={2} py={3}>
+                <TableContainer component={Paper}>
+                  <Table sx={{ minWidth: 650 }} aria-label="team table">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Team Name</TableCell>
+                        <TableCell align="right">Owner Email</TableCell>
+                        <TableCell align="right">Division</TableCell>
+                        <TableCell align="right">Average Weekly CF</TableCell>
+                        <TableCell align="right">Number of Members</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {paginatedTeamsData.map((team) => (
+                        <TableRow
+                          key={team.id}
+                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                        >
+                          <TableCell component="th" scope="row">
+                            {team.name}
+                          </TableCell>
+                          <TableCell align="right">{team.ownerEmail}</TableCell>
+                          <TableCell align="right">{team.division}</TableCell>
+                          <TableCell align="right">{team.carbonFootprintAverage}</TableCell>
+                          <TableCell align="right">{team.numberOfMembers}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <TablePagination
+                    rowsPerPageOptions={[8]}
+                    component="div"
+                    count={sortedTeamsData.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                  />
+
+                </TableContainer>
               </Grid>
             </Grid>
           </Grid>
@@ -453,6 +488,6 @@ export default function CompanyDashboard() {
           ></div>
         </Stack>
       </Popover>
-    </Box>
+    </Box >
   );
 }
