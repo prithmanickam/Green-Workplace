@@ -119,7 +119,6 @@ export default function AddEmployees() {
   };
 
 
-
   return (
     <Box sx={{ display: 'flex' }}>
       <SideNavbar />

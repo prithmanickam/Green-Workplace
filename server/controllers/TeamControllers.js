@@ -802,6 +802,51 @@ module.exports.getLineChartData = async (req, res) => {
 };
 
 
+module.exports.getBarChartData = async (req, res) => {
+  const { company_id } = req.body;
+
+  try {
+    let offices = {};
+    const { data: users } = await supabase
+      .from("User")
+      .select(`
+        Office(name),
+        Team_Member(monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf)
+      `)
+      .eq("company_id", company_id)
+      .neq("type", "Admin");
+
+    users.forEach(user => {
+      const officeName = user.Office.name;
+
+      // Initialize office in the offices object if it doesn't exist
+      if (!offices[officeName]) {
+        offices[officeName] = { monday: 0, tuesday: 0, wednesday: 0, thursday: 0, friday: 0 };
+      }
+
+      // Object to track if a day has already been incremented for this user
+      const incrementedDays = { monday: false, tuesday: false, wednesday: false, thursday: false, friday: false };
+
+      // Iterate through each team member
+      user.Team_Member.forEach(member => {
+        ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+          // Check if the day's cf > 0 and if the day has not been incremented yet for this user
+          if (member[`${day}_cf`] > 0 && !incrementedDays[day]) {
+            offices[officeName][day] += 1;
+            incrementedDays[day] = true; // Mark the day as incremented
+          }
+        });
+      });
+    });
+
+    res.status(200).json({ status: "ok", data: offices });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+
 module.exports.getCompanyDashboardData = async (req, res) => {
   const { company_id } = req.body;
 

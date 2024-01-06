@@ -17,7 +17,8 @@ const {
     editTeamWAODays,
     addTeamMember,
     removeTeamMember,
-    getLineChartData
+    getLineChartData,
+    getBarChartData,
 } = require("../controllers/TeamControllers");
 
 const router = Router();
@@ -70,7 +71,10 @@ router.post("/getTeamDashboardData", getTeamDashboardData);
 //to get the users company dashboard data from the database
 router.post("/getCompanyDashboardData", getCompanyDashboardData);
 
-//to get the users team dashboard data from the database
+//to get the line chart data from the database
 router.post("/getLineChartData", getLineChartData);
+
+//to get the bar chart data from the database
+router.post("/getBarChartData", getBarChartData);
 
 module.exports = router;

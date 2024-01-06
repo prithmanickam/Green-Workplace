@@ -269,3 +269,4 @@
 
 ### 5 Jan 2023
 * *3 hours* Office now added for employee registration by Admin accounts.
+* *4 hours* Created No. of Employees in Office Barchart for Company Dashboard.

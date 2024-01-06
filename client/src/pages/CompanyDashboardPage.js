@@ -9,6 +9,7 @@ import { baseURL } from "../utils/constant";
 import { getGradientColors } from "../utils/gradientConstants";
 import { useUser } from '../context/UserContext';
 import { toast } from "react-toastify";
+import { BarChart } from '@mui/x-charts/BarChart';
 import "../App.css"
 
 export default function CompanyDashboard() {
@@ -27,6 +28,9 @@ export default function CompanyDashboard() {
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
   const [lineChartLength, setLineChartLength] = useState('week');
   const [lineChartData, setLineChartData] = useState({});
+  const [barChartData, setBarChartData] = useState({});
+  const [selectedOffice, setSelectedOffice] = useState('');
+  const [officeChartData, setOfficeChartData] = useState([0, 0, 0, 0, 0]);
 
   const handleInfoPopoverOpen = (event) => {
     setInfoPopoverAnchorEl(event.currentTarget);
@@ -100,22 +104,22 @@ export default function CompanyDashboard() {
 
   useEffect(() => {
     if (userData) {
-      console.log("hi in useeffect")
+
       fetch(`${baseURL}/getBarChartData`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-
           company_id: userData.company_id
         }),
       })
         .then((res) => res.json())
         .then((data) => {
           if (data.status === "ok") {
-            console.log("hi status ok")
-            //setLineChartData(data.data);
+
+            setBarChartData(data.data);
+            console.log(barChartData)
 
           } else {
             toast.error("Failed to fetch line chart data.");
@@ -126,6 +130,23 @@ export default function CompanyDashboard() {
         });
     }
   }, [userData, lineChartLength]);
+
+  useEffect(() => {
+    if (barChartData && selectedOffice) {
+      // Extract values in the order of the days from Monday to Friday
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+      const data = days.map(day => barChartData[selectedOffice][day]);
+
+      console.log(data);
+      setOfficeChartData(data);
+    }
+  }, [selectedOffice, barChartData]);
+
+
+  const handleOfficeChange = (event) => {
+    setSelectedOffice(event.target.value);
+  };
+
 
   useEffect(() => {
     if (userData) {
@@ -189,28 +210,58 @@ export default function CompanyDashboard() {
   };
 
 
-
   return (
     <Box sx={{ display: 'flex' }}>
       <SideNavbar />
       <Box component="main" sx={{ flexGrow: 1, py: 10, px: 5, display: 'flex', flexDirection: 'column' }}>
-        <h1>Company Dashboard</h1>
+        <h1>Company Dashboard </h1>
         <div style={{ flex: 1, display: 'flex' }}>
           <Grid container spacing={3}>
             {/* First row */}
             <Grid item xs={4}>
               <Card sx={{ height: '100%' }}>
-                <CardContent style={{ minHeight: '100px' }}>
-                  <Typography variant="h6" paragraph>
-                    Company Info:
-                  </Typography>
-                  Name: {companyData.name}
+                <CardContent style={{ minHeight: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+
+                  <BarChart
+                    xAxis={[{ scaleType: 'band', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], label: 'Days' }]}
+                    series={[{
+                      data: officeChartData,
+                      color: '#eed202',
+                      label: 'No. of Employees in Office',
+                    }]}
+                    width={300}
+                    height={200}
+                  />
+
+                  <Stack direction="row" spacing={2}  alignItems="center">
+                    <Typography variant="h8" paragraph>
+                      Select Office:
+                    </Typography>
+
+                    <Select
+                      value={selectedOffice}
+                      onChange={handleOfficeChange}           
+                    >
+              
+                      {Object.keys(barChartData).map((office) => (
+                        <MenuItem key={office} value={office}>{office}</MenuItem>
+                      ))}
+                    </Select>
+
+                  </Stack>
                 </CardContent>
               </Card>
             </Grid>
             <Grid item xs={4}>
               <Card sx={{ height: '100%', backgroundImage: gradient }} >
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
+                <Typography variant="h6" paragraph>
+                      Company Info: 
+                  </Typography>
+                  <Typography variant="h7" paragraph>
+                      Name: {companyData.name}
+                  </Typography>
+                  
                   <Typography variant="h7" paragraph>
                     Company Average Weekly Commuting Carbon Footprint:
                   </Typography>
@@ -248,7 +299,7 @@ export default function CompanyDashboard() {
                     <Typography>Loading line chart...</Typography>
                   )}
                   <div>
-                  <Button
+                    <Button
                       variant="outlined"
                       size="small"
                       onClick={() => handleLineChartLengthChange('week')}
