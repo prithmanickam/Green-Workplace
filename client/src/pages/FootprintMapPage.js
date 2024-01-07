@@ -57,6 +57,8 @@ function FootprintMapPage() {
   const [directionsResponse, setDirectionsResponse] = useState(null);
   const [distance, setDistance] = useState('');
   const [duration, setDuration] = useState('');
+  const [doubledDuration, setDoubledDuration] = useState('');
+  const [doubledDistance, setDoubledDistance] = useState('');
   const [travelMode, setTravelMode] = useState('TRANSIT');
   const [departureTime, setDepartureTime] = useState('08:00');
   const [carbonFootprint, setCarbonFootprint] = useState('');
@@ -70,10 +72,10 @@ function FootprintMapPage() {
 
   useEffect(() => {
     if (distance !== '') {
-      const carbonFootprint = calculateCarbonFootprint(parseFloat(distance), travelMode);
+      const carbonFootprint = calculateCarbonFootprint(parseFloat(doubledDistance), travelMode);
       setCarbonFootprint(carbonFootprint);
     }
-  }, [distance, travelMode]);
+  }, [distance, doubledDistance, travelMode]);
 
   useEffect(() => {
     fetch(`${baseURL}/getUserTeamsData`, {
@@ -102,6 +104,42 @@ function FootprintMapPage() {
         toast.error("An error occurred while fetching teams data.");
       });
   }, [userData]);
+
+  useEffect(() => {
+    if (duration !== '') {
+      setDoubledDistance(`${distance.slice(0, -3) * 2} km`)
+      const regex = /(\d+)\s*hour(s)?\s*(\d+)?\s*min(s)?/;
+      const matches = duration.match(regex);
+
+      if (!matches) {
+        const minutesRegex = /(\d+)\s*min(s)?/;
+        const minutesMatch = duration.match(minutesRegex);
+
+        if (!minutesMatch) {
+          return "Invalid input format";
+        }
+
+        const minutes = parseInt(minutesMatch[1]);
+        const doubledMinutes = minutes * 2;
+        setDoubledDuration(`${doubledMinutes} mins`);
+        return
+
+      }
+
+      const hours = parseInt(matches[1]) || 0;
+      const minutes = parseInt(matches[3]) || 0;
+
+      const totalMinutes = hours * 60 + minutes;
+      const doubledTotalMinutes = totalMinutes * 2;
+
+      const doubledHours = Math.floor(doubledTotalMinutes / 60);
+      const doubledMinutes = doubledTotalMinutes % 60;
+
+      setDoubledDuration(`${doubledHours} hours ${doubledMinutes} mins`);
+      return
+    }
+  }, [distance, duration]);
+
 
   if (!isLoaded) {
     console.log(map)
@@ -201,7 +239,7 @@ function FootprintMapPage() {
     <Box key={team.teamName}>
       <hr />
       <Typography>{team.teamName}</Typography>
-      
+
       <TextField
         //label="Percentage"
         size="small"
@@ -284,7 +322,7 @@ function FootprintMapPage() {
         body: JSON.stringify({
           user_id: userData.id,
           day,
-          duration,
+          duration: doubledDuration,
           carbonFootprint: parseFloat(carbonFootprint),
           teamData,
         }),
@@ -301,8 +339,14 @@ function FootprintMapPage() {
     }
   }
 
+
   return (
+
     <>
+
+      <div style={{ position: 'fixed', zIndex: 100, width: '100%' }}>
+        <TopNavbar />
+      </div>
       <Box
         style={{
           position: 'fixed',
@@ -312,7 +356,7 @@ function FootprintMapPage() {
           width: '100%',
         }}
       >
-        <TopNavbar/>
+
         <GoogleMap
           center={center}
           zoom={15}
@@ -342,8 +386,6 @@ function FootprintMapPage() {
           backgroundColor: sideBarColour,
           boxShadow: 'base',
           width: 270,
-          height: 564,
-          //height: '100vh', 
           position: 'absolute',
           top: 0,
           left: 0,
@@ -484,8 +526,8 @@ function FootprintMapPage() {
           <CardContent>
             <Grid container alignItems="center" spacing={1}>
               <Grid item xs={9}>
-                <Typography style={{ fontSize: '15px' }}>Distance: {distance}</Typography>
-                <Typography style={{ fontSize: '15px' }}>Duration: {duration}</Typography>
+                <Typography style={{ fontSize: '13px' }}>Distance: {distance} x 2 = {doubledDistance}</Typography>
+                <Typography style={{ fontSize: '13px' }}>Duration: {duration} x 2 = {doubledDuration} </Typography>
                 <Box py={1}>
                   <Divider />
                 </Box>
@@ -504,7 +546,7 @@ function FootprintMapPage() {
             type='submit'
             onClick={handleSubmit}
             sx={{
-              mt: 3, mb: 2, px: 6,
+              px: 6,
               color: "white",
               font: "Arial",
               backgroundColor: "#3182CE",
@@ -519,7 +561,7 @@ function FootprintMapPage() {
             aria-label='center back'
             onClick={navigateBack}
             sx={{
-              mt: 3, mb: 2,
+
               color: "white",
               font: "Arial",
               backgroundColor: "grey",

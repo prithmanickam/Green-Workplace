@@ -273,3 +273,6 @@
 
 ### 6 Jan 2023
 * *1 hour* Teams displayed as table format in company dashboard and has paigination.
+
+### 7 Jan 2023
+* *3 hours* Double carbon footprint in Google Maps Pagecalculator for return journeys, and Fixed calculate route component overlapping top-navbar in Map Page Bug
