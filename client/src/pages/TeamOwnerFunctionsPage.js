@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
 import { Box, Typography, Select, MenuItem, Stack, Button, TextField } from '@mui/material';
 import { toast } from "react-toastify";
@@ -11,6 +10,7 @@ import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import InputLabel from '@mui/material/InputLabel';
 import Autocomplete from '@mui/material/Autocomplete';
 import Divider from '@mui/material/Divider';
+import useAuth from '../hooks/useAuth';
 
 export default function TeamOwnerFunctions() {
   const { userData } = useUser();
@@ -27,41 +27,45 @@ export default function TeamOwnerFunctions() {
   const [confirmedPreferences, setConfirmedPreferences] = useState([]);
   const [firstLoad, setFirstLoad] = useState(true);
 
+  useAuth(["Employee"]);
+
   const teamOptions = userTeams.map(team => ({
     team_id: team.id,
     team_name: team.name,
   }));
 
   useEffect(() => {
-    fetch(`${baseURL}/getUserTeamOwnerTeams`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setUserTeams(data.user_teams);
-          if (data.user_teams.length > 0 && selectedTeam === '') {
-            // Set the initial selected team to the first team only if it's not already set
-            setSelectedTeam(data.user_teams[0].name);
-            setSelectedTeamId(data.user_teams[0].id);
-          }
-        } else {
-          toast.error("Failed to fetch user's teams.");
-        }
+    if (userData) {
+      fetch(`${baseURL}/getUserTeamOwnerTeams`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setUserTeams(data.user_teams);
+            if (data.user_teams.length > 0 && selectedTeam === '') {
+              // Set the initial selected team to the first team only if it's not already set
+              setSelectedTeam(data.user_teams[0].name);
+              setSelectedTeamId(data.user_teams[0].id);
+            }
+          } else {
+            toast.error("Failed to fetch user's teams.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching teams data.");
+        });
+    }
   }, [userData, selectedTeam]);
 
   useEffect(() => {
-    if (selectedTeamId) {
+    if (selectedTeamId && userData) {
       fetch(`${baseURL}/getTeamOwnerFunctionsData`, {
         method: "POST",
         headers: {
@@ -230,10 +234,6 @@ export default function TeamOwnerFunctions() {
         toast.error("An error occurred while saving preferences.");
       });
   };
-
-  if (!userData || (userData.type !== 'Employee')) {
-    return <Navigate to="/homepage" replace />;
-  }
 
   return (
     <Box sx={{ display: 'flex' }}>

@@ -6,7 +6,6 @@ import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
 import InputAdornment from '@mui/material/InputAdornment';
-
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import DirectionsBikeIcon from '@mui/icons-material/DirectionsBike';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
@@ -17,6 +16,7 @@ import ElectricCarIcon from '@mui/icons-material/ElectricCar';
 import ElectricScooterIcon from '@mui/icons-material/ElectricScooter';
 import SubwayIcon from '@mui/icons-material/Subway';
 import TramIcon from '@mui/icons-material/Tram';
+import useAuth from '../hooks/useAuth';
 
 const CO2_EMISSIONS_PER_MINUTE = {
   Car: 0.009,
@@ -42,6 +42,8 @@ export default function ManuallyAddFootprint() {
   const [carbonFootprint, setCarbonFootprint] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
 
+  useAuth(["Employee"]);
+
   const getTransportIcon = (mode) => {
     switch (mode) {
       case 'Car': return <DirectionsCarIcon />;
@@ -58,33 +60,34 @@ export default function ManuallyAddFootprint() {
     }
   };
 
-
   useEffect(() => {
-    fetch(`${baseURL}/getUserTeamsData`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          console.log("hi")
-          console.log(data.data)
-          const fetchedTeams = data.data;
-          console.log(fetchedTeams)
-          setTeams(fetchedTeams);
-
-        } else {
-          toast.error("Failed to fetch teams data. Please try again.");
-        }
+    if (userData) {
+      fetch(`${baseURL}/getUserTeamsData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            console.log("hi")
+            console.log(data.data)
+            const fetchedTeams = data.data;
+            console.log(fetchedTeams)
+            setTeams(fetchedTeams);
+
+          } else {
+            toast.error("Failed to fetch teams data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching teams data.");
+        });
+    }
   }, [userData]);
 
 
@@ -161,8 +164,6 @@ export default function ManuallyAddFootprint() {
     return (CO2_EMISSIONS_PER_MINUTE[mode] * totalMinutes).toFixed(2);
   };
 
-
-
   const isSingleTeamUser = Array.isArray(teams) && teams.length === 1;
 
   const teamFields = Array.isArray(teams) ? teams.map((team) => (
@@ -171,7 +172,6 @@ export default function ManuallyAddFootprint() {
       <Typography>{team.teamName}</Typography>
 
       <TextField
-        //label="Percentage"
         size="small"
         style={{ width: '100%' }}
         value={isSingleTeamUser ? 100 : teamPercentages[team.teamName] || ''}
@@ -218,34 +218,36 @@ export default function ManuallyAddFootprint() {
       calculatedCarbonFootprint: ((parseFloat(teamPercentages[team.teamName]) / 100) * parseFloat(carbonFootprint)).toFixed(2),
     }));
 
-    fetch(`${baseURL}/postCarbonFootprint`, {
-      method: "POST",
-      crossDomain: true,
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-        day: selectedDay,
-        duration,
-        carbonFootprint: parseFloat(carbonFootprint),
-        teamData,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data, "SetCarbonFootprint");
-        if (data.status === "ok") {
-          toast.success(`Carbon Stats Saved for ${selectedDay}.`);
-        } else {
-          toast.error("Something went wrong");
-        }
+    if (userData) {
+      fetch(`${baseURL}/postCarbonFootprint`, {
+        method: "POST",
+        crossDomain: true,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+          day: selectedDay,
+          duration,
+          carbonFootprint: parseFloat(carbonFootprint),
+          teamData,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while saving carbon stats.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data, "SetCarbonFootprint");
+          if (data.status === "ok") {
+            toast.success(`Carbon Stats Saved for ${selectedDay}.`);
+          } else {
+            toast.error("Something went wrong");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while saving carbon stats.");
+        });
+    }
   };
 
   return (

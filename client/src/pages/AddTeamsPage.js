@@ -13,11 +13,11 @@ import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import { toast } from "react-toastify";
-import { Navigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import Autocomplete from '@mui/material/Autocomplete';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { baseURL } from "../utils/constant";
+import useAuth from '../hooks/useAuth';
 
 export default function AddTeams() {
   const [emailInput, setEmailInput] = useState('');
@@ -37,79 +37,82 @@ export default function AddTeams() {
 
   const [selectedOffice, setSelectedOffice] = useState(null);
 
-  console.log(selectedOffice)
+  useAuth(["Admin"]);
 
   useEffect(() => {
-    // to get all teams
-    fetch(`${baseURL}/getTeams`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ company: userData.company_id }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          const allTeams = data.teams.map((team) => ({
-            teamId: team.team_id,
-            email: team.team_owner_email,
-            teamName: team.name,
-            office: team.office_name,
-            noOfMembers: team.team_members_count,
-          }));
-          setTeams(allTeams);
-        } else {
-          toast.error("Failed to fetch teams data. Please try again.");
-        }
+    if (userData) {
+      // to get all teams
+      fetch(`${baseURL}/getTeams`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ company: userData.company_id }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            const allTeams = data.teams.map((team) => ({
+              teamId: team.team_id,
+              email: team.team_owner_email,
+              teamName: team.name,
+              office: team.office_name,
+              noOfMembers: team.team_members_count,
+            }));
+            setTeams(allTeams);
+          } else {
+            toast.error("Failed to fetch teams data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching teams data.");
+        });
 
 
-    // to get all offices in the company
-    fetch(`${baseURL}/getOffices`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ company: userData.company_id }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          console.log("offices: ", data.data)
-          setOffices(data.data);
-        } else {
-          toast.error("Failed to fetch office data. Please try again.");
-        }
+      // to get all offices in the company
+      fetch(`${baseURL}/getOffices`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ company: userData.company_id }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            console.log("offices: ", data.data)
+            setOffices(data.data);
+          } else {
+            toast.error("Failed to fetch office data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching teams data.");
+        });
 
 
-    // Get all users (not admins) - for selecting team members
-    fetch(`${baseURL}/getAllUsers`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({company: userData.company_id}),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          const allEmails = data.users.map((user) => user.email);
-          setRegisteredAccounts(allEmails);
-        } else {
-          toast.error("Failed to fetch user data. Please try again.");
-        }
+      // Get all users (not admins) - for selecting team members
+      fetch(`${baseURL}/getAllUsers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ company: userData.company_id }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching user data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            const allEmails = data.users.map((user) => user.email);
+            setRegisteredAccounts(allEmails);
+          } else {
+            toast.error("Failed to fetch user data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching user data.");
+        });
+
+    }
   }, [userData]);
 
   // to register an account / check if details meet validations
@@ -141,7 +144,7 @@ export default function AddTeams() {
 
     if (teamOwner === null || teamName === "" || divisions === "" || office === null) {
       toast.error("You must fill all required fields.");
-    } else if (hasDuplicates){
+    } else if (hasDuplicates) {
       toast.error("Duplicate email addresses detected. Please remove duplicates.");
     } else {
       fetch(`${baseURL}/addTeam`, {
@@ -204,10 +207,6 @@ export default function AddTeams() {
       });
   };
 
-  if (!userData || (userData.type !== 'Admin')) {
-    return <Navigate to="/homepage" replace />;
-  }
-
   // Handle adding a team member to the selectedTeamMembers array
   const handleAddTeamMember = (event, newValue) => {
     if (newValue) {
@@ -265,14 +264,18 @@ export default function AddTeams() {
                         />
                       </Grid>
                       <Grid item xs={4}>
-                        <TextField
-                          name="company"
-                          label="Company ID"
-                          variant="outlined"
-                          fullWidth
-                          value={userData.company_id}
-                          disabled
-                        />
+                        {userData && (
+                          <>
+                            <TextField
+                              name="company"
+                              label="Company ID"
+                              variant="outlined"
+                              fullWidth
+                              value={userData.company_id}
+                              disabled
+                            />
+                          </>
+                        )}
                       </Grid>
                       <Grid item xs={4}>
                         <Autocomplete

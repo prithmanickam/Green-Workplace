@@ -13,11 +13,10 @@ import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import { toast } from "react-toastify";
-import { Navigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
-import { Select, MenuItem, FormControl, InputLabel  } from '@mui/material';
-//import axios from "axios";
+import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import useAuth from '../hooks/useAuth';
 
 export default function AddEmployees() {
   const [emailInput, setEmailInput] = useState('');
@@ -25,6 +24,8 @@ export default function AddEmployees() {
   const [selectedOffice, setSelectedOffice] = useState('');
   const [offices, setOffices] = useState([]);
   const { userData } = useUser();
+
+  useAuth(["Admin"]);
 
   useEffect(() => {
 
@@ -57,36 +58,34 @@ export default function AddEmployees() {
   };
 
   useEffect(() => {
-    fetch(`${baseURL}/getAllUsers`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ company: userData.company_id }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          // Extract user data (emails, first names, last names, and user types)
-          const allUsers = data.users.map((user) => ({
-            email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
-            type: user.type,
-          }));
-          setRegisteredAccounts(allUsers);
-        } else {
-          toast.error("Failed to fetch user data. Please try again.");
-        }
+    if (userData) {
+      fetch(`${baseURL}/getAllUsers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ company: userData.company_id }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching user data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            // Extract user data (emails, first names, last names, and user types)
+            const allUsers = data.users.map((user) => ({
+              email: user.email,
+              firstname: user.firstname,
+              lastname: user.lastname,
+              type: user.type,
+            }));
+            setRegisteredAccounts(allUsers);
+          } else {
+            toast.error("Failed to fetch user data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching user data.");
+        });
+    }
   }, [userData]);
-
-  if (!userData || (userData.type !== 'Admin')) {
-    return <Navigate to="/homepage" replace />;
-  }
 
   const handleEmailInputChange = (event) => {
     setEmailInput(event.target.value);

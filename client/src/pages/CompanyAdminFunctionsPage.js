@@ -3,10 +3,10 @@ import SideNavbar from '../components/SideNavbar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import { Navigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
 import { toast } from "react-toastify";
+import useAuth from '../hooks/useAuth';
 
 export default function CompanyAdminFunctions() {
   const { userData } = useUser();
@@ -14,39 +14,39 @@ export default function CompanyAdminFunctions() {
   const [amberStandard, setAmberStandard] = useState('');
   const [redStandard, setRedStandard] = useState('');
 
-  const handleSaveStandards = () => {
-    // Send the standards to the server
-    fetch(`${baseURL}/editCompanyCarbonStandard`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        company_id: userData.company_id,
-        greenStandard,
-        amberStandard,
-        redStandard,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          // Handle a successful response, e.g., show a success message.
-          toast.success('Standards saved successfully');
-        } else {
-          // Handle an error response, e.g., show an error message.
-          toast.error('Failed to save standards');
-        }
-      })
-      .catch((error) => {
-        // Handle any network or request error.
-        toast.error('An error occurred while saving standards', error);
-      });
-  };
+  useAuth(["Admin"]);
 
-  if (userData && userData.type !== 'Admin') {
-    return <Navigate to="/homepage" replace />;
-  }
+  const handleSaveStandards = () => {
+    if (userData) {
+      // Send the standards to the server
+      fetch(`${baseURL}/editCompanyCarbonStandard`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          company_id: userData.company_id,
+          greenStandard,
+          amberStandard,
+          redStandard,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            // Handle a successful response, e.g., show a success message.
+            toast.success('Standards saved successfully');
+          } else {
+            // Handle an error response, e.g., show an error message.
+            toast.error('Failed to save standards');
+          }
+        })
+        .catch((error) => {
+          // Handle any network or request error.
+          toast.error('An error occurred while saving standards', error);
+        });
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex' }}>

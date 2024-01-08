@@ -3,9 +3,10 @@ import { Link, Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
 import { Card, CardContent, Typography, Box, Button, Stack, Grid } from '@mui/material';
 import LinearProgress from '@mui/material/LinearProgress';
-import { useUser } from '../context/UserContext';
 import { toast } from "react-toastify";
 import { baseURL } from "../utils/constant";
+import { useUser } from '../context/UserContext';
+import useAuth from '../hooks/useAuth';
 
 export default function SetCarbonFootprint() {
 
@@ -14,38 +15,44 @@ export default function SetCarbonFootprint() {
   const [totalStats, setTotalStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch(`${baseURL}/getCarbonFootprint`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          const teamStats = data.stats;
-          setTeams(teamStats);
-          const totalStats = data.totalStats;
-          setTotalStats(totalStats);
+  useAuth(["Employee"]);
 
-        } else {
-          toast.error("Failed to fetch user carbon data for teams.");
-        }
+  useEffect(() => {
+
+    if (userData) {
+
+      fetch(`${baseURL}/getCarbonFootprint`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      })
-      .finally(() => {
-        setLoading(false); // Set loading to false when data fetching is complete
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            const teamStats = data.stats;
+            setTeams(teamStats);
+            const totalStats = data.totalStats;
+            setTotalStats(totalStats);
+
+          } else {
+            toast.error("Failed to fetch user carbon data for teams.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching teams data.");
+        })
+        .finally(() => {
+          setLoading(false); // Set loading to false when data fetching is complete
+        });
+    }
+
   }, [userData]);
 
-
-  if (!userData || (userData.type !== 'Employee')) {
+  if (userData && (userData.type !== 'Employee')) {
     return <Navigate to="/homepage" replace />;
   }
 

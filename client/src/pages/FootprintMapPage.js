@@ -16,6 +16,7 @@ import Select from '@mui/material/Select';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
+import useAuth from '../hooks/useAuth';
 
 import {
   useJsApiLoader,
@@ -46,10 +47,7 @@ function FootprintMapPage() {
   const { userData } = useUser();
   const navigate = useNavigate()
 
-  if (!userData || (userData.type !== 'Employee')) {
-    console.log("nav backk")
-    navigate('/SetCarbonFootprint');
-  }
+
 
   // use states constants
   const [day, setDay] = React.useState('');
@@ -70,6 +68,8 @@ function FootprintMapPage() {
   const originRef = useRef();
   const destiantionRef = useRef();
 
+  useAuth(["Employee"]);
+
   useEffect(() => {
     if (distance !== '') {
       const carbonFootprint = calculateCarbonFootprint(parseFloat(doubledDistance), travelMode);
@@ -78,31 +78,33 @@ function FootprintMapPage() {
   }, [distance, doubledDistance, travelMode]);
 
   useEffect(() => {
-    fetch(`${baseURL}/getUserTeamsData`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          console.log("hi")
-          console.log(data.data)
-          const fetchedTeams = data.data;
-          console.log(fetchedTeams)
-          setTeams(fetchedTeams);
-
-        } else {
-          toast.error("Failed to fetch teams data. Please try again.");
-        }
+    if (userData) {
+      fetch(`${baseURL}/getUserTeamsData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            console.log("hi")
+            console.log(data.data)
+            const fetchedTeams = data.data;
+            console.log(fetchedTeams)
+            setTeams(fetchedTeams);
+
+          } else {
+            toast.error("Failed to fetch teams data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching teams data.");
+        });
+    }
   }, [userData]);
 
   useEffect(() => {
@@ -145,8 +147,6 @@ function FootprintMapPage() {
     console.log(map)
     return <Typography />;
   }
-  console.log("teams")
-  console.log(teams)
 
   // Calculates the distance and duration
   async function calculateRoute() {
@@ -310,7 +310,6 @@ function FootprintMapPage() {
 
       console.log(day, duration, carbonFootprint, teamData);
 
-      //toast.success(`Carbon Stats Saved for ${day}.`);
       fetch(`${baseURL}/postCarbonFootprint`, {
         method: "POST",
         crossDomain: true,
@@ -341,9 +340,7 @@ function FootprintMapPage() {
 
 
   return (
-
     <>
-
       <div style={{ position: 'fixed', zIndex: 100, width: '100%' }}>
         <TopNavbar />
       </div>

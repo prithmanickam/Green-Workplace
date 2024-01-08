@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import SideNavbar from '../components/SideNavbar';
+import useAuth from '../hooks/useAuth';
 
 const TransportModeDetection = () => {
 
   const [deviceType, setDeviceType] = useState('Unknown Device');
+
+  useAuth(["Employee"]);
 
   useEffect(() => {
     // Function to determine the device type

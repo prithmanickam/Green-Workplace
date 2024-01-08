@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
 import { Box, Typography, Button, Card, CardContent, Grid, Stack, IconButton, Popover, Divider } from '@mui/material';
 import { toast } from "react-toastify";
-import { useUser } from '../context/UserContext';
 import InfoIcon from '@mui/icons-material/Info';
 import { baseURL } from "../utils/constant";
 import { getGradientColors } from "../utils/gradientConstants";
 import { LineChart } from '@mui/x-charts/LineChart';
+import { useUser } from '../context/UserContext';
+import useAuth from '../hooks/useAuth';
 
 export default function YourDashboard() {
   const { userData } = useUser();
@@ -23,6 +23,8 @@ export default function YourDashboard() {
   const [lineChartLength, setLineChartLength] = useState('week');
   const [lineChartData, setLineChartData] = useState({});
 
+  useAuth(["Employee"]);
+
   const handleInfoPopoverOpen = (event) => {
     setInfoPopoverAnchorEl(event.currentTarget);
   };
@@ -33,6 +35,7 @@ export default function YourDashboard() {
 
   useEffect(() => {
     if (userData) {
+      console.log(userData)
       fetch(`${baseURL}/getLineChartData`, {
         method: "POST",
         headers: {
@@ -67,64 +70,68 @@ export default function YourDashboard() {
   };
 
   useEffect(() => {
-    fetch(`${baseURL}/getYourDashboardData`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setDashboardData(data.data);
-          data.data.teams.forEach((team) => {
-            const confirmedPrefs = {};
-            data.data.teams.forEach((team) => {
-              confirmedPrefs[team[0].teamId] = team[0].wao_preference;
-            });
-            setConfirmedPreferences(confirmedPrefs);
-            if (firstLoad === true) {
-              setTeamPreferences(confirmedPrefs);
-              setFirstLoad(false)
-            }
-          });
-        } else {
-          toast.error("Failed to fetch your dashboard data. Please try again.");
-        }
-      })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
+    if (userData) {
 
-    fetch(`${baseURL}/getCompanyCarbonStandard`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        company_id: userData.company_id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setCompanyCarbonStandard(data.companyCarbonStandard);
-        } else {
-          toast.error("Failed to fetch company dashboard data.");
-        }
+      fetch(`${baseURL}/getYourDashboardData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching company dashboard data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setDashboardData(data.data);
+            data.data.teams.forEach((team) => {
+              const confirmedPrefs = {};
+              data.data.teams.forEach((team) => {
+                confirmedPrefs[team[0].teamId] = team[0].wao_preference;
+              });
+              setConfirmedPreferences(confirmedPrefs);
+              if (firstLoad === true) {
+                setTeamPreferences(confirmedPrefs);
+                setFirstLoad(false)
+              }
+            });
+          } else {
+            toast.error("Failed to fetch your dashboard data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching teams data.");
+        });
+
+      fetch(`${baseURL}/getCompanyCarbonStandard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          company_id: userData.company_id,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setCompanyCarbonStandard(data.companyCarbonStandard);
+          } else {
+            toast.error("Failed to fetch company dashboard data.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching company dashboard data.");
+        });
+    }
 
   }, [userData, confirmedPreferences, firstLoad]);
 
 
 
   useEffect(() => {
+
     if (companyCarbonStandard && dashboardData) {
       // Determine the gradient class based on the carbon standards
       const carbonFootprint = parseFloat(dashboardData.totalCarbonFootprint);
@@ -138,9 +145,6 @@ export default function YourDashboard() {
     }
   }, [companyCarbonStandard, dashboardData, green_gradient, amber_gradient, red_gradient]);
 
-  if (!userData || (userData.type !== 'Employee')) {
-    return <Navigate to="/homepage" replace />;
-  }
 
   const handleDayToggle = (teamId, day) => {
     setTeamPreferences((prevPreferences) => {
@@ -154,35 +158,37 @@ export default function YourDashboard() {
   };
 
   const handleSavePreferences = (teamId) => {
-    const selectedDays = teamPreferences[teamId] || [];
-    const orderedDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].filter(day => selectedDays.includes(day));
+    if (userData) {
+      const selectedDays = teamPreferences[teamId] || [];
+      const orderedDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].filter(day => selectedDays.includes(day));
 
-    fetch(`${baseURL}/postWorkAtOfficePreference`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-        team_id: teamId,
-        selected_days: orderedDays,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          toast.success("Preferences saved successfully");
-          setConfirmedPreferences({
-            ...confirmedPreferences,
-            [teamId]: orderedDays
-          });
-        } else {
-          toast.error("Failed to save preferences. Please try again.");
-        }
+      fetch(`${baseURL}/postWorkAtOfficePreference`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+          team_id: teamId,
+          selected_days: orderedDays,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while saving preferences.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            toast.success("Preferences saved successfully");
+            setConfirmedPreferences({
+              ...confirmedPreferences,
+              [teamId]: orderedDays
+            });
+          } else {
+            toast.error("Failed to save preferences. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while saving preferences.");
+        });
+    }
   };
 
 

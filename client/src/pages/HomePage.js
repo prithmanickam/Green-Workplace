@@ -9,11 +9,14 @@ import Box from '@mui/material/Box';
 import { ThemeContext } from '../context/ThemeContext';
 import { useUser } from '../context/UserContext';
 import { getThemeColors } from '../utils/themeUtils';
+import useAuth from '../hooks/useAuth';
 
 export default function HomePage() {
   const { mode } = React.useContext(ThemeContext)
   const { oppositeThemeColour } = getThemeColors(mode);
   const { userData, setUserData } = useUser();
+
+  useAuth(["Admin", "Employee"]);
 
   useEffect(() => {
     fetch(`${baseURL}/userData`, {
@@ -31,6 +34,7 @@ export default function HomePage() {
       .then((res) => res.json())
       .then((data) => {
         console.log(data, "userData");
+        localStorage.setItem('userData', JSON.stringify(data.data));
         setUserData(data.data);
       });
   }, [setUserData]);

@@ -11,6 +11,7 @@ import { useUser } from '../context/UserContext';
 import { toast } from "react-toastify";
 import { BarChart } from '@mui/x-charts/BarChart';
 import "../App.css"
+import useAuth from '../hooks/useAuth';
 
 export default function CompanyDashboard() {
   const { userData } = useUser();
@@ -34,6 +35,8 @@ export default function CompanyDashboard() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(8);
 
+  useAuth(["Admin", "Employee"]);
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -54,52 +57,55 @@ export default function CompanyDashboard() {
   };
 
   useEffect(() => {
-    fetch(`${baseURL}/getCompanyDashboardData`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        company_id: userData.company_id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setCompanyData(data.companyInfo);
-          setTeamsData(data.teamsInfo);
-          const sortedByCarbonFootprint = [...data.teamsInfo].sort((a, b) => sortOrder === 'asc' ? parseFloat(a.carbonFootprintAverage) - parseFloat(b.carbonFootprintAverage) : parseFloat(b.carbonFootprintAverage) - parseFloat(a.carbonFootprintAverage));
-          setSortedTeamsData(sortedByCarbonFootprint);
-        } else {
-          toast.error("Failed to fetch company dashboard data.");
-        }
+    if (userData) {
+      fetch(`${baseURL}/getCompanyDashboardData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          company_id: userData.company_id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching company dashboard data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setCompanyData(data.companyInfo);
+            setTeamsData(data.teamsInfo);
+            const sortedByCarbonFootprint = [...data.teamsInfo].sort((a, b) => sortOrder === 'asc' ? parseFloat(a.carbonFootprintAverage) - parseFloat(b.carbonFootprintAverage) : parseFloat(b.carbonFootprintAverage) - parseFloat(a.carbonFootprintAverage));
+            setSortedTeamsData(sortedByCarbonFootprint);
+          } else {
+            toast.error("Failed to fetch company dashboard data.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching company dashboard data.");
+        });
 
-    fetch(`${baseURL}/getCompanyCarbonStandard`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        company_id: userData.company_id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setCompanyCarbonStandard(data.companyCarbonStandard);
-        } else {
-          toast.error("Failed to fetch company dashboard data.");
-        }
+
+      fetch(`${baseURL}/getCompanyCarbonStandard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          company_id: userData.company_id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching company dashboard data.");
-      });
-
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setCompanyCarbonStandard(data.companyCarbonStandard);
+          } else {
+            toast.error("Failed to fetch company dashboard data.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching company dashboard data.");
+        });
+    }
   }, [userData, sortOrder]);
+
 
   useEffect(() => {
     if (companyCarbonStandard && companyData) {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
 import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, Divider, Button } from '@mui/material';
 import { toast } from "react-toastify";
@@ -10,6 +9,7 @@ import Avatar from '@mui/material/Avatar';
 import InfoIcon from '@mui/icons-material/Info';
 import InputLabel from '@mui/material/InputLabel';
 import { LineChart } from '@mui/x-charts/LineChart';
+import useAuth from '../hooks/useAuth';
 
 export default function TeamDashboard() {
   const { userData } = useUser();
@@ -33,6 +33,8 @@ export default function TeamDashboard() {
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
 
+  useAuth(["Employee"]);
+
   const handleInfoPopoverOpen = (event) => {
     setInfoPopoverAnchorEl(event.currentTarget);
   };
@@ -47,31 +49,33 @@ export default function TeamDashboard() {
   }));
 
   useEffect(() => {
-    fetch(`${baseURL}/getUserTeams`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setUserTeams(data.user_teams);
-          if (data.user_teams.length > 0 && selectedTeam === '') {
-            // Set the initial selected team to the first team only if it's not already set
-            setSelectedTeam(data.user_teams[0].Team.name);
-            setSelectedTeamId(data.user_teams[0].team_id);
-          }
-        } else {
-          toast.error("Failed to fetch user's teams.");
-        }
+    if (userData) {
+      fetch(`${baseURL}/getUserTeams`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setUserTeams(data.user_teams);
+            if (data.user_teams.length > 0 && selectedTeam === '') {
+              // Set the initial selected team to the first team only if it's not already set
+              setSelectedTeam(data.user_teams[0].Team.name);
+              setSelectedTeamId(data.user_teams[0].team_id);
+            }
+          } else {
+            toast.error("Failed to fetch user's teams.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching teams data.");
+        });
+    }
   }, [userData, selectedTeam]);
 
   useEffect(() => {
@@ -134,27 +138,28 @@ export default function TeamDashboard() {
         });
     }
 
-
-    fetch(`${baseURL}/getCompanyCarbonStandard`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        company_id: userData.company_id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setCompanyCarbonStandard(data.companyCarbonStandard);
-        } else {
-          toast.error("Failed to fetch company dashboard data.");
-        }
+    if (userData) {
+      fetch(`${baseURL}/getCompanyCarbonStandard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          company_id: userData.company_id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching company dashboard data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setCompanyCarbonStandard(data.companyCarbonStandard);
+          } else {
+            toast.error("Failed to fetch company dashboard data.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching company dashboard data.");
+        });
+    }
   }, [selectedTeamId, userData]);
 
   useEffect(() => {
@@ -171,9 +176,6 @@ export default function TeamDashboard() {
     }
   }, [companyCarbonStandard, teamDashboardData, green_gradient, amber_gradient, red_gradient])
 
-  if (!userData || (userData.type !== 'Employee')) {
-    return <Navigate to="/homepage" replace />;
-  }
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -270,7 +272,7 @@ export default function TeamDashboard() {
                     <Typography>Loading line chart...</Typography>
                   )}
                   <div>
-                  <Button
+                    <Button
                       variant="outlined"
                       size="small"
                       onClick={() => handleLineChartLengthChange('week')}

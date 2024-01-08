@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Navigate } from "react-router-dom";
 import SideNavbar from '../components/SideNavbar';
 import {
   Box,
@@ -15,6 +14,7 @@ import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
 import supabase from '../config/supabaseConfig';
+import useAuth from '../hooks/useAuth';
 
 const formatMessageDate = (dateString) => {
   const [datePart, timePart] = dateString.split(', ');
@@ -93,6 +93,8 @@ export default function TeamChat() {
     team_name: team.Team.name,
   }));
 
+  useAuth(["Employee"]);
+
   useEffect(() => {
     setTimeout(() => {
       if (messagesContainerRef.current) {
@@ -124,31 +126,32 @@ export default function TeamChat() {
         messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
       }
     };
-
-    fetch(`${baseURL}/getUserTeams`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id: userData.id,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "ok") {
-          setUserTeams(data.user_teams);
-          if (data.user_teams.length > 0 && selectedTeam === '') {
-            setSelectedTeam(data.user_teams[0].Team.name);
-            setSelectedTeamId(data.user_teams[0].team_id);
-          }
-        } else {
-          toast.error("Failed to fetch user's teams.");
-        }
+    if (userData) {
+      fetch(`${baseURL}/getUserTeams`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+        }),
       })
-      .catch((error) => {
-        toast.error("An error occurred while fetching teams data.");
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setUserTeams(data.user_teams);
+            if (data.user_teams.length > 0 && selectedTeam === '') {
+              setSelectedTeam(data.user_teams[0].Team.name);
+              setSelectedTeamId(data.user_teams[0].team_id);
+            }
+          } else {
+            toast.error("Failed to fetch user's teams.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching teams data.");
+        });
+    }
 
     if (!selectedTeamId) {
       return;
@@ -203,9 +206,6 @@ export default function TeamChat() {
     }, 100);
   };
 
-  if (!userData || (userData.type !== 'Employee')) {
-    return <Navigate to="/homepage" replace />;
-  }
 
   return (
     <Box sx={{ display: 'flex' }}>
