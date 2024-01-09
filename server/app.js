@@ -15,4 +15,7 @@ app.use("/api", carbonFootprintRoutes);
 const teamRoutes = require("./routes/TeamRoute");
 app.use("/api", teamRoutes);
 
+const companyRoutes = require("./routes/CompanyRoute");
+app.use("/api", companyRoutes);
+
 module.exports = app;

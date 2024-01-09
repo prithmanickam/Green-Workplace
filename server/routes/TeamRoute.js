@@ -5,20 +5,16 @@ const {
     getTeams,
     deleteTeam,
     getUserTeamsData,
-    getOffices,
     getYourDashboardData,
     postWorkAtOfficePreference,
     getUserTeams,
     getTeamDashboardData,
-    getCompanyDashboardData,
     getUserTeamOwnerTeams,
     getTeamOwnerFunctionsData,
     editTeamName,
     editTeamWAODays,
     addTeamMember,
     removeTeamMember,
-    getLineChartData,
-    getBarChartData,
 } = require("../controllers/TeamControllers");
 
 const router = Router();
@@ -35,8 +31,6 @@ router.post("/deleteTeam", deleteTeam);
 //to get the users teams data from the database
 router.post("/getUserTeamsData", getUserTeamsData);
 
-//to get the offices from the database
-router.post("/getOffices", getOffices);
 
 //to get the users dashboard data including info on their teams from the database
 router.post("/getYourDashboardData", getYourDashboardData);
@@ -67,14 +61,5 @@ router.post("/removeTeamMember", removeTeamMember);
 
 //to get the users team dashboard data from the database
 router.post("/getTeamDashboardData", getTeamDashboardData);
-
-//to get the users company dashboard data from the database
-router.post("/getCompanyDashboardData", getCompanyDashboardData);
-
-//to get the line chart data from the database
-router.post("/getLineChartData", getLineChartData);
-
-//to get the bar chart data from the database
-router.post("/getBarChartData", getBarChartData);
 
 module.exports = router;

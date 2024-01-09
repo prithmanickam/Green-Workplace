@@ -138,7 +138,6 @@ export default function CompanyDashboard() {
           if (data.status === "ok") {
 
             setBarChartData(data.data);
-            console.log(barChartData)
 
           } else {
             toast.error("Failed to fetch line chart data.");
@@ -156,7 +155,6 @@ export default function CompanyDashboard() {
       const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
       const data = days.map(day => barChartData[selectedOffice][day]);
 
-      console.log(data);
       setOfficeChartData(data);
     }
   }, [selectedOffice, barChartData]);

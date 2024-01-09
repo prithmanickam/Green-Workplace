@@ -275,7 +275,9 @@
 * *1 hour* Teams displayed as table format in company dashboard and has paigination.
 
 ### 7 Jan 2023
-* *3 hours* Double carbon footprint in Google Maps Page calculator for return journeys, and Fixed calculate route component overlapping top-navbar in Map Page Bug
+* *3 hours* Double carbon footprint in Google Maps Page calculator for return journeys, and Fixed calculate route component overlapping top-navbar in Map Page Bug.
+* *2 hours* Started page reload and auth issues for all pages.
 
 ### 8 Jan 2023
-* *5 hours* Fix page reload and auth issues for all pages.
+* *3 hours* Fixed page reload and auth issues for all pages.
+* *7 hours* Created all apis for Admin Functions Page (Edit Company Standard, Add Office, Delete Office, Change Employee Office, and Delete Employee)
