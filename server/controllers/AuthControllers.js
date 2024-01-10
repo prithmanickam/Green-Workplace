@@ -9,6 +9,61 @@ const nodemailer = require('nodemailer');
 
 const JWT_SECRET_FOR_REGISTRATION = 'asbfi3e5asf36n2';
 
+module.exports.updateUsername = async (req, res) => {
+  const { userId, editedUser } = req.body;
+
+  if (!userId || !editedUser || !editedUser.firstname || !editedUser.lastname) {
+    return res.status(400).json({ status: "error", message: "Missing required fields" });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("User")
+      .update({
+        firstname: editedUser.firstname,
+        lastname: editedUser.lastname
+      })
+      .eq("id", userId);
+
+    if (error) {
+      //console.error("Error updating user's name:", error);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok", message: "User name updated successfully", user: data });
+  } catch (error) {
+    //console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+
+module.exports.updatePassword = async (req, res) => {
+  const { userEmail, newPassword } = req.body;
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  try {
+    const { data, error } = await supabase
+      .from("User")
+      .update({
+        password: hashedPassword,
+      })
+      .eq("email", userEmail);
+
+    if (error) {
+      //console.error("Error updating user's name:", error);
+      return res.status(500).json({ status: "error" });
+    }
+
+    res.status(200).json({ status: "ok", message: "User name updated successfully", user: data });
+  } catch (error) {
+    //console.error(error);
+    res.status(500).json({ status: "error" });
+  }
+};
+
+
 // Fetch all users that are in a specific company (and not admin)
 module.exports.getAllUsers = async (req, res) => {
   const { company } = req.body;
@@ -31,6 +86,56 @@ module.exports.getAllUsers = async (req, res) => {
     res.status(500).json({ status: "error" });
   }
 };
+
+module.exports.sendResetPasswordEmail = async (req, res) => {
+  try {
+    const email = req.body.email;
+
+    // Create a payload for the JWT token containing email 
+    const payload = {
+      email,
+      company: "",
+      office: "",
+      resetpasswordtoken: uuid.v4(),
+    };
+
+    // Sign the payload to generate the forgot password token
+    const resetpasswordtoken = jwt.sign(payload, JWT_SECRET_FOR_REGISTRATION);
+
+    // Nodemailer transporter is created
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: COMPANY_EMAIL,
+        pass: APP_PASSWORD,
+      },
+    });
+
+    // Email content
+    const emailContent = `
+        <html>
+          <body>
+            <p>Hello,</p>
+            <p>Here is your reset password link for Green-Workplace:</p>
+            <a href="https://green-workplace.vercel.app/resetpassword/${resetpasswordtoken}">Reset Password</a>
+          </body>
+        </html>
+      `;
+
+    // Send the email to the current recipient
+    await transporter.sendMail({
+      from: 'no-reply@greenworkplace.com',
+      to: email,
+      subject: 'Green-Workplace Reset Password Link',
+      html: emailContent,
+    });
+
+    res.status(200).json({ status: "ok" });
+  } catch (error) {
+    res.status(500).json({ status: "error" });
+  }
+};
+
 
 // For admin to send registration email to a users email inbox
 module.exports.sendRegistrationEmails = async (req, res) => {
@@ -107,7 +212,7 @@ module.exports.getEmailFromToken = async (req, res) => {
 
     res.status(200).json({ status: "ok", email, company, office });
   } catch (error) {
-    //console.error('Error fetching email from token:', error);
+    console.error('Error fetching email from token:', error);
     res.status(500).json({ status: 'error', error: 'Internal server error' });
   }
 };
@@ -174,7 +279,7 @@ module.exports.loginUser = async (req, res) => {
     res.status(200).json({ status: "ok", token });
   } catch (error) {
     //console.error(error);
-    res.status(500).json({ status: "error"});
+    res.status(500).json({ status: "error" });
   }
 };
 

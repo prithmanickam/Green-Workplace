@@ -284,3 +284,8 @@
 
 ### 9 Jan 2023
 * *8 hours* Created new ML Model from my new Dataset - 90% accuracy with random forest (5000 rows collected from myself and consented users commutes from around 3 month period)
+
+### 10 Jan 2023
+* *3 hours* Created Account Page and Update Username and Password APIs
+* *5 hours* Created Forgot Password and Reset Password Pages
+

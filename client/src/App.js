@@ -1,6 +1,8 @@
 import React from 'react';
 import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import RegistrationPage from './pages/RegistrationPage';
 import AccountPage from './pages/AccountPage';
 import HomePage from './pages/HomePage';
@@ -47,6 +49,17 @@ const App = () => {
     }
   };
 
+  // If the user is logged in, log them out and redirect to the reset password page
+  const ResetPasswordPageLoggedOut = () => {
+    if (isLoggedIn) {
+      window.localStorage.removeItem('token');
+      window.localStorage.removeItem('loggedIn');
+      return <ResetPasswordPage />;
+    } else {
+      return <ResetPasswordPage />;
+    }
+  };
+
   return (
     <ThemeContextProvider>
       <UserContextProvider>
@@ -56,6 +69,9 @@ const App = () => {
               {/* Public Routes */}
               <Route path="/home" element={<LoginPage />} />
               <Route path="/login" element={<LoginPageLoggedOut />} />
+              <Route path="/ForgotPassword" element={<ForgotPasswordPage />} />
+
+              <Route path="/resetpassword/:resetpasswordtoken" element={<ResetPasswordPageLoggedOut />} />
               <Route path="/register/:registrationtoken" element={<RegistrationPageLoggedOut />} />
 
               {/* For testing purposes to create mock accounts */}

@@ -1,8 +1,6 @@
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
 import TextField from "@mui/material/TextField";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
 import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Card from "@mui/material/Card";
@@ -15,19 +13,17 @@ import { baseURL } from "../utils/constant";
 import TopNavbar from '../components/TopNavbar';
 import { toast } from "react-toastify";
 
-const LoginPage = () => {
+const ForgotPasswordPage = () => {
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   function handleSubmit(e) {
     e.preventDefault();
 
-    console.log(email, password);
 
     try {
       //sending request to login api
-      fetch(`${baseURL}/login`, {
+      fetch(`${baseURL}/sendResetPasswordEmail`, {
         method: "POST",
         crossDomain: true,
         headers: {
@@ -35,22 +31,15 @@ const LoginPage = () => {
           Accept: "application/json",
           "Access-Control-Allow-Origin": "*",
         },
-        //and passing in email and password
         body: JSON.stringify({
           email,
-          password,
         }),
-      }) //in response, we are recieving the data
+      })
         .then((res) => res.json())
         .then((data) => {
-          console.log(data, "userRegister");
-          //if login is successful we store the token, and var loggedIn is set to true
-          if (data.status === "ok") {
-            toast.success("Login successful");
 
-            window.localStorage.setItem("token", data.token);
-            window.localStorage.setItem("loggedIn", true);
-            window.location.href = "./homepage";
+          if (data.status === "ok") {
+            toast.success("Link sent to email");
           }
           else {
             toast.error(data.error);
@@ -98,9 +87,8 @@ const LoginPage = () => {
               alignItems: "center",
             }}
           >
-
             <Typography component="h1" variant="h5">
-              Log in
+              Forgot Password
             </Typography>
             <Box
               component="form"
@@ -119,21 +107,7 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 autoFocus
               />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                id="password"
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-              <FormControlLabel
-                control={<Checkbox value="remember" color="primary" />}
-                label="Remember me"
-              />
+
               <Button
                 type="submit"
                 fullWidth
@@ -149,12 +123,12 @@ const LoginPage = () => {
                   },
                 }}
               >
-                Log In
+                Send Reset Password Link
               </Button>
               <Grid container>
                 <Grid item xs>
-                  <Link href="/ForgotPassword" variant="body2">
-                    Forgot password?
+                  <Link href="/login" variant="body2">
+                    Navigate Back to Login
                   </Link>
                 </Grid>
               </Grid>
@@ -166,4 +140,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default ForgotPasswordPage;
