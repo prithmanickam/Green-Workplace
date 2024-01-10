@@ -420,6 +420,7 @@ export default function TransportDetectionPage() {
 				const gyroscopeStats = calculateStats(gyroscopeDataRef.current);
 
 				const newData = {
+					'distance_meters_ten_sec': currentDistanceTravelledRef.current,
 					'android.sensor.accelerometer#mean': accelerometerStats.mean,
 					'android.sensor.accelerometer#min': accelerometerStats.min,
 					'android.sensor.accelerometer#max': accelerometerStats.max,
@@ -439,8 +440,7 @@ export default function TransportDetectionPage() {
 						'Content-Type': 'application/json',
 					},
 					body: JSON.stringify({
-						newData,
-						distance:currentDistanceTravelledRef.current,
+						newData
 					}),
 						
 				})
@@ -543,13 +543,15 @@ export default function TransportDetectionPage() {
 				}
 			} else if (mode === 'Walking') {
 				walkingCounter++;
-				if (walkingCounter >= 5 && vehicleModes.includes(currentMode)) {
+				//assumption if the walking counter is more than 6, the user is no longer
+				// on that vechile transport
+				if (walkingCounter >= 6 && vehicleModes.includes(currentMode)) {
 					let mostCommonMode = modeSequence.sort((a, b) =>
 						modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
 					).pop();
-					addSummaryEntry(mostCommonMode, startTime, modes[index - 5].time);
+					addSummaryEntry(mostCommonMode, startTime, modes[index - 6].time);
 					currentMode = 'Walking';
-					startTime = modes[index - 4].time;
+					startTime = modes[index - 5].time;
 					modeSequence = [];
 				}
 			} else {

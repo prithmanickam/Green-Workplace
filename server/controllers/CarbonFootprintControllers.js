@@ -1,5 +1,5 @@
 const supabase = require("../config/supabaseConfig");
-const { DecisionTreeClassifier } = require('ml-cart');
+const { RandomForestClassifier } = require('ml-random-forest');
 const { Matrix } = require('ml-matrix');
 const { readFileSync } = require('fs');
 const path = require('path');
@@ -14,10 +14,6 @@ const job = schedule.scheduleJob('00 23 * * 0', async function () {
     const { data: usersTeams, error: getUsersTeamsError } = await supabase
       .from("Team_Member")
       .select(`team_id, user_id, monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf, Team(company_id)`);
-
-    // if (getUsersTeamsError) {
-    //   throw getUsersTeamsError;
-    // }
 
     // Calculate the date of the last Monday
     const lastMonday = new Date();
@@ -40,7 +36,7 @@ const job = schedule.scheduleJob('00 23 * * 0', async function () {
             team_id: entry.team_id,
             week: formattedDate,
             carbon_footprint: totalCarbonFootprint,
-            company_id: Team.company_id,
+            company_id: entry.Team.company_id,
           }
         ]);
 
@@ -60,7 +56,7 @@ const modelPath = path.join(__dirname, 'model.json');
 const loadModel = (filePath) => {
   const data = readFileSync(filePath, 'utf8');
   const modelState = JSON.parse(data);
-  const classifier = DecisionTreeClassifier.load(modelState.model);
+  const classifier = RandomForestClassifier.load(modelState.model);
   return {
     classifier: classifier,
     targetMap: modelState.targetMap
@@ -71,7 +67,7 @@ const { classifier, targetMap } = loadModel(modelPath);
 
 module.exports.getTransportMode = async (req, res) => {
   try {
-    const { newData, distance } = req.body;
+    const { newData } = req.body;
     
     if (!newData || Object.keys(newData).length === 0) {
       return res.status(400).json({ status: "error", message: "No data provided." });
@@ -82,33 +78,6 @@ module.exports.getTransportMode = async (req, res) => {
 
     // Find the mode from the targetMap using the prediction
     const mode = Object.keys(targetMap).find(key => targetMap[key] === prediction[0]);
-
-    console.log(mode)
-    console.log(distance)
-
-    console.log(newData['android.sensor.accelerometer#mean'])
-
-    const { error: insertError } = await supabase
-      .from("Dataset")
-      .insert([
-        {
-          'android.sensor.accelerometer#mean': newData['android.sensor.accelerometer#mean'],
-          'android.sensor.accelerometer#min': newData['android.sensor.accelerometer#min'],
-          'android.sensor.accelerometer#max': newData['android.sensor.accelerometer#max'],
-          'android.sensor.accelerometer#std': newData['android.sensor.accelerometer#std'],
-          'android.sensor.gyroscope#mean': newData['android.sensor.gyroscope#mean'],
-          'android.sensor.gyroscope#min': newData['android.sensor.gyroscope#min'],
-          'android.sensor.gyroscope#max': newData['android.sensor.gyroscope#max'],
-          'android.sensor.gyroscope#std': newData['android.sensor.gyroscope#std'],
-          'target': mode,
-          'distance_meters_ten_sec': distance,
-        }
-      ]);
-    
-    if (insertError) {
-      console.error("Error adding tmd stats:", insertError);
-      //return res.status(500).json({ status: "error" });
-    }
 
     res.status(200).json({ status: "ok", mode });
   } catch (error) {

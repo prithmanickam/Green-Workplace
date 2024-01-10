@@ -1,10 +1,10 @@
 const fs = require('fs');
 const { writeFileSync } = require('fs');
 const Papa = require('papaparse');
-const { DecisionTreeClassifier } = require('ml-cart');
-//const { RandomForestClassifier } = require('ml-random-forest');
+//const { DecisionTreeClassifier } = require('ml-cart');
 //const KNN = require('ml-knn');
 //const { GaussianNB } = require('ml-naivebayes');
+const { RandomForestClassifier } = require('ml-random-forest');
 const { Matrix } = require('ml-matrix');
 
 // Function to save the model
@@ -51,7 +51,7 @@ const loadDataset = (filePath) => {
 const splitDataset = (data) => {
   const features = data.map((row) => {
     // Destructure to exclude certain features
-    const { target, time, 'sound#mean': _, 'sound#min': __, 'sound#max': ___, 'sound#std': ____, ...rest } = row;
+    const { target, ...rest } = row;
     return Object.values(rest);
   });
 
@@ -97,6 +97,7 @@ const encodeTargets = (data) => {
 
 // Ensure that the newData matches the training data format
 const newData = {
+  'distance_meters_ten_sec': 30,
   'android.sensor.accelerometer#mean': 9.9,
   'android.sensor.accelerometer#min': 6.7,
   'android.sensor.accelerometer#max': 15.5,
@@ -111,6 +112,7 @@ const newData = {
 const predictModeOfTransport = (classifier, targetMap, dataPoint) => {
   // Prepare the data point for prediction by removing excluded features
   const featuresForPrediction = {
+    'distance_meters_ten_sec': dataPoint['distance_meters_ten_sec'],
     'android.sensor.accelerometer#mean': dataPoint['android.sensor.accelerometer#mean'],
     'android.sensor.accelerometer#min': dataPoint['android.sensor.accelerometer#min'],
     'android.sensor.accelerometer#max': dataPoint['android.sensor.accelerometer#max'],
@@ -119,10 +121,6 @@ const predictModeOfTransport = (classifier, targetMap, dataPoint) => {
     'android.sensor.gyroscope#min': dataPoint['android.sensor.gyroscope#min'],
     'android.sensor.gyroscope#max': dataPoint['android.sensor.gyroscope#max'],
     'android.sensor.gyroscope#std': dataPoint['android.sensor.gyroscope#std'],
-    // 'sound#mean': dataPoint['sound#mean'], // Excluded
-    // 'sound#min': dataPoint['sound#min'],   // Excluded
-    // 'sound#max': dataPoint['sound#max'],   // Excluded
-    // 'sound#std': dataPoint['sound#std'],   // Excluded
   };
 
   // Convert the new data point to the format expected by the classifier (array of values)
@@ -153,15 +151,15 @@ const main = async () => {
     const { features: testFeatures, labels: testLabels } = splitDataset(testSet);
 
     // Train the CART Alg Decision Tree classifier
-    const classifier = new DecisionTreeClassifier();
-    classifier.train(new Matrix(trainingFeatures), trainingLabels);
+    //const classifier = new DecisionTreeClassifier();
+    //classifier.train(new Matrix(trainingFeatures), trainingLabels);
 
     // Predict the test set
-    const predictions = classifier.predict(new Matrix(testFeatures));
+    //const predictions = classifier.predict(new Matrix(testFeatures));
 
     // Evaluate the accuracy
-    const accuracy = calculateAccuracy(testLabels, predictions);
-    console.log(`Accuracy: ${accuracy}`);
+    //const accuracy = calculateAccuracy(testLabels, predictions);
+    //console.log(`Accuracy: ${accuracy}`);
 
     // Train the Naive Bayes classifier
     /*
@@ -181,7 +179,7 @@ const main = async () => {
     */
 
     // Train the Random Forest Classifier
-    /*
+    
     const randomForestClassifier = new RandomForestClassifier({
       numberOfTrees: 100 
     });
@@ -191,7 +189,7 @@ const main = async () => {
     const rfPredictions = randomForestClassifier.predict(new Matrix(testFeatures));
     const rfAccuracy = calculateAccuracy(testLabels, rfPredictions);
     console.log(`Random Forest Accuracy: ${rfAccuracy}`);
-    */
+    
 
     saveModel(classifier, targetMap, 'C:\\...\\model.json');
 

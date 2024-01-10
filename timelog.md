@@ -281,3 +281,6 @@
 ### 8 Jan 2023
 * *3 hours* Fixed page reload and auth issues for all pages.
 * *7 hours* Created all apis for Admin Functions Page (Edit Company Standard, Add Office, Delete Office, Change Employee Office, and Delete Employee)
+
+### 9 Jan 2023
+* *8 hours* Created new ML Model from my new Dataset - 90% accuracy with random forest (5000 rows collected from myself and consented users commutes from around 3 month period)
