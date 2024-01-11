@@ -87,62 +87,40 @@ module.exports.updateEmployeeOffice = async (req, res) => {
   }
 };
 
-// Add a new office to the database
 module.exports.deleteEmployee = async (req, res) => {
   const { employeeEmail } = req.body;
 
   try {
-    
-    const { user_id } = await supabase
-      .from("Employee")
-      .select("id")
-      .eq("email", employeeEmail);
-
-    const { } = await supabase
-      .from("Team_Member")
-      .delete()
-      .eq("user_id", user_id);
-    
-    const {  } = await supabase
-      .from("Team_Member_History")
-      .delete()
-      .eq("user_id", user_id);
-    
-    const {  } = await supabase
-      .from("User_Monday_Stats")
-      .delete()
-      .eq("user_id", user_id);
-    
-    const {  } = await supabase
-      .from("User_Tuesday_Stats")
-      .delete()
-      .eq("user_id", user_id);
-    
-    const {  } = await supabase
-      .from("User_Wednesday_Stats")
-      .delete()
-      .eq("user_id", user_id);
-
-    const {  } = await supabase
-      .from("User_Thursday_Stats")
-      .delete()
-      .eq("user_id", user_id);
-    
-    const {  } = await supabase
-      .from("User_Friday_Stats")
-      .delete()
-      .eq("user_id", user_id);
-    
-    const { error } = await supabase
+    // Retrieve the User ID
+    const { data: userData, error: userError } = await supabase
       .from("User")
-      .delete()
-      .eq("email", employeeEmail);
+      .select("id")
+      .eq("email", employeeEmail)
+      .single();
 
-    if (error) {
-      return res.status(500).json({ status: "error", message: error.message });
+    if (userError || !userData) {
+      return res.status(500).json({ status: "error", message: "User not found." });
     }
 
-    res.status(200).json({ status: "ok", });
+    const user_id = userData.id;
+
+    // Delete from related tables
+    const tables = ["Team_Member", "Team_Member_History", "User_Monday_Stats", "User_Tuesday_Stats", "User_Wednesday_Stats", "User_Thursday_Stats", "User_Friday_Stats"];
+    
+    for (const table of tables) {
+      const { error } = await supabase.from(table).delete().eq("user_id", user_id);
+      if (error) {
+        throw error;
+      }
+    }
+
+    // Delete the user
+    const { error } = await supabase.from("User").delete().eq("id", user_id);
+    if (error) {
+      throw error;
+    }
+
+    res.status(200).json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }

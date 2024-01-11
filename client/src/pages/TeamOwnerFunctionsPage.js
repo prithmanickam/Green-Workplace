@@ -80,9 +80,9 @@ export default function TeamOwnerFunctions() {
         .then((res) => res.json())
         .then((data) => {
           if (data.status === "ok") {
-            setConfirmedPreferences(data.teamInfo[0].wao_days)
+            setConfirmedPreferences(data.teamInfo[0].wao_days || []);
             if (firstLoad === true) {
-              setTeamPreferences(data.teamInfo[0].wao_days);
+              setTeamPreferences(data.teamInfo[0].wao_days || []);
               setFirstLoad(false)
             }
             setTeamMembersToAdd(data.teamMembersToAdd);
@@ -196,13 +196,15 @@ export default function TeamOwnerFunctions() {
   };
 
   const handleDayToggle = (day) => {
-    setTeamPreferences((prevPreferences) => {
-      const updatedPreferences = prevPreferences.includes(day)
-        ? prevPreferences.filter((d) => d !== day)
-        : [...prevPreferences, day];
+    if (teamPreferences) {
+      setTeamPreferences((prevPreferences) => {
+        const updatedPreferences = prevPreferences.includes(day)
+          ? prevPreferences.filter((d) => d !== day)
+          : [...prevPreferences, day];
 
-      return updatedPreferences;
-    });
+        return updatedPreferences;
+      });
+    }
   };
 
   const handleSavePreferences = () => {
@@ -265,106 +267,111 @@ export default function TeamOwnerFunctions() {
           </Select>
         </Stack>
 
-        <Divider variant="middle" sx={{ py: 2 }} />
+        {userTeams.length === 0 ? (
+          <Typography variant="h6" >
+            You are not a team owner of any team. Contact your company admin if you need to be one.
+          </Typography>
+        ) : (
+          <>
+            <Divider variant="middle" sx={{ py: 2 }} />
 
-        <Stack direction="row" py={1} spacing={5} alignItems="center" >
-          <InputLabel>Team Name:</InputLabel>
-          {editingTeamName ? (
-            <>
-              <TextField
-                label="New Team Name"
+            <Stack direction="row" py={1} spacing={5} alignItems="center" >
+              <InputLabel>Team Name:</InputLabel>
+              {editingTeamName ? (
+                <>
+                  <TextField
+                    label="New Team Name"
+                    variant="outlined"
+                    value={newTeamName}
+                    onChange={(e) => setNewTeamName(e.target.value)}
+                  />
+                  <Button variant="contained" color="primary" onClick={handleSaveTeamName}>Save</Button>
+                  <Button variant="contained" color="secondary" onClick={handleCancelEditTeamName}>Cancel</Button>
+                </>
+              ) : (
+                <>
+                  <Typography variant="h6">{selectedTeam}</Typography>
+                  <Button variant="contained" color="primary" onClick={handleEditTeamName}>Edit &nbsp; <EditIcon /></Button>
+                </>
+              )}
+            </Stack>
+
+            <Divider variant="middle" sx={{ py: 2 }} />
+            <Stack direction="row" py={1} spacing={5} alignItems="center">
+              <InputLabel>Current Set Team's Work At Office Days: </InputLabel> &nbsp;
+              {confirmedPreferences ? confirmedPreferences.join(', ') : 'None selected'}
+            </Stack>
+
+            <Stack direction="row" py={1} spacing={5} alignItems="center">
+              <InputLabel>Select WAO Days:</InputLabel>
+              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
+                <Button
+                  key={day}
+                  variant="outlined"
+                  onClick={() => handleDayToggle(day)}
+                  sx={{
+                    backgroundColor: teamPreferences.includes(day) ? '#eed202' : 'primary',
+                    color: teamPreferences.includes(day) ? 'black' : 'primary',
+                    border: teamPreferences.includes(day) ? '1px solid black' : 'primary',
+                    marginRight: '8px',
+                  }}
+                >
+                  {day}
+                </Button>
+              ))}
+              <Button
                 variant="outlined"
-                value={newTeamName}
-                onChange={(e) => setNewTeamName(e.target.value)}
+                color="success"
+                style={{ marginRight: '8px' }}
+                onClick={handleSavePreferences}
+                sx={{
+                  backgroundColor: '#1ED760',
+                  color: 'black',
+                }}
+              >
+                Save
+              </Button>
+            </Stack>
+
+            <Divider variant="middle" sx={{ py: 2 }} />
+
+            <Stack direction="row" py={1} spacing={5} alignItems="center">
+              <InputLabel>Add Team Member:</InputLabel>
+              <Autocomplete
+                value={selectedMemberToAdd}
+                onChange={(event, newValue) => {
+                  setSelectedMemberToAdd(newValue);
+                }}
+                options={teamMembersToAdd}
+                sx={{ width: 300 }}
+                isOptionEqualToValue={(option, value) => option === value}
+                renderInput={(params) => (
+                  <TextField {...params} label="Search/Add Team Member" variant="outlined" />
+                )}
               />
-              <Button variant="contained" color="primary" onClick={handleSaveTeamName}>Save</Button>
-              <Button variant="contained" color="secondary" onClick={handleCancelEditTeamName}>Cancel</Button>
-            </>
-          ) : (
-            <>
-              <Typography variant="h6">{selectedTeam}</Typography>
-              <Button variant="contained" color="primary" onClick={handleEditTeamName}>Edit &nbsp; <EditIcon /></Button>
-            </>
-          )}
-        </Stack>
+              <Button variant="contained" color="primary" onClick={handleAddTeamMember}>Add &nbsp; <PersonAddIcon /></Button>
+            </Stack>
 
-        <Divider variant="middle" sx={{ py: 2 }} />
-        <Stack direction="row" py={1} spacing={5} alignItems="center">
-          <InputLabel>Current Set Team's Work At Office Days: </InputLabel> &nbsp;
-          {confirmedPreferences ? confirmedPreferences.join(', ') : 'None selected'}
-        </Stack>
+            <Divider variant="middle" sx={{ py: 2 }} />
 
-        <Stack direction="row" py={1} spacing={5} alignItems="center">
-          <InputLabel>Select WAO Days:</InputLabel>
-          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
-            <Button
-              key={day}
-              variant="outlined"
-              onClick={() => handleDayToggle(day)}
-              sx={{
-                backgroundColor: teamPreferences.includes(day) ? '#eed202' : 'primary',
-                color: teamPreferences.includes(day) ? 'black' : 'primary',
-                border: teamPreferences.includes(day) ? '1px solid black' : 'primary',
-                marginRight: '8px',
-              }}
-            >
-              {day}
-            </Button>
-          ))}
-          <Button
-            variant="outlined"
-            color="success"
-            style={{ marginRight: '8px' }}
-            onClick={handleSavePreferences}
-            sx={{
-              backgroundColor: '#1ED760',
-              color: 'black',
-            }}
-          >
-            Save
-          </Button>
-        </Stack>
-
-        <Divider variant="middle" sx={{ py: 2 }} />
-
-        <Stack direction="row" py={1} spacing={5} alignItems="center">
-          <InputLabel>Add Team Member:</InputLabel>
-          <Autocomplete
-            value={selectedMemberToAdd}
-            onChange={(event, newValue) => {
-              setSelectedMemberToAdd(newValue);
-            }}
-            options={teamMembersToAdd}
-            sx={{ width: 300 }}
-            isOptionEqualToValue={(option, value) => option === value}
-            renderInput={(params) => (
-              <TextField {...params} label="Search/Add Team Member" variant="outlined" />
-            )}
-          />
-          <Button variant="contained" color="primary" onClick={handleAddTeamMember}>Add &nbsp; <PersonAddIcon /></Button>
-        </Stack>
-
-        <Divider variant="middle" sx={{ py: 2 }} />
-
-        <Stack direction="row" py={1} spacing={5} alignItems="center">
-          <InputLabel>Remove Team Member:</InputLabel>
-          <Autocomplete
-            value={selectedMemberToRemove}
-            onChange={(event, newValue) => {
-              setSelectedMemberToRemove(newValue);
-            }}
-            options={teamMembersToRemove}
-            sx={{ width: 300 }}
-            isOptionEqualToValue={(option, value) => option === value}
-            renderInput={(params) => (
-              <TextField {...params} label="Search/Remove Team Member" variant="outlined" />
-            )}
-          />
-          <Button variant="contained" color="secondary" onClick={handleRemoveTeamMember}>Remove &nbsp; <PersonRemoveIcon /></Button>
-        </Stack>
-        <div style={{ flex: 1, display: 'flex' }}>
-
-        </div>
+            <Stack direction="row" py={1} spacing={5} alignItems="center">
+              <InputLabel>Remove Team Member:</InputLabel>
+              <Autocomplete
+                value={selectedMemberToRemove}
+                onChange={(event, newValue) => {
+                  setSelectedMemberToRemove(newValue);
+                }}
+                options={teamMembersToRemove}
+                sx={{ width: 300 }}
+                isOptionEqualToValue={(option, value) => option === value}
+                renderInput={(params) => (
+                  <TextField {...params} label="Search/Remove Team Member" variant="outlined" />
+                )}
+              />
+              <Button variant="contained" color="secondary" onClick={handleRemoveTeamMember}>Remove &nbsp; <PersonRemoveIcon /></Button>
+            </Stack>
+          </>
+        )}
       </Box>
     </Box >
   );

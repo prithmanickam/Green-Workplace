@@ -289,3 +289,5 @@
 * *3 hours* Created Account Page and Update Username and Password APIs
 * *5 hours* Created Forgot Password and Reset Password Pages
 
+### 11 Jan 2023
+* *5 hours* Created a company temp team as default team if user is in no teams.

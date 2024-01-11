@@ -7,7 +7,7 @@ import {
   Stack,
   InputLabel,
   TextField,
-  Button,
+  Button
 } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 import { toast } from "react-toastify";

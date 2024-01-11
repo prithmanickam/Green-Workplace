@@ -182,7 +182,6 @@ export default function TeamDashboard() {
       <SideNavbar />
       <Box component="main" sx={{ flexGrow: 1, py: 10, px: 5, display: 'flex', flexDirection: 'column' }}>
 
-
         <Stack direction="row" py={1} spacing={5} alignItems="center" >
           <h1>Team Dashboard</h1>
           {/* Dropdown to switch team dashboard for different teams */}
@@ -207,7 +206,7 @@ export default function TeamDashboard() {
             ))}
           </Select>
         </Stack>
-
+         
         <div style={{ flex: 1, display: 'flex' }}>
           <Grid container spacing={3}>
             {/* First row */}

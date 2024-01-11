@@ -225,7 +225,7 @@ module.exports.registerUser = async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
-    const { data, error } = await supabase.from("User").upsert([
+    const { data: userData, error: error } = await supabase.from("User").upsert([
       {
         firstname,
         lastname,
@@ -234,12 +234,27 @@ module.exports.registerUser = async (req, res) => {
         company_id: company,
         office_id: office,
       },
-    ]);
-
+    ])
+    .select();
+    
     if (error) {
-      //console.error("Error registering user:", error);
+      console.error("Error registering user:", error);
       return res.status(500).json({ status: "error" });
     }
+
+    const { data: companyInfo, error: error2 } = await supabase
+      .from("Company")
+      .select("*")
+      .eq("id", company)
+      .single();
+      
+
+    const { error: addToTempTeamError } = await supabase
+      .from("Team_Member")
+      .insert([
+        { "user_id": userData[0].id, "team_id": companyInfo.temporary_team },
+    ]);
+
 
     res.status(200).json({ status: "ok" });
   } catch (error) {

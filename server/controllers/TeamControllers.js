@@ -498,7 +498,8 @@ module.exports.addTeamMember = async (req, res) => {
     const { data: user_id, error: getUserIdError } = await supabase
       .from("User")
       .select(`
-         id
+         id,
+         Company(temporary_team)
     `)
       .eq("email", new_team_member);
 
@@ -518,6 +519,19 @@ module.exports.addTeamMember = async (req, res) => {
     //   return res.status(500).json({ status: "error" });
     // }
 
+
+    const { error: error3 } = await supabase
+      .from("Team_Member")
+      .delete()
+      .eq("team_id", user_id[0].Company.temporary_team)
+      .eq("user_id", user_id[0].id)
+
+    if (error3) {
+      console.error("Error finding team:", error3);
+      //   return res.status(500).json({ status: "error" });
+    }
+
+
     res.status(200).json({ status: "ok" });
   } catch (error) {
     console.error(error);
@@ -534,7 +548,8 @@ module.exports.removeTeamMember = async (req, res) => {
     const { data: user_id, error: getUserIdError } = await supabase
       .from("User")
       .select(`
-         id
+         id,
+         Company(temporary_team)
     `)
       .eq("email", team_member);
 
@@ -554,6 +569,20 @@ module.exports.removeTeamMember = async (req, res) => {
     //   return res.status(500).json({ status: "error" });
     // }
 
+    const { data, error, count } = await supabase
+      .from("Team_Member")
+      .select('*', { count: 'exact' })
+      .eq('user_id', user_id[0].id);
+
+
+    if (count == 0) {
+      const { error: addToTempTeamError } = await supabase
+        .from("Team_Member")
+        .insert([
+          { "user_id": user_id[0].id, "team_id": user_id[0].Company.temporary_team },
+        ]);
+    }
+
     res.status(200).json({ status: "ok" });
   } catch (error) {
     console.error(error);
@@ -566,23 +595,22 @@ module.exports.getTeamDashboardData = async (req, res) => {
   const { team_id } = req.body;
 
   try {
-    const { data: team, getTeamError } = await supabase
+    const { data: team, error: getTeamError } = await supabase
       .from("Team")
       .select(`
         id,
         name, 
         divisions, 
         team_created, 
-        Company(name), 
+        Company!Team_company_id_fkey (*),
         User(email)
       `)
       .eq("id", team_id);
 
     // if (getTeamError) {
-    //   console.error("Error finding team name:", getTeamError);
-    //   return res.status(500).json({ status: "error" });
-    // }
-
+    //    console.error("Error finding team name:", getTeamError);
+    //    return res.status(500).json({ status: "error" });
+    //  }
 
     const teamInfo = {
       id: team[0].id,
