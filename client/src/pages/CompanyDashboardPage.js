@@ -16,6 +16,7 @@ import useAuth from '../hooks/useAuth';
 export default function CompanyDashboard() {
   const { userData } = useUser();
   const [companyData, setCompanyData] = useState({});
+  const [totalCompanyEmployees, setTotalCompanyEmployees] = useState();
   const [companyCarbonStandard, setCompanyCarbonStandard] = useState({});
   const { green_gradient, amber_gradient, red_gradient } = getGradientColors();
   const [gradient, setGradient] = useState('');
@@ -71,6 +72,7 @@ export default function CompanyDashboard() {
         .then((data) => {
           if (data.status === "ok") {
             setCompanyData(data.companyInfo);
+            setTotalCompanyEmployees(data.totalCompanyMembers)
             setTeamsData(data.teamsInfo);
             const sortedByCarbonFootprint = [...data.teamsInfo].sort((a, b) => sortOrder === 'asc' ? parseFloat(a.carbonFootprintAverage) - parseFloat(b.carbonFootprintAverage) : parseFloat(b.carbonFootprintAverage) - parseFloat(a.carbonFootprintAverage));
             setSortedTeamsData(sortedByCarbonFootprint);
@@ -275,8 +277,11 @@ export default function CompanyDashboard() {
                   <Typography variant="h6" paragraph>
                     Company Info:
                   </Typography>
-                  <Typography variant="h7" paragraph>
+                  <Typography variant="h7" paragraph style={{ marginBottom: '4px' }}>
                     Name: {companyData.name}
+                  </Typography>
+                  <Typography variant="h7" paragraph style={{ }}>
+                    No. of Employees: {totalCompanyEmployees}
                   </Typography>
 
                   <Typography variant="h7" paragraph>

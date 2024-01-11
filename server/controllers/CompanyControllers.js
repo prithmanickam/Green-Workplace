@@ -383,7 +383,7 @@ module.exports.getCompanyDashboardData = async (req, res) => {
 
     companyInfo.name = companyName[0].name
 
-    res.status(200).json({ status: "ok", teamsInfo, companyInfo });
+    res.status(200).json({ status: "ok", teamsInfo, companyInfo, totalCompanyMembers });
   } catch (error) {
     console.log(error);
     res.status(500).json({ status: "error" });

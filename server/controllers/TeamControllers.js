@@ -601,6 +601,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
         id,
         name, 
         divisions, 
+        wao_days,
         team_created, 
         Company!Team_company_id_fkey (*),
         User(email)
@@ -618,6 +619,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
       email: team[0].User.email,
       company: team[0].Company.name,
       divisions: team[0].divisions,
+      wao_days: team[0].wao_days,
       team_created: team[0].team_created,
       carbon_footprint_total: 0,
       carbon_footprint_metric: 0,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
-import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, Divider, Button } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, Divider, Button, TablePagination } from '@mui/material';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
@@ -18,6 +18,7 @@ export default function TeamDashboard() {
     email: '',
     company: '',
     team_created: '',
+    wao_days: [],
     carbon_footprint_total: 0,
     carbon_footprint_metric: 0,
     team_members: [],
@@ -32,6 +33,9 @@ export default function TeamDashboard() {
   const [gradient, setGradient] = useState('');
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(8);
+
 
   useAuth(["Employee"]);
 
@@ -47,6 +51,16 @@ export default function TeamDashboard() {
     team_id: team.team_id,
     team_name: team.Team.name,
   }));
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to the first page when rows per page changes
+  };
+
 
   useEffect(() => {
     if (userData) {
@@ -126,7 +140,8 @@ export default function TeamDashboard() {
         .then((res) => res.json())
         .then((data) => {
           if (data.status === "ok") {
-            setTeamDashboardData(data.data);
+            const sortedMembers = data.data.team_members.sort((a, b) => a.carbon_footprint - b.carbon_footprint);
+            setTeamDashboardData({ ...data.data, team_members: sortedMembers });
 
             //console.log(data.data.line_graph_values)
           } else {
@@ -176,6 +191,20 @@ export default function TeamDashboard() {
     }
   }, [companyCarbonStandard, teamDashboardData, green_gradient, amber_gradient, red_gradient])
 
+  const getAvatarStyle = (index) => {
+    if (page === 0) { // Only applies border colours on the first page
+      switch (index) {
+        case 0: return { border: '3px solid gold' };
+        case 1: return { border: '3px solid silver' };
+        case 2: return { border: '3px solid #cd7f32' }; 
+        default: return {};
+      }
+    }
+    return {}; 
+  };
+  
+
+
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -206,7 +235,7 @@ export default function TeamDashboard() {
             ))}
           </Select>
         </Stack>
-         
+
         <div style={{ flex: 1, display: 'flex' }}>
           <Grid container spacing={3}>
             {/* First row */}
@@ -224,6 +253,9 @@ export default function TeamDashboard() {
                   </Typography>
                   <Typography variant="body1" style={{ marginBottom: '8px' }}>
                     Company: {teamDashboardData.company}
+                  </Typography>
+                  <Typography variant="body1" style={{ marginBottom: '8px' }}>
+                    Team set Work at Office days: {teamDashboardData?.wao_days?.join(', ') || ""}
                   </Typography>
                   <Typography variant="body1" style={{ marginBottom: '8px' }}>
                     Account Created: {teamDashboardData?.team_created?.slice(0, 10) || ""}
@@ -305,36 +337,51 @@ export default function TeamDashboard() {
                 Team Members:
               </Typography>
               <Grid container direction="column" spacing={2}>
-                {teamDashboardData.team_members && teamDashboardData.team_members.map((teamMember, index) => (
-                  <Grid item key={index}>
-                    <Card sx={{ height: 'auto' }}>
-                      <CardContent>
-                        <Grid container alignItems="center">
-                          <Grid item xs={2}>
-                            <Grid container alignItems="center" justifyContent="center">
-                              <Avatar alt={teamMember.firstname} src="/path_to_image.jpg" sx={{ width: 75, height: 75, marginRight: 2 }} />
+                {teamDashboardData.team_members
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((teamMember, index) => (
+                    <Grid item key={index}>
+                      <Card sx={{ height: 'auto' }}>
+                        <CardContent>
+                          <Grid container alignItems="center">
+                            <Grid item xs={2}>
+                              <Grid container alignItems="center" justifyContent="center">
+                                <Avatar
+                                  alt={teamMember.firstname}
+                                  src="/path_to_image.jpg"
+                                  sx={{ width: 75, height: 75, marginRight: 2, ...getAvatarStyle(index + page * rowsPerPage) }}
+                                />
+                              </Grid>
+                            </Grid>
+                            <Grid item xs={10}>
+                              <Typography variant="h6" paragraph>
+                                {teamMember.firstname} {teamMember.lastname}
+                              </Typography>
+                              <Typography variant="body1" style={{ marginBottom: '8px' }}>
+                                Email: {teamMember.email}
+                              </Typography>
+                              <Typography variant="body1" style={{ marginBottom: '8px' }}>
+                                Weekly Carbon Footprint: {teamMember.carbon_footprint} kg CO2
+                              </Typography>
+                              <Typography variant="body1" style={{ marginBottom: '8px' }}>
+                                Work At Office preference: {teamMember.wao_preference ? teamMember.wao_preference.join(', ') : 'Not specified'}
+                              </Typography>
                             </Grid>
                           </Grid>
-                          <Grid item xs={10}>
-                            <Typography variant="h6" paragraph>
-                              {teamMember.firstname} {teamMember.lastname}
-                            </Typography>
-                            <Typography variant="body1" style={{ marginBottom: '8px' }}>
-                              Email: {teamMember.email}
-                            </Typography>
-                            <Typography variant="body1" style={{ marginBottom: '8px' }}>
-                              Weekly Carbon Footprint: {teamMember.carbon_footprint} kg CO2
-                            </Typography>
-                            <Typography variant="body1" style={{ marginBottom: '8px' }}>
-                              Work At Office preference: {teamMember.wao_preference ? teamMember.wao_preference.join(', ') : 'Not specified'}
-                            </Typography>
-                          </Grid>
-                        </Grid>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))
+                }
               </Grid>
+              <TablePagination
+                component="div"
+                count={teamDashboardData.team_members.length}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
             </Grid>
           </Grid>
         </div>
