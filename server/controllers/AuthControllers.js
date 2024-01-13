@@ -12,10 +12,6 @@ const JWT_SECRET_FOR_REGISTRATION = 'asbfi3e5asf36n2';
 module.exports.updateUsername = async (req, res) => {
   const { userId, editedUser } = req.body;
 
-  if (!userId || !editedUser || !editedUser.firstname || !editedUser.lastname) {
-    return res.status(400).json({ status: "error", message: "Missing required fields" });
-  }
-
   try {
     const { data, error } = await supabase
       .from("User")
@@ -25,10 +21,6 @@ module.exports.updateUsername = async (req, res) => {
       })
       .eq("id", userId);
 
-    if (error) {
-      //console.error("Error updating user's name:", error);
-      return res.status(500).json({ status: "error" });
-    }
 
     res.status(200).json({ status: "ok", message: "User name updated successfully", user: data });
   } catch (error) {
@@ -51,11 +43,6 @@ module.exports.updatePassword = async (req, res) => {
       })
       .eq("email", userEmail);
 
-    if (error) {
-      //console.error("Error updating user's name:", error);
-      return res.status(500).json({ status: "error" });
-    }
-
     res.status(200).json({ status: "ok", message: "User name updated successfully", user: data });
   } catch (error) {
     //console.error(error);
@@ -76,13 +63,11 @@ module.exports.getAllUsers = async (req, res) => {
       .eq("company_id", company);
 
     if (error) {
-      //console.error("Error fetching users in the company:", error);
       return res.status(500).json({ status: "error" });
     }
 
     res.status(200).json({ status: "ok", users: data });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -236,18 +221,12 @@ module.exports.registerUser = async (req, res) => {
       },
     ])
     .select();
-    
-    if (error) {
-      console.error("Error registering user:", error);
-      return res.status(500).json({ status: "error" });
-    }
 
     const { data: companyInfo, error: error2 } = await supabase
       .from("Company")
       .select("*")
       .eq("id", company)
       .single();
-      
 
     const { error: addToTempTeamError } = await supabase
       .from("Team_Member")

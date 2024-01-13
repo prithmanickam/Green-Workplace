@@ -81,7 +81,6 @@ module.exports.getTransportMode = async (req, res) => {
 
     res.status(200).json({ status: "ok", mode });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ status: "error", errorMsg: error, message: "An error occurred on the server." });
   }
 };
@@ -339,7 +338,6 @@ module.exports.getCompanyCarbonStandard = async (req, res) => {
 
     res.status(200).json({ status: "ok", companyCarbonStandard });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ status: "error" });
   }
 };

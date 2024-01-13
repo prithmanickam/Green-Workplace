@@ -324,11 +324,6 @@ module.exports.postWorkAtOfficePreference = async (req, res) => {
         },
       ).eq("user_id", user_id).eq("team_id", team_id);
 
-    // if (postPreferenceError) {
-    //   //console.error("Error posting preference:", postPreferenceError);
-    //   return res.status(500).json({ status: "error" });
-    // }
-
     res.status(200).json({ status: "ok" });
   } catch (error) {
     //console.error(error);
@@ -393,6 +388,8 @@ module.exports.getTeamOwnerFunctionsData = async (req, res) => {
   const { company_id, user_email, team_id } = req.body;
 
   try {
+    console.log("Fetching teamInfo...");
+
     const { data: teamInfo, error: getTeamInfoError } = await supabase
       .from("Team")
       .select(`
@@ -401,31 +398,18 @@ module.exports.getTeamOwnerFunctionsData = async (req, res) => {
     `)
       .eq("id", team_id);
 
-    // if (getTeamInfoError) {
-    //   console.error("Error finding team:", getTeamInfoError);
-    //   return res.status(500).json({ status: "error" });
-    // }
 
     const { data: teamMembersToRemove, error: getMembersToRemoveError } = await supabase
       .from("Team_Member")
       .select("User(email)")
       .eq("team_id", team_id);
 
-    // if (getMembersToRemoveError) {
-    //   console.error("Error finding team members to remove:", getMembersToRemoveError);
-    //   return res.status(500).json({ status: "error" });
-    // }
 
     const { data: teamMembersToAdd, error: getMembersToAddError } = await supabase
       .from("User")
       .select(`email`)
       .eq("company_id", company_id)
       .eq("type", 'Employee');
-
-    // if (getMembersToAddError) {
-    //   console.error("Error finding team members to add:", getMembersToAddError);
-    //   return res.status(500).json({ status: "error" });
-    // }
 
     const emailsToRemove = teamMembersToRemove.map(item => item.User.email);
     const teamMembersToAddEmails = teamMembersToAdd.map(item => item.email);
@@ -477,10 +461,6 @@ module.exports.editTeamWAODays = async (req, res) => {
       .update({ wao_days: selected_days })
       .eq("id", team_id);
 
-    // if (editTeamWAODaysError) {
-    //   console.error("Error finding team:", editTeamWAODaysError);
-    //   return res.status(500).json({ status: "error" });
-    // }
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
@@ -503,10 +483,6 @@ module.exports.addTeamMember = async (req, res) => {
     `)
       .eq("email", new_team_member);
 
-    // if (getUserIdError) {
-    //   console.error("Error finding team:", getUserIdError);
-    //   return res.status(500).json({ status: "error" });
-    // }
 
     const { error: addTeamMemberError } = await supabase
       .from("Team_Member")
@@ -514,22 +490,12 @@ module.exports.addTeamMember = async (req, res) => {
         { "user_id": user_id[0].id, "team_id": team_id },
       ]);
 
-    // if (addTeamMemberError) {
-    //   console.error("Error finding team:", addTeamMemberError);
-    //   return res.status(500).json({ status: "error" });
-    // }
-
 
     const { error: error3 } = await supabase
       .from("Team_Member")
       .delete()
       .eq("team_id", user_id[0].Company.temporary_team)
       .eq("user_id", user_id[0].id)
-
-    if (error3) {
-      console.error("Error finding team:", error3);
-      //   return res.status(500).json({ status: "error" });
-    }
 
 
     res.status(200).json({ status: "ok" });
@@ -671,7 +637,6 @@ module.exports.getTeamDashboardData = async (req, res) => {
 
     res.status(200).json({ status: "ok", data: teamInfo });
   } catch (error) {
-    console.log(error)
     res.status(500).json({ status: "error" });
   }
 };

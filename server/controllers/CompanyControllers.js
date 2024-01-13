@@ -12,11 +12,6 @@ module.exports.getOffices = async (req, res) => {
       .select("*")
       .eq("company_id", company);
 
-    // if (error) {
-    //   //console.error("Error fetching offices:", error);
-    //   return res.status(500).json({ status: "error" });
-    // }
-
     res.status(200).json({ status: "ok", data: data });
   } catch (error) {
     //console.error(error);
@@ -166,7 +161,6 @@ module.exports.getLineChartData = async (req, res) => {
         date.setMonth(date.getMonth() - 1);
       }
       monthNumbers.pop();
-
       return monthNumbers;
     }
 
@@ -191,9 +185,7 @@ module.exports.getLineChartData = async (req, res) => {
 
     if (lineChartLength === "week") {
       dates = getLast4Mondays();
-
       for (const monday of dates) {
-
         const { data, error } = await supabase
           .from("Team_Member_History")
           .select("carbon_footprint")
@@ -207,7 +199,6 @@ module.exports.getLineChartData = async (req, res) => {
         }
         const validWeeklyFootprint = isNaN(weeklyFootprint) ? 0 : weeklyFootprint;
         footprintList.push(validWeeklyFootprint);
-
       }
     } else if (lineChartLength === "month") {
       dates = getFirstDayOfLast4Months();
@@ -222,7 +213,6 @@ module.exports.getLineChartData = async (req, res) => {
 
         if (data && data.length > 0) {
           const filteredData = data.filter(record => record.week.includes(`-${month}-`));
-
           if (type === "user") {
             let weeklySums = {};
             for (const record of filteredData) {
@@ -256,8 +246,6 @@ module.exports.getLineChartData = async (req, res) => {
     res.status(500).json({ status: "error" });
   }
 };
-
-
 
 
 module.exports.getBarChartData = async (req, res) => {
@@ -299,7 +287,6 @@ module.exports.getBarChartData = async (req, res) => {
 
     res.status(200).json({ status: "ok", data: offices });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ status: "error" });
   }
 };

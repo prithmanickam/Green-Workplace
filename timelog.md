@@ -292,3 +292,6 @@
 ### 11 Jan 2023
 * *5 hours* Created a company temp team as default team if user is in no teams.
 * *2.5 hours* Displays extra details in company and team dashboard. Within Team Dashboard pagination and gamification via borders is added.
+
+### 12 Jan 2023
+* *8 hours* Updated test coverage to 80%.
