@@ -1,26 +1,39 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, StatusBar, Button, TextInput } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, StatusBar, Button, TextInput, Modal } from 'react-native';
 import * as Location from 'expo-location';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import Toast from 'react-native-toast-message';
-import ModalDropdown from 'react-native-modal-dropdown';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-
+import RNPickerSelect from 'react-native-picker-select';
+import CustomModal from '../components/CustomModel';
 import { WaveIndicator } from 'react-native-indicators';
 
-const CO2_EMISSIONS_PER_MINUTE = {
-	Car: 0.009,
+const CO2_EMISSIONS_PER_METER = {
+	Car: 0.00016637,
 	Bicycle: 0,
-	Bus: 0.0022,
-	Train: 0.0005,
+	Bus: 0.0001195,
+	Train: 0.00003694,
 	Walking: 0,
-	Motorcycle: 0.005,
-	ElectricCar: 0.001,
-	Scooter: 0.003,
-	Subway: 0.0003,
-	Tram: 0.0004
+	Motorcycle: 0.00010086,
+	ElectricCar: 0.00005563,
+	Subway: 0.0000275,
+	Tram: 0.0000202
 };
+
+// multiplied by 500 (Average speed in meters per minute)
+const CO2_EMISSIONS_PER_MINUTE = {
+	Car: 0.083185,
+	Bicycle: 0,
+	Bus: 0.03585,
+	Train: 0.03077102,
+	Walking: 0,
+	Motorcycle: 0.05043,
+	ElectricCar: 0.027815,
+	Subway: 0.011,
+	Tram: 0.00404
+};
+
 
 export default function TransportDetectionPage() {
 	const [location, setLocation] = useState(null);
@@ -48,17 +61,44 @@ export default function TransportDetectionPage() {
 	const [isPredicting, setIsPredicting] = useState(false);
 	const [predictionEnded, setPredictionEnded] = useState(false);
 
-	const [selectedDay, setSelectedDay] = useState('');
 	const [transportMode, setTransportMode] = useState('');
 	const [entries, setEntries] = useState([]);
-	const [duration, setDuration] = useState('');
 	const [totalCarbonFootprint, setTotalCarbonFootprint] = useState(0);
 	const [teams, setTeams] = useState([]);
 	const [teamPercentages, setTeamPercentages] = useState({});
 	const [totalPercentage, setTotalPercentage] = useState(0);
 
 	const dayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-	const transportOptions = ['Car', 'Bicycle', 'Bus', 'Train', 'Walking', 'Motorcycle', 'ElectricCar', 'Scooter', 'Subway', 'Tram'];
+	const transportOptions = ['Car', 'Bicycle', 'Bus', 'Train', 'Walking', 'Motorcycle', 'ElectricCar', 'Subway', 'Tram'];
+	const dayPickerItems = dayOptions.map(day => ({ label: day, value: day }));
+	const transportPickerItems = transportOptions.map(mode => ({ label: mode, value: mode }));
+	const hourOptions = Array.from({ length: 24 }, (_, i) => ({ label: `${i}`.padStart(2, '0'), value: `${i}`.padStart(2, '0') }));
+	const minuteOptions = Array.from({ length: 60 }, (_, i) => ({ label: `${i}`.padStart(2, '0'), value: `${i}`.padStart(2, '0') }));
+	const [durationHour, setDurationHour] = useState('');
+	const [durationMinute, setDurationMinute] = useState('');
+	const [sameReturnJourney, setSameReturnJourney] = useState("Yes");
+	const [carSettings, setCarSettings] = useState({ engineType: 'petrol', passengers: 1 });
+	const [showCarSettingsModal, setShowCarSettingsModal] = useState(false);
+	const [editingEntryIndex, setEditingEntryIndex] = useState(-1);
+
+	const DIESEL_EMISSION_FACTOR = 0.966;
+
+	const getCurrentDay = () => {
+		const today = new Date().getDay();
+		const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+		if (today === 0 || today === 6) {
+			return '';
+		}
+		return weekdays[today - 1];
+	};
+
+	const [selectedDay, setSelectedDay] = useState(getCurrentDay());
+	const [successModalVisible, setSuccessModalVisible] = useState(false);
+	const [errorTransportModalVisible, setErrorTransportModalVisible] = useState(false);
+	const [errorDayModalVisible, setErrorDayModalVisible] = useState(false);
+	const [errorPercentagesModalVisible, setErrorPercentagesModalVisible] = useState(false);
+	const [errorSubmitModalVisible, setErrorSubmitModalVisible] = useState(false);
+
 
 	const getIconName = (mode) => {
 		switch (mode) {
@@ -78,8 +118,6 @@ export default function TransportDetectionPage() {
 				return 'motorcycle';
 			case 'ElectricCar':
 				return 'bolt';
-			case 'Scooter':
-				return 'street-view';
 			case 'Subway':
 				return 'subway';
 			case 'Tram':
@@ -136,31 +174,80 @@ export default function TransportDetectionPage() {
 	// Function to calculate the team's share of the carbon footprint
 	const calculateTeamCarbonFootprint = (teamName) => {
 		const percentage = parseFloat(teamPercentages[teamName] || 0);
-		return ((percentage / 100) * parseFloat(totalCarbonFootprint)).toFixed(2);
+		let newFootprint = totalCarbonFootprint
+		if (sameReturnJourney == "Yes") {
+			newFootprint = totalCarbonFootprint * 2
+		}
+		return ((percentage / 100) * parseFloat(newFootprint)).toFixed(2);
 	};
 
 
-	const calculateCarbonFootprint = (mode, time) => {
+	const calculateCarbonFootprintUsingTime = (mode, time, engineType = 'petrol', passengers = 1) => {
 		const [hours, minutes] = time.split(':').map(Number);
 		const totalMinutes = hours * 60 + minutes;
-		return (CO2_EMISSIONS_PER_MINUTE[mode] * totalMinutes).toFixed(2);
+		let emissionRate = CO2_EMISSIONS_PER_MINUTE[mode];
+
+		if (mode === 'Car') {
+			emissionRate *= engineType === 'diesel' ? DIESEL_EMISSION_FACTOR : 1;
+		}
+
+		return (emissionRate * totalMinutes / passengers).toFixed(1);
 	};
 
-	const updateTotalCarbonFootprint = () => {
-		const total = entries.reduce((sum, entry) => sum + parseFloat(entry.carbonFootprint || 0), 0);
+	const calculateCarbonFootprintUsingDistance = (mode, distance, engineType = 'petrol', passengers = 1) => {
+		let emissionRate = CO2_EMISSIONS_PER_METER[mode];
+
+		if (mode === 'Car') {
+			emissionRate *= engineType === 'diesel' ? DIESEL_EMISSION_FACTOR : 1;
+		}
+
+		return (emissionRate * distance / passengers).toFixed(1);
+	};
+
+
+
+	const updateTotalCarbonFootprint = (updatedEntries) => {
+		const total = updatedEntries.reduce((sum, entry) => {
+			return sum + parseFloat(entry.carbonFootprint || 0);
+		}, 0);
 		setTotalCarbonFootprint(total.toFixed(2));
 	};
 
+
 	const addEntry = () => {
-		const carbonFootprint = calculateCarbonFootprint(transportMode, duration);
-		const newEntries = [...entries, { mode: transportMode, time: duration, carbonFootprint }];
+		if (transportMode === '') {
+			setErrorTransportModalVisible(true);
+			return;
+		}
 
-		// Calculate the total using newEntries
-		const newTotal = newEntries.reduce((sum, entry) => sum + parseFloat(entry.carbonFootprint || 0), 0);
-		setTotalCarbonFootprint(newTotal.toFixed(2));
+		// Reset carSettings to default values when adding a new Car entry
+		if (transportMode === 'Car') {
+			setCarSettings({ engineType: 'petrol', passengers: 1 });
+		}
 
-		setEntries(newEntries);
+		if (durationHour == '') {
+			combinedDuration = `00:${durationMinute}`;
+		}
+		if (durationMinute == '') {
+			combinedDuration = `${durationHour}:00`;
+		}
+		if ((durationMinute == '') && (durationHour == '')) {
+			combinedDuration = `00:00`;
+		}
+
+		let carbonFootprint;
+		if (transportMode === 'Car') {
+			// Use default car settings for new entry
+			carbonFootprint = calculateCarbonFootprintUsingTime(transportMode, combinedDuration, 'petrol', 1);
+		} else {
+			carbonFootprint = calculateCarbonFootprintUsingTime(transportMode, combinedDuration);
+		}
+		const newEntry = { mode: transportMode, time: combinedDuration, carbonFootprint, distance: "N/A" };
+
+		setEntries([...entries, newEntry]);
+		updateTotalCarbonFootprint([...entries, newEntry]); // Recalculate total carbon footprint
 	};
+
 
 	const deleteEntry = (index) => {
 		const newEntries = entries.filter((_, i) => i !== index);
@@ -213,13 +300,12 @@ export default function TransportDetectionPage() {
 
 	const handleSubmit = async () => {
 		// Validation checks before submitting
-		if (!selectedDay || totalCarbonFootprint === '0.00' || totalPercentage !== 100) {
-			Toast.show({
-				type: 'error',
-				text1: 'Incomplete fields',
-				text2: 'Please fill all the fields.'
-			});
-			console.error("Please fill all the fields correctly.");
+		if (!selectedDay) {
+			setErrorDayModalVisible(true);
+			return;
+		}
+		if (totalPercentage !== 100) {
+			setErrorPercentagesModalVisible(true);
 			return;
 		}
 
@@ -238,30 +324,26 @@ export default function TransportDetectionPage() {
 				body: JSON.stringify({
 					user_id: userData.id,
 					day: selectedDay,
-					duration: entries.reduce((sum, entry) => sum + entry.time, 0), // Calculate total duration
+					duration: calculateTotalDuration(),
 					carbonFootprint: totalCarbonFootprint,
 					teamData,
 				}),
 			});
 			const data = await response.json();
 			if (data.status === "ok") {
-				console.log("Submission Successful");
-				Alert.alert("Success", "Carbon stats saved successfully!");
+				setSuccessModalVisible(true);
 			} else {
-				console.error("Submission Failed");
-				Alert.alert("Error", "Failed to save carbon stats.");
+				setErrorSubmitModalVisible(true);
 			}
 		} catch (error) {
-			console.error("An error occurred:", error);
-			Alert.alert("Error", "An error occurred while saving carbon stats.");
+			setErrorSubmitModalVisible(true);
 		}
 	};
-
 
 	const startPredicting = () => {
 		setIsPredicting(true);
 		setPredictionEnded(false);
-		setTransportModes([]); // Reset transport modes
+		setTransportModes([]);
 		setDistanceTraveled(0);
 		setCurrentDistanceTravelled(0);
 	};
@@ -442,7 +524,7 @@ export default function TransportDetectionPage() {
 					body: JSON.stringify({
 						newData
 					}),
-						
+
 				})
 					.then((response) => response.json())
 					.then((data) => {
@@ -453,7 +535,7 @@ export default function TransportDetectionPage() {
 							}
 
 							const currentTime = new Date().toLocaleTimeString();
-							const modeWithTime = { mode: accurateMode, time: currentTime };
+							const modeWithTime = { mode: accurateMode, time: currentTime, distance: currentDistanceTravelledRef.current };
 							setTransportModes(modes => [modeWithTime, ...modes]);
 							Toast.show({
 								type: 'success',
@@ -518,40 +600,49 @@ export default function TransportDetectionPage() {
 
 	// Algorithm to predict overall journey from the transport predicted data
 	const getPrimaryTransportModes = (modes) => {
-		const addSummaryEntry = (mode, start, end) => {
-			summary.push({ mode, startTime: start, endTime: end });
-		};
+		if (!modes || modes.length === 0) {
+			return []; // Return an empty array if no valid modes are provided
+		}
 
 		const vehicleModes = ["Car", "Bus", "Train"];
+		const addSummaryEntry = (mode, start, end, totalDistance) => {
+			// Only add entry if start time and end time are different (else its likely a mis-detection)
+			if ((start !== end) || (mode == "Walking")) {
+				summary.push({ mode, startTime: start, endTime: end, distance: totalDistance });
+			}
+		};
+
 		let summary = [];
 		let currentMode = modes[0].mode === 'Still' ? 'Walking' : modes[0].mode;
 		let startTime = modes[0].time;
+		let totalDistance = 0;
 		let walkingCounter = 0;
 		let modeSequence = [];
 
 		modes.forEach((entry, index) => {
 			let mode = entry.mode === 'Still' ? 'Walking' : entry.mode;
 			let time = entry.time;
+			totalDistance += entry.distance;
 
 			if (vehicleModes.includes(mode)) {
 				walkingCounter = 0;
 				modeSequence.push(mode);
 				if (currentMode === 'Walking') {
-					addSummaryEntry(currentMode, startTime, modes[index - 1].time);
+					addSummaryEntry(currentMode, startTime, modes[index - 1].time, totalDistance);
 					currentMode = mode;
 					startTime = time;
+					totalDistance = 0;
 				}
 			} else if (mode === 'Walking') {
 				walkingCounter++;
-				//assumption if the walking counter is more than 6, the user is no longer
-				// on that vechile transport
 				if (walkingCounter >= 6 && vehicleModes.includes(currentMode)) {
 					let mostCommonMode = modeSequence.sort((a, b) =>
 						modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
 					).pop();
-					addSummaryEntry(mostCommonMode, startTime, modes[index - 6].time);
+					addSummaryEntry(mostCommonMode, startTime, modes[index - 6].time, totalDistance);
 					currentMode = 'Walking';
 					startTime = modes[index - 5].time;
+					totalDistance = 0;
 					modeSequence = [];
 				}
 			} else {
@@ -563,12 +654,11 @@ export default function TransportDetectionPage() {
 			let mostCommonMode = modeSequence.length ? modeSequence.sort((a, b) =>
 				modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
 			).pop() : currentMode;
-			addSummaryEntry(mostCommonMode, startTime, modes[modes.length - 1].time);
+			addSummaryEntry(mostCommonMode, startTime, modes[modes.length - 1].time, totalDistance);
 		}
 
 		return summary;
 	};
-
 
 	// Function to calculate the duration between two times in HH:MM format
 	const calculateDuration = (startTime, endTime) => {
@@ -581,9 +671,9 @@ export default function TransportDetectionPage() {
 		const start = formatTime(endTime);
 		const end = formatTime(startTime);
 
-		let durationMinutes = (end - start) / 60000; // Duration in minutes
+		let durationMinutes = (end - start) / 60000;
 		if (durationMinutes < 0) {
-			durationMinutes += 24 * 60; // Adjust for times past midnight
+			durationMinutes += 24 * 60;
 		}
 
 		const hours = Math.floor(durationMinutes / 60);
@@ -597,12 +687,87 @@ export default function TransportDetectionPage() {
 	const addPrimaryTransportModeEntries = () => {
 		getPrimaryTransportModes(transportModes).forEach(primaryMode => {
 			const modeDuration = calculateDuration(primaryMode.startTime, primaryMode.endTime);
-			const carbonFootprint = calculateCarbonFootprint(primaryMode.mode, modeDuration);
+			const carbonFootprint = calculateCarbonFootprintUsingDistance(primaryMode.mode, primaryMode.distance);
 			setEntries(currentEntries => [
 				...currentEntries,
-				{ mode: primaryMode.mode, time: modeDuration, carbonFootprint: carbonFootprint }
+				{ mode: primaryMode.mode, time: modeDuration, carbonFootprint: carbonFootprint, distance: primaryMode.distance }
 			]);
 		});
+
+		const newTotal = entries.reduce((sum, entry) => sum + parseFloat(entry.carbonFootprint || 0), 0);
+		setTotalCarbonFootprint(newTotal.toFixed(2));
+	};
+
+	// Function to convert HH:MM string to minutes
+	const durationToMinutes = (duration) => {
+		const [hours, minutes] = duration.split(':').map(Number);
+		return hours * 60 + minutes;
+	};
+
+	// Function to convert minutes to hours minutes format
+	const minutesToDuration = (totalMinutes) => {
+		const hours = Math.floor(totalMinutes / 60);
+		const minutes = totalMinutes % 60;
+		if (hours === 0) {
+			return `${minutes} min`;
+		} else {
+			return `${hours} hours ${minutes} min`;
+		}
+	};
+
+	// Function to calculate total duration
+	const calculateTotalDuration = () => {
+		let totalMinutes = entries.reduce((sum, entry) => {
+			return sum + durationToMinutes(entry.time);
+		}, 0);
+
+		if (sameReturnJourney === "Yes") {
+			totalMinutes *= 2;
+		}
+
+		return minutesToDuration(totalMinutes);
+	};
+
+	const handlePassengerChange = (text) => {
+		// Set to 1 if the input is empty or non-numeric
+		const numPassengers = text === '' || isNaN(text) ? '' : parseInt(text);
+		setCarSettings(prev => ({ ...prev, passengers: numPassengers }));
+	};
+
+
+	const editCarEntry = (index) => {
+		const entry = entries[index];
+		if (entry && entry.mode === 'Car') {
+			setCarSettings({ engineType: entry.engineType || 'petrol', passengers: entry.passengers || 1 });
+			setEditingEntryIndex(index);
+			setShowCarSettingsModal(true);
+		}
+	};
+
+	const saveCarSettings = () => {
+		if (editingEntryIndex >= 0) {
+			const updatedCarbonFootprint = calculateCarbonFootprintUsingTime(
+				'Car',
+				entries[editingEntryIndex].time,
+				carSettings.engineType,
+				carSettings.passengers
+			);
+
+			let updatedEntries = [...entries];
+			updatedEntries[editingEntryIndex] = {
+				...updatedEntries[editingEntryIndex],
+				...carSettings,
+				carbonFootprint: updatedCarbonFootprint
+			};
+			setEntries(updatedEntries);
+
+			// Recalculate total carbon footprint
+			updateTotalCarbonFootprint(updatedEntries);
+
+			// Reset editing index
+			setEditingEntryIndex(-1);
+		}
+		setShowCarSettingsModal(false);
 	};
 
 
@@ -613,13 +778,12 @@ export default function TransportDetectionPage() {
 			<Text>Mobile Sensor and GPS Data</Text>
 			<ScrollView style={styles.scrollView}>
 
-				<Text>{text}</Text>
-				<Text>Distance travelled since last detection: {currentDistanceTravelledRef.current?.toFixed(2)}m</Text>
-				<Text>Accelerometer Data:</Text>
-				<Text>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
-
-				<Text>Gyroscope Data:</Text>
-				<Text>x: {currentGyroscope.x?.toFixed(2)}, y: {currentGyroscope.y?.toFixed(2)}, z: {currentGyroscope.z?.toFixed(2)}</Text>
+				<Text style={styles.textWithPadding}>{text}</Text>
+				<Text style={styles.textWithPadding}>Distance travelled since last detection: {currentDistanceTravelledRef.current?.toFixed(2)}m</Text>
+				<Text style={styles.textWithPadding}>Accelerometer Data:</Text>
+				<Text style={styles.textWithPadding}>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
+				<Text style={styles.textWithPadding}>Gyroscope Data:</Text>
+				<Text style={styles.textWithPadding}>x: {currentGyroscope.x?.toFixed(2)}, y: {currentGyroscope.y?.toFixed(2)}, z: {currentGyroscope.z?.toFixed(2)}</Text>
 			</ScrollView>
 
 
@@ -643,7 +807,7 @@ export default function TransportDetectionPage() {
 					<View key={index} style={styles.textAndIcon}>
 						<Icon name={getIconName(item.mode)} size={20} color="#000" />
 						<Text style={styles.textStyle}>
-							{item.mode} - {item.time}
+							{item.mode} - {item.time} - {item.distance.toFixed(2)}m
 						</Text>
 					</View>
 				))}
@@ -657,44 +821,92 @@ export default function TransportDetectionPage() {
 				<ScrollView style={styles.largerScrollView}>
 
 					<Text style={styles.centeredBoldText}>Automatically Added Transport Entries:</Text>
-					{getPrimaryTransportModes(transportModes).map((mode, index) => (
-						<Text key={index}>{mode.mode} from {mode.endTime} to {mode.startTime}</Text>
-					))}
+
+					{(
+						getPrimaryTransportModes(transportModes).map((mode, index) => (
+							<Text key={index} style={{ textAlign: 'center' }}>
+								{mode.mode} from {mode.endTime} to {mode.startTime} | {mode.distance.toFixed(2)}m
+							</Text>
+						))
+					)}
+
+
+					<View style={styles.divider} />
+
+					<Text style={styles.centeredBoldText}>Additional Information:</Text>
+
+					<View style={styles.row}>
+						<Text style={styles.label}>Select Day:</Text>
+						<RNPickerSelect
+							onValueChange={(value) => setSelectedDay(value)}
+							items={dayPickerItems}
+							style={pickerSelectStyles}
+							value={selectedDay}
+							placeholder={{
+								label: 'Select a day.',
+								value: null,
+							}}
+							useNativeAndroidPickerStyle={false}
+						/>
+					</View>
+
+					<View style={styles.row}>
+						<Text style={styles.label}>Same Return Journey:</Text>
+						<RNPickerSelect
+							onValueChange={(value) => setSameReturnJourney(value)}
+							items={[
+								{ label: "Yes", value: "Yes" },
+								{ label: "No", value: "No" }
+							]}
+							style={pickerSelectStyles}
+							value={sameReturnJourney}
+							placeholder={{}}
+							useNativeAndroidPickerStyle={false}
+						/>
+					</View>
 
 					<View style={styles.divider} />
 
 					<Text style={styles.centeredBoldText}>Add/Delete Transport Entries:</Text>
 
 					<View style={styles.row}>
-						<Text style={styles.label}>Select Day:</Text>
-						<ModalDropdown
-							options={dayOptions}
-							onSelect={(index, value) => setSelectedDay(value)}
-							style={styles.dropdown}
-							textStyle={styles.dropdownText}
-							dropdownTextStyle={styles.dropdownTextStyle}
-						/>
-					</View>
-
-					<View style={styles.row}>
 						<Text style={styles.label}>Select Transport Mode:</Text>
-						<ModalDropdown
-							options={transportOptions}
-							onSelect={(index, value) => setTransportMode(value)}
-							style={styles.dropdown}
-							textStyle={styles.dropdownText}
-							dropdownTextStyle={styles.dropdownTextStyle}
+						<RNPickerSelect
+							onValueChange={(value) => setTransportMode(value)}
+							items={transportPickerItems}
+							style={pickerSelectStyles}
+							value={transportMode}
+							placeholder={{
+								label: 'Select mode.',
+								value: null,
+							}}
+							useNativeAndroidPickerStyle={false}
 						/>
 					</View>
 
 					<View style={styles.row}>
 						<Text style={styles.label}>Duration of Mode:</Text>
-						<TextInput
-							placeholder="(HH:MM)"
-							value={duration}
-							onChangeText={setDuration}
-							style={styles.textInput}
-						/>
+						<View style={styles.durationPicker}>
+							<RNPickerSelect
+								onValueChange={(value) => setDurationHour(value)}
+								items={hourOptions}
+								style={pickerSelectStyles}
+								value={durationHour}
+								placeholder={{ label: 'HH', value: null }}
+								useNativeAndroidPickerStyle={false}
+							/>
+						</View>
+						<Text>:</Text>
+						<View style={styles.durationPicker}>
+							<RNPickerSelect
+								onValueChange={(value) => setDurationMinute(value)}
+								items={minuteOptions}
+								style={pickerSelectStyles}
+								value={durationMinute}
+								placeholder={{ label: 'MM', value: null }}
+								useNativeAndroidPickerStyle={false}
+							/>
+						</View>
 					</View>
 
 
@@ -708,7 +920,17 @@ export default function TransportDetectionPage() {
 								color="black"
 								onPress={() => deleteEntry(index)}
 							/>
-							<Text style={styles.entryText}>{entry.mode} - {entry.time} - {entry.carbonFootprint} kg CO2</Text>
+							{entry.mode === 'Car' && (
+								<Icon
+									name="edit"
+									size={20}
+									color="blue"
+									onPress={() => editCarEntry(index)}
+								/>
+							)}
+							<Text style={styles.entryText}>
+								{entry.mode} - {entry.time} - {typeof entry.distance === 'number' ? entry.distance.toFixed(1) : 'N/A'}m - {entry.carbonFootprint} kg CO2
+							</Text>
 							<Icon
 								name="trash"
 								size={20}
@@ -718,7 +940,15 @@ export default function TransportDetectionPage() {
 						</View>
 					))}
 
-					<Text>Total Carbon Footprint: {totalCarbonFootprint} kg CO2</Text>
+
+					<Text style={{ textAlign: 'center' }}>
+						Total Carbon Footprint: {sameReturnJourney === "Yes" ? "(x2) " + (totalCarbonFootprint * 2) : totalCarbonFootprint} kg CO2
+					</Text>
+
+					<Text style={{ textAlign: 'center' }}>
+						Total Duration: {sameReturnJourney === "Yes" ? "(x2) " + calculateTotalDuration() : calculateTotalDuration()} kg CO2
+					</Text>
+
 
 					<View style={styles.divider} />
 
@@ -726,14 +956,14 @@ export default function TransportDetectionPage() {
 
 					{/* Team Fields */}
 					{teams.map((team, index) => (
-						<View key={index} >
+						<View key={index} style={styles.teamRow}>
 							<Text style={styles.teamName}>{team.teamName}</Text>
 							<TextInput
 								style={styles.teamInput}
 								value={teamPercentages[team.teamName]}
 								onChangeText={(value) => handleTeamPercentageChange(team.teamName, value)}
 								keyboardType="numeric"
-								placeholder="Percentage"
+								placeholder="%"
 							/>
 							<Text style={styles.teamFootprint}>
 								Carbon Footprint: {calculateTeamCarbonFootprint(team.teamName)} kg CO2
@@ -741,7 +971,6 @@ export default function TransportDetectionPage() {
 						</View>
 					))}
 
-					{/* Submit Button */}
 					<Button
 						title="Submit"
 						onPress={handleSubmit}
@@ -751,6 +980,68 @@ export default function TransportDetectionPage() {
 				</ScrollView>
 			)}
 			<StatusBar style="auto" />
+			<CustomModal
+				modalVisible={errorTransportModalVisible}
+				setModalVisible={setErrorTransportModalVisible}
+				modalText="Please select a transport mode."
+				color="red"
+			/>
+			<CustomModal
+				modalVisible={errorDayModalVisible}
+				setModalVisible={setErrorDayModalVisible}
+				modalText="Select the day before submitting."
+				color="red"
+			/>
+			<CustomModal
+				modalVisible={errorPercentagesModalVisible}
+				setModalVisible={setErrorPercentagesModalVisible}
+				modalText="Enter percentage distribution for your teams. Needs to add to 100."
+				color="red"
+			/>
+			<CustomModal
+				modalVisible={errorSubmitModalVisible}
+				setModalVisible={setErrorSubmitModalVisible}
+				modalText="Error submitting carbon footprint. Check your connection."
+				color="red"
+			/>
+			<CustomModal
+				modalVisible={successModalVisible}
+				setModalVisible={setSuccessModalVisible}
+				modalText="Successfully Saved Carbon Footprint."
+				color="green"
+			/>
+			<Modal
+				visible={showCarSettingsModal}
+				animationType="slide"
+				transparent={true}
+				onRequestClose={() => setShowCarSettingsModal(false)}
+			>
+				<View style={styles.centeredView}>
+					<View style={styles.modalView}>
+						<Text>Select Engine Type:</Text>
+						{/* Dropdown or Picker for engine type */}
+						<RNPickerSelect
+							onValueChange={(value) => setCarSettings(prev => ({ ...prev, engineType: value }))}
+							items={[{ label: 'Petrol', value: 'petrol' }, { label: 'Diesel', value: 'diesel' }]}
+							value={carSettings.engineType}
+						/>
+						<Text>No. of Employee Passengers:</Text>
+						<TextInput
+							style={styles.inputBox}
+							onChangeText={handlePassengerChange}
+							value={carSettings.passengers.toString()}
+							keyboardType="numeric"
+						/>
+
+						<Button
+							title="Save Settings"
+							onPress={saveCarSettings}
+						/>
+
+					</View>
+				</View>
+			</Modal>
+
 		</View>
 	);
 }
@@ -800,7 +1091,6 @@ const styles = StyleSheet.create({
 		marginVertical: 4,
 	},
 
-	// space between icon and text
 	textStyle: {
 		marginLeft: 10,
 		marginRight: 10,
@@ -824,6 +1114,10 @@ const styles = StyleSheet.create({
 		marginRight: 10,
 	},
 
+	textWithPadding: {
+		marginLeft: 6,
+	},
+
 	divider: {
 		width: '90%',
 		alignSelf: 'center',
@@ -835,6 +1129,103 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		fontWeight: 'bold',
 	},
+	durationPicker: {
+		width: 70,
+	},
 
 
+	centeredView: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		marginTop: 22
+	},
+	modalView: {
+		margin: 20,
+		backgroundColor: "white",
+		borderRadius: 20,
+		padding: 35,
+		alignItems: "center",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2
+		},
+		shadowOpacity: 0.25,
+		shadowRadius: 4,
+		elevation: 5
+	},
+	button: {
+		borderRadius: 20,
+		padding: 10,
+		elevation: 2
+	},
+	buttonClose: {
+		backgroundColor: "#2196F3",
+	},
+	textStyleModal: {
+		color: "white",
+		fontWeight: "bold",
+		textAlign: "center"
+	},
+	modalText: {
+		marginBottom: 15,
+		textAlign: "center"
+	},
+	teamRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		padding: 10,
+	},
+	teamName: {
+		flex: 2,
+		marginRight: 10,
+	},
+	teamInput: {
+		flex: 1,
+		borderWidth: 1,
+		borderColor: 'gray',
+		padding: 8,
+		marginRight: 10,
+	},
+	teamFootprint: {
+		flex: 2,
+	},
+	inputBox: {
+		borderWidth: 1,
+		borderColor: 'gray',
+		borderRadius: 5,
+		padding: 10,
+		marginTop: 5,
+		marginBottom: 5,
+		width: '80%',
+	},
+});
+
+const pickerSelectStyles = StyleSheet.create({
+	inputIOS: {
+		fontSize: 16,
+		paddingVertical: 12,
+		paddingHorizontal: 10,
+		borderWidth: 1,
+		borderColor: 'gray',
+		borderRadius: 4,
+		color: 'black',
+		paddingRight: 30,
+		backgroundColor: 'white',
+		marginRight: 10,
+	},
+	inputAndroid: {
+		fontSize: 16,
+		paddingHorizontal: 10,
+		paddingVertical: 8,
+		borderWidth: 0.5,
+		borderColor: 'purple',
+		borderRadius: 8,
+		color: 'black',
+		paddingRight: 30,
+		backgroundColor: 'white',
+		marginRight: 10,
+	},
 });

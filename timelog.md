@@ -295,3 +295,6 @@
 
 ### 12 Jan 2023
 * *8 hours* Updated test coverage to 80%.
+
+### 13 Jan 2023
+* *10 hours* Improved UI of Mobile TMD Page. Primary transport mode algorithm ignore minor misdetections. Car settings can be edited by user.
