@@ -58,7 +58,7 @@ module.exports.getAllUsers = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("User")
-      .select("*")
+      .select(`*, Office(name)`)
       .neq("type", "Admin")
       .eq("company_id", company);
 

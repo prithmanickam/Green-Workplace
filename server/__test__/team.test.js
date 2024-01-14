@@ -15,7 +15,6 @@ describe("Team Controller Tests", () => {
           teamOwner: 'owner@example.com',
           teamName: 'Team A',
           divisions: 'Division 1',
-          office: 1,
           company: 1,
           teamMembers: ['member1@example.com', 'member2@example.com']
         }
@@ -174,7 +173,7 @@ describe("Team Controller Tests", () => {
       };
 
       // Mock the initial data retrieval
-      const allTeams = [{ id: 1, name: 'Team A' }, { id: 2, name: 'Team B' }];
+      const allTeams = [{ id: 1, name: 'Team A', can_delete:true }, { id: 2, name: 'Team B', can_delete:false }];
       supabase.from = jest.fn().mockReturnValueOnce({
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockResolvedValue({ data: allTeams, error: null }),
@@ -188,8 +187,7 @@ describe("Team Controller Tests", () => {
           single: jest.fn().mockResolvedValue({
             data: {
               User: { email: 'example@example.com' },
-              Office: { name: 'Office A' },
-              Team_Member: [{ count: 5 }]
+              Team_Member: [{ count: 5 }],
             },
             error: null
           }),

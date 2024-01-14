@@ -298,3 +298,6 @@
 
 ### 13 Jan 2023
 * *10 hours* Improved UI of Mobile TMD Page. Primary transport mode algorithm ignore minor misdetections. Car settings can be edited by user.
+
+### 14 Jan 2023
+* *2 hours* Removed unnecessary fields in add team page and added paigination.

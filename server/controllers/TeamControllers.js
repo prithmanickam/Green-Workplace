@@ -6,7 +6,6 @@ module.exports.addTeam = async (req, res) => {
     teamOwner,
     teamName,
     divisions,
-    office,
     company,
     teamMembers,
   } = req.body;
@@ -32,19 +31,13 @@ module.exports.addTeam = async (req, res) => {
     //   return res.status(500).json({ status: "error" });
     // }
 
-    // Prevents there being a team with the same name in that division
-    const team_identifier = `${company}_${divisions}_${teamName}`;
-
     // Create the team
     const { data: createdTeam, error: createTeamError } = await supabase.from("Team").upsert([
       {
         team_owner_id,
         name: teamName,
         divisions,
-        office_id: office,
         company_id: company,
-        team_identifier,
-
       },
     ]).select();
 
@@ -128,7 +121,7 @@ module.exports.getTeams = async (req, res) => {
 
       const { data: team_info, getTeamInfoError } = await supabase
         .from("Team")
-        .select(`User(email), Office(name), Team_Member(count) `)
+        .select(`User(email), Team_Member(count) `)
         .eq("id", team.id)
         .single();
 
@@ -142,9 +135,9 @@ module.exports.getTeams = async (req, res) => {
       const teamData = {
         team_id: team.id,
         team_owner_email: team_info.User.email,
-        office_name: team_info.Office.name,
         name: team.name,
         team_members_count: team_info.Team_Member[0].count,
+        can_delete: team.can_delete,
       };
       allTeamsData.push(teamData);
     }

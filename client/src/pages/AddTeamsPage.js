@@ -1,20 +1,29 @@
 import React, { useState, useEffect } from "react";
 import SideNavbar from '../components/SideNavbar';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import TableContainer from '@mui/material/TableContainer';
-import Table from '@mui/material/Table';
-import TableHead from '@mui/material/TableHead';
-import TableBody from '@mui/material/TableBody';
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
+import {
+  Box,
+  TextField,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Autocomplete,
+  TablePagination,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
+} from '@mui/material';
+
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
-import Autocomplete from '@mui/material/Autocomplete';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { baseURL } from "../utils/constant";
 import useAuth from '../hooks/useAuth';
@@ -33,9 +42,35 @@ export default function AddTeams() {
 
   const [teams, setTeams] = useState([]);
 
-  const [offices, setOffices] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(8);
 
-  const [selectedOffice, setSelectedOffice] = useState(null);
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [teamToDelete, setTeamToDelete] = useState(null);
+
+  const handleClickOpenDeleteDialog = (team) => {
+    setTeamToDelete(team);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
+
+  const confirmDeleteTeam = () => {
+    handleDeleteTeam(teamToDelete.teamId);
+    handleCloseDeleteDialog();
+  };
+
 
   useAuth(["Admin"]);
 
@@ -56,34 +91,12 @@ export default function AddTeams() {
               teamId: team.team_id,
               email: team.team_owner_email,
               teamName: team.name,
-              office: team.office_name,
               noOfMembers: team.team_members_count,
+              canDelete: team.can_delete,
             }));
             setTeams(allTeams);
           } else {
             toast.error("Failed to fetch teams data. Please try again.");
-          }
-        })
-        .catch((error) => {
-          toast.error("An error occurred while fetching teams data.");
-        });
-
-
-      // to get all offices in the company
-      fetch(`${baseURL}/getOffices`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ company: userData.company_id }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "ok") {
-            console.log("offices: ", data.data)
-            setOffices(data.data);
-          } else {
-            toast.error("Failed to fetch office data. Please try again.");
           }
         })
         .catch((error) => {
@@ -122,7 +135,6 @@ export default function AddTeams() {
     const teamOwner = selectedTeamOwner; // Use the selected team owner
     const teamName = data.get("teamName");
     const divisions = data.get("divisions");
-    const office = selectedOffice.id;
     const company = userData.company_id;
     const teamMembers = selectedTeamMembers;
 
@@ -142,7 +154,7 @@ export default function AddTeams() {
       }
     });
 
-    if (teamOwner === null || teamName === "" || divisions === "" || office === null) {
+    if (teamOwner === null || teamName === "" || divisions === "") {
       toast.error("You must fill all required fields.");
     } else if (hasDuplicates) {
       toast.error("Duplicate email addresses detected. Please remove duplicates.");
@@ -157,7 +169,6 @@ export default function AddTeams() {
           teamOwner,
           teamName,
           divisions,
-          office,
           company,
           teamMembers,
         }),
@@ -172,7 +183,7 @@ export default function AddTeams() {
                 email: teamOwner,
                 teamName,
                 noOfMembers: teamMembers.length + 1,
-                office: office.name,
+                canDelete: true,
               },
             ]);
 
@@ -239,7 +250,7 @@ export default function AddTeams() {
                 <Card>
                   <CardContent>
                     <Grid container spacing={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                      <Grid item xs={4}>
+                      <Grid item xs={6}>
                         <Autocomplete
                           required
                           id="teamOwner"
@@ -254,7 +265,7 @@ export default function AddTeams() {
                           )}
                         />
                       </Grid>
-                      <Grid item xs={4}>
+                      <Grid item xs={6}>
                         <TextField
                           required
                           name="teamName"
@@ -263,37 +274,8 @@ export default function AddTeams() {
                           fullWidth
                         />
                       </Grid>
-                      <Grid item xs={4}>
-                        {userData && (
-                          <>
-                            <TextField
-                              name="company"
-                              label="Company ID"
-                              variant="outlined"
-                              fullWidth
-                              value={userData.company_id}
-                              disabled
-                            />
-                          </>
-                        )}
-                      </Grid>
-                      <Grid item xs={4}>
-                        <Autocomplete
-                          required
-                          id="office"
-                          label="Office"
-                          options={offices}
-                          value={selectedOffice}
-                          onChange={(event, newValue) => {
-                            setSelectedOffice(newValue);
-                          }}
-                          getOptionLabel={(option) => option.name} // Display the office name
-                          renderInput={(params) => (
-                            <TextField {...params} label="Office" variant="outlined" />
-                          )}
-                        />
-                      </Grid>
-                      <Grid item xs={8}>
+
+                      <Grid item xs={12}>
                         <TextField
                           required
                           name="divisions"
@@ -353,31 +335,63 @@ export default function AddTeams() {
                           <TableCell>Team Owner Email</TableCell>
                           <TableCell>Team Name</TableCell>
                           <TableCell>No. of Members</TableCell>
-                          <TableCell>Office</TableCell>
+
                           <TableCell>Delete</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {teams.map((team, index) => (
+                        {teams.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((team, index) => (
                           <TableRow key={index}>
                             <TableCell>{team.email}</TableCell>
                             <TableCell>{team.teamName}</TableCell>
                             <TableCell>{team.noOfMembers}</TableCell>
-                            <TableCell>{team.office}</TableCell>
+
                             <TableCell>
-                              <Button
-                                variant="outlined"
-                                color="secondary"
-                                onClick={() => handleDeleteTeam(team.teamId)}
-                              >
-                                <DeleteIcon />
-                              </Button>
+                              {team.canDelete && (  // only delete if canDelete is true
+                                <Button
+                                  variant="outlined"
+                                  color="secondary"
+                                  onClick={() => handleClickOpenDeleteDialog(team)}
+                                >
+                                  <DeleteIcon />
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
+                  <TablePagination
+                    component="div"
+                    count={teams.length}
+                    page={page}
+                    rowsPerPage={rowsPerPage}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={[8, 15, 25]}
+                  />
+                  <Dialog
+                    open={openDeleteDialog}
+                    onClose={handleCloseDeleteDialog}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                  >
+                    <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
+                    <DialogContent>
+                      <DialogContentText id="alert-dialog-description">
+                        Are you sure you want to delete this team?
+                      </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                      <Button onClick={handleCloseDeleteDialog} color="primary">
+                        Cancel
+                      </Button>
+                      <Button onClick={confirmDeleteTeam} color="primary" autoFocus>
+                        Confirm
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
                 </CardContent>
               </Card>
             </Grid>

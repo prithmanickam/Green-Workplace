@@ -12,6 +12,7 @@ import TableHead from '@mui/material/TableHead';
 import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
+import TablePagination from '@mui/material/TablePagination';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
@@ -23,9 +24,20 @@ export default function AddEmployees() {
   const [registeredAccounts, setRegisteredAccounts] = useState([]);
   const [selectedOffice, setSelectedOffice] = useState('');
   const [offices, setOffices] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(8);
   const { userData } = useUser();
 
   useAuth(["Admin"]);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   useEffect(() => {
 
@@ -74,7 +86,7 @@ export default function AddEmployees() {
               email: user.email,
               firstname: user.firstname,
               lastname: user.lastname,
-              type: user.type,
+              office: user.Office.name,
             }));
             setRegisteredAccounts(allUsers);
           } else {
@@ -171,21 +183,30 @@ export default function AddEmployees() {
                           <TableCell>Email</TableCell>
                           <TableCell>First Name</TableCell>
                           <TableCell>Last Name</TableCell>
-                          <TableCell>User Type</TableCell>
+                          <TableCell>Office</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {registeredAccounts.map((user, index) => (
+                        {registeredAccounts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user, index) => (
                           <TableRow key={index}>
                             <TableCell>{user.email}</TableCell>
                             <TableCell>{user.firstname}</TableCell>
                             <TableCell>{user.lastname}</TableCell>
-                            <TableCell>{user.type}</TableCell>
+                            <TableCell>{user.office}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
+                  <TablePagination
+                    component="div"
+                    count={registeredAccounts.length}
+                    page={page}
+                    rowsPerPage={rowsPerPage}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={[8, 15, 25]}
+                  />
                 </CardContent>
               </Card>
             </Grid>

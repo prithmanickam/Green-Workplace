@@ -393,54 +393,6 @@ describe("Authentication Controller Tests", () => {
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: "User not found" });
     });
-
-    it('should return a 500 error if fetching users fails in getAllUsers', async () => {
-      const req = {
-        body: {
-          company: 1
-        }
-      };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-
-      // Mock Supabase to simulate an error during fetching users
-      supabase.from = jest.fn().mockImplementation(() => ({
-        select: jest.fn().mockReturnThis(),
-        neq: jest.fn().mockReturnThis(),
-        eq: jest.fn(() => Promise.resolve({ error: "Database error" }))
-      }));
-
-      await authControllers.getAllUsers(req, res);
-
-      // Check that the response status and json methods are called with the expected values
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ status: "error" });
-    });
-
-    it('should return a 500 error if an exception occurs in getAllUsers', async () => {
-      const req = {
-        body: {
-          company: 1
-        }
-      };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-
-      // Simulate a situation where an exception is thrown during the API logic
-      supabase.from = jest.fn().mockImplementation(() => {
-        throw new Error('Unexpected error');
-      });
-
-      await authControllers.getAllUsers(req, res);
-
-      // Verify that the 500 status code and the appropriate JSON response are returned
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ status: "error" });
-    });
   });
 
   describe("sendRegistrationEmails", () => {
@@ -693,7 +645,7 @@ describe("Authentication Controller Tests", () => {
           lastname: "Doe",
           email: "johndoe@example.com",
           company_id: 1,
-          type: "Employee",
+          office: "London",
         },
         {
           id: 2,
@@ -701,7 +653,7 @@ describe("Authentication Controller Tests", () => {
           lastname: "Smith",
           email: "janesmith@example.com",
           company_id: 1,
-          type: "Employee",
+          Office: "Glasgow",
         },
       ];
 
@@ -720,11 +672,57 @@ describe("Authentication Controller Tests", () => {
         lastname: user.lastname,
         email: user.email,
         company_id: user.company_id,
-        type: user.type,
       }));
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ status: "ok" });
+    });
+    it('should return a 500 error if fetching users fails in getAllUsers', async () => {
+      const req = {
+        body: {
+          company: 1
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      // Mock Supabase to simulate an error during fetching users
+      supabase.from = jest.fn().mockImplementation(() => ({
+        select: jest.fn().mockReturnThis(),
+        neq: jest.fn().mockReturnThis(),
+        eq: jest.fn(() => Promise.resolve({ error: "Database error" }))
+      }));
+
+      await authControllers.getAllUsers(req, res);
+
+      // Check that the response status and json methods are called with the expected values
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error" });
+    });
+
+    it('should return a 500 error if an exception occurs in getAllUsers', async () => {
+      const req = {
+        body: {
+          company: 1
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      // Simulate a situation where an exception is thrown during the API logic
+      supabase.from = jest.fn().mockImplementation(() => {
+        throw new Error('Unexpected error');
+      });
+
+      await authControllers.getAllUsers(req, res);
+
+      // Verify that the 500 status code and the appropriate JSON response are returned
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
   });
 
