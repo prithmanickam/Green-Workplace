@@ -16,7 +16,7 @@ import TablePagination from '@mui/material/TablePagination';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
-import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Select, MenuItem, FormControl, InputLabel, Stack } from '@mui/material';
 import useAuth from '../hooks/useAuth';
 
 export default function AddEmployees() {
@@ -140,27 +140,29 @@ export default function AddEmployees() {
             <Grid item xs={12}>
               <Card>
                 <CardContent>
-                  <TextField
-                    label="Email Addresses (comma-separated)"
-                    variant="outlined"
-                    fullWidth
-                    value={emailInput}
-                    onChange={handleEmailInputChange}
-                  />
-                  <FormControl fullWidth>
-                    <InputLabel id="office-select-label">Select Office</InputLabel>
-                    <Select
-                      labelId="office-select-label"
-                      id="office-select"
-                      value={selectedOffice}
-                      label="Select Office"
-                      onChange={handleOfficeChange}
-                    >
-                      {offices.map((office) => (
-                        <MenuItem key={office.id} value={office.id}>{office.name}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <Stack spacing={2}>
+                    <TextField
+                      label="Email Addresses (comma-separated)"
+                      variant="outlined"
+                      fullWidth
+                      value={emailInput}
+                      onChange={handleEmailInputChange}
+                    />
+                    <FormControl fullWidth>
+                      <InputLabel id="office-select-label">Select Office</InputLabel>
+                      <Select
+                        labelId="office-select-label"
+                        id="office-select"
+                        value={selectedOffice}
+                        label="Select Office"
+                        onChange={handleOfficeChange}
+                      >
+                        {offices.map((office) => (
+                          <MenuItem key={office.id} value={office.id}>{office.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Stack>
                   <Button
                     variant="contained"
                     color="primary"
@@ -169,6 +171,7 @@ export default function AddEmployees() {
                   >
                     Send
                   </Button>
+
                 </CardContent>
               </Card>
             </Grid>

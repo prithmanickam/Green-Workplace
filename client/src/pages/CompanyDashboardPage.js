@@ -72,7 +72,7 @@ export default function CompanyDashboard() {
         .then((data) => {
           if (data.status === "ok") {
             setCompanyData(data.companyInfo);
-            setTotalCompanyEmployees(data.totalCompanyMembers)
+            //setTotalCompanyEmployees(data.totalCompanyMembers)
             setTeamsData(data.teamsInfo);
             const sortedByCarbonFootprint = [...data.teamsInfo].sort((a, b) => sortOrder === 'asc' ? parseFloat(a.carbonFootprintAverage) - parseFloat(b.carbonFootprintAverage) : parseFloat(b.carbonFootprintAverage) - parseFloat(a.carbonFootprintAverage));
             setSortedTeamsData(sortedByCarbonFootprint);
@@ -104,6 +104,25 @@ export default function CompanyDashboard() {
         })
         .catch((error) => {
           toast.error("An error occurred while fetching company dashboard data.");
+        });
+
+      fetch(`${baseURL}/getAllUsers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ company: userData.company_id }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setTotalCompanyEmployees(data.users.length)
+          } else {
+            toast.error("Failed to fetch user data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching user data.");
         });
     }
   }, [userData, sortOrder]);
@@ -138,8 +157,12 @@ export default function CompanyDashboard() {
         .then((res) => res.json())
         .then((data) => {
           if (data.status === "ok") {
-
             setBarChartData(data.data);
+            // Check if there are offices in the data and select the first offfice
+            const offices = Object.keys(data.data);
+            if (offices.length > 0) {
+              setSelectedOffice(offices[0]);
+            }
 
           } else {
             toast.error("Failed to fetch line chart data.");
@@ -280,7 +303,7 @@ export default function CompanyDashboard() {
                   <Typography variant="h7" paragraph style={{ marginBottom: '4px' }}>
                     Name: {companyData.name}
                   </Typography>
-                  <Typography variant="h7" paragraph style={{ }}>
+                  <Typography variant="h7" paragraph style={{}}>
                     No. of Employees: {totalCompanyEmployees}
                   </Typography>
 
@@ -417,7 +440,7 @@ export default function CompanyDashboard() {
                     </TableBody>
                   </Table>
                   <TablePagination
-                    rowsPerPageOptions={[8]}
+                    rowsPerPageOptions={[8, 15, 25]}
                     component="div"
                     count={sortedTeamsData.length}
                     rowsPerPage={rowsPerPage}
