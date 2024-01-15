@@ -101,7 +101,7 @@ module.exports.deleteEmployee = async (req, res) => {
 
     // Delete from related tables
     const tables = ["Team_Member", "Team_Member_History", "User_Monday_Stats", "User_Tuesday_Stats", "User_Wednesday_Stats", "User_Thursday_Stats", "User_Friday_Stats"];
-    
+
     for (const table of tables) {
       const { error } = await supabase.from(table).delete().eq("user_id", user_id);
       if (error) {
@@ -265,7 +265,7 @@ module.exports.getBarChartData = async (req, res) => {
     users.forEach(user => {
       const officeName = user.Office.name;
 
-      // Initialize office in the offices object if it doesn't exist
+      // Initialise office in the offices object if it doesn't exist
       if (!offices[officeName]) {
         offices[officeName] = { monday: 0, tuesday: 0, wednesday: 0, thursday: 0, friday: 0 };
       }
@@ -296,6 +296,8 @@ module.exports.getCompanyDashboardData = async (req, res) => {
   const { company_id } = req.body;
 
   try {
+
+
     const { data: teams, getTeamsError } = await supabase
       .from("Team")
       .select(`
@@ -310,11 +312,6 @@ module.exports.getCompanyDashboardData = async (req, res) => {
           friday_cf)
       `)
       .eq("company_id", company_id);
-
-    //if (getTeamsError) {
-    //  console.error("Error finding teams:", getTeamsError);
-    //return res.status(500).json({ status: "error" });
-    //}
 
     const teamsInfo = [];
     let totalCompanyCarbonFootprint = 0;
@@ -358,19 +355,20 @@ module.exports.getCompanyDashboardData = async (req, res) => {
       totalCarbonFootprint: totalCompanyCarbonFootprint.toFixed(2),
     };
 
-    const { data: companyName, getCompanyNameError } = await supabase
+    const { data: companyName } = await supabase
       .from("Company")
       .select("name")
       .eq("id", company_id);
 
-    //if (getCompanyNameError) {
-    //console.error("Error finding teams:", getCompanyNameError);
-    //return res.status(500).json({ status: "error" });
-    //}
-
     companyInfo.name = companyName[0].name
 
-    res.status(200).json({ status: "ok", teamsInfo, companyInfo, totalCompanyMembers });
+    const { count: userCount } = await supabase
+    .from("User")
+    .select("id", { count: 'exact' })  
+    .neq("type", "Admin")
+    .eq("company_id", company_id);
+
+    res.status(200).json({ status: "ok", teamsInfo, companyInfo, userCount });
   } catch (error) {
     console.log(error);
     res.status(500).json({ status: "error" });

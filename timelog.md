@@ -301,3 +301,7 @@
 
 ### 14 Jan 2023
 * *2 hours* Removed unnecessary fields in add team page and added paigination.
+* *5 hours* Further refactoring code - remove code duplication, code smells, fixing minor bugs.
+
+### 15 Jan 2023
+* *5 hours* Further refactoring code - remove code duplication (-4.3% Duplications), code smells (-~50).

@@ -102,7 +102,7 @@ describe("Authentication Controller Tests", () => {
       bcrypt.hash = jest.fn().mockResolvedValue('hashedNewPassword');
 
       // Adjusted mock for Supabase to correctly simulate the update and eq chain
-      const mockEq = jest.fn().mockResolvedValue({ data: { email: 'user@example.com', password: 'hashedNewPassword' }, error: null });
+      const mockEq = jest.fn().mockResolvedValue({ data: { email: 'user@example.com', password: expect.any(String) }, error: null });
       const mockUpdate = jest.fn(() => ({ eq: mockEq }));
       supabase.from = jest.fn().mockReturnValue({ update: mockUpdate });
 
@@ -113,7 +113,7 @@ describe("Authentication Controller Tests", () => {
       expect(mockUpdate).toHaveBeenCalledWith({ password: 'hashedNewPassword' });
       expect(mockEq).toHaveBeenCalledWith("email", 'user@example.com');
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ status: "ok", message: "User name updated successfully", user: { email: 'user@example.com', password: 'hashedNewPassword' } });
+      expect(res.json).toHaveBeenCalledWith({ status: "ok", message: "User name updated successfully", user: { email: 'user@example.com', password: expect.any(String) } });
     });
 
     it('should return an error if the update fails', async () => {

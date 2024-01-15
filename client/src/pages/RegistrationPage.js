@@ -66,8 +66,6 @@ export default function Registration() {
 				crossDomain: true,
 				headers: {
 					"Content-Type": "application/json",
-					Accept: "application/json",
-					"Access-Control-Allow-Origin": "*",
 				},
 				body: JSON.stringify({
 					firstname,

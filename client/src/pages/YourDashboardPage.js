@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
-import { Box, Typography, Button, Card, CardContent, Grid, Stack, IconButton, Popover, Divider } from '@mui/material';
+import CustomLineChart from '../components/CustomLineChart';
+import CarbonStandardPopover from '../components/CarbonStandardPopover';
+import { Box, Typography, Button, Card, CardContent, Grid, IconButton, Popover } from '@mui/material';
 import { toast } from "react-toastify";
 import InfoIcon from '@mui/icons-material/Info';
 import { baseURL } from "../utils/constant";
 import { getGradientColors } from "../utils/gradientConstants";
-import { LineChart } from '@mui/x-charts/LineChart';
 import { useUser } from '../context/UserContext';
 import useAuth from '../hooks/useAuth';
+import useCompanyCarbonStandard from '../hooks/useCompanyCarbonStandard';
 
 export default function YourDashboard() {
   const { userData } = useUser();
@@ -15,13 +17,12 @@ export default function YourDashboard() {
   const [teamPreferences, setTeamPreferences] = useState({});
   const [confirmedPreferences, setConfirmedPreferences] = useState({});
   const [firstLoad, setFirstLoad] = useState(true);
-  const [companyCarbonStandard, setCompanyCarbonStandard] = useState({});
   const { green_gradient, amber_gradient, red_gradient } = getGradientColors();
   const [gradient, setGradient] = useState('');
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
   const [lineChartLength, setLineChartLength] = useState('week');
-  const [lineChartData, setLineChartData] = useState({});
+  const { companyCarbonStandard } = useCompanyCarbonStandard(userData?.company_id);
 
   useAuth(["Employee"]);
 
@@ -32,37 +33,6 @@ export default function YourDashboard() {
   const handleInfoPopoverClose = () => {
     setInfoPopoverAnchorEl(null);
   };
-
-  useEffect(() => {
-    if (userData) {
-      console.log(userData)
-      fetch(`${baseURL}/getLineChartData`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: "user",
-          lineChartLength: lineChartLength,
-          user_id: userData.id,
-          team_id: 0,
-          company_id: userData.company_id
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "ok") {
-            setLineChartData(data.data);
-
-          } else {
-            toast.error("Failed to fetch line chart data.");
-          }
-        })
-        .catch((error) => {
-          toast.error("An error occurred while fetching line chart data.");
-        });
-    }
-  }, [userData, lineChartLength]);
 
   const handleLineChartLengthChange = (length) => {
     console.log("pressed")
@@ -102,27 +72,6 @@ export default function YourDashboard() {
         })
         .catch((error) => {
           toast.error("An error occurred while fetching teams data.");
-        });
-
-      fetch(`${baseURL}/getCompanyCarbonStandard`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          company_id: userData.company_id,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "ok") {
-            setCompanyCarbonStandard(data.companyCarbonStandard);
-          } else {
-            toast.error("Failed to fetch company dashboard data.");
-          }
-        })
-        .catch((error) => {
-          toast.error("An error occurred while fetching company dashboard data.");
         });
     }
 
@@ -191,7 +140,6 @@ export default function YourDashboard() {
     }
   };
 
-
   return (
     <Box sx={{ display: 'flex' }}>
       <SideNavbar />
@@ -244,23 +192,12 @@ export default function YourDashboard() {
             <Grid item xs={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
-                  {lineChartData?.footprintList && (
-                    <LineChart
-                      width={300}
-                      height={230}
-                      series={[
-                        { data: lineChartData.footprintList, label: 'Your Avg CF' },
-                      ]}
-                      xAxis={[{
-                        scaleType: 'point',
-                        data: lineChartData.dates,
-                        label: 'Last 4 ' + lineChartLength + 's',
-                      }]}
-                    />
-                  )}
-                  {!lineChartData?.footprintList && (
-                    <Typography>Loading line chart...</Typography>
-                  )}
+                  <CustomLineChart
+                    type="user"
+                    lineChartLength={lineChartLength}
+                    userData={userData}
+                    team_id={0}
+                  />
                   <div>
                     <Button
                       variant="outlined"
@@ -366,57 +303,12 @@ export default function YourDashboard() {
           horizontal: 'left',
         }}
       >
-        <Typography style={{ padding: '8px' }}>
-          Carbon Footprint Standard
-        </Typography>
-        <Divider />
-        <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
-            Good: &lt; {companyCarbonStandard.amber_carbon_standard} kg
-          </Typography>
-          <div
-            className="green-gradient"
-            style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              alignSelf: 'center',
-              marginRight: '10px',
-              backgroundImage: green_gradient
-            }}
-          ></div>
-        </Stack>
-        <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
-            Average: {companyCarbonStandard.amber_carbon_standard} &lt;= & &lt; {companyCarbonStandard.red_carbon_standard} kg
-          </Typography>
-          <div
-            className="amber-gradient"
-            style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              alignSelf: 'center',
-              marginRight: '10px',
-              backgroundImage: amber_gradient
-            }}
-          ></div>
-        </Stack>
-        <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
-            Bad: &gt;= {companyCarbonStandard.red_carbon_standard} kg
-          </Typography>
-          <div
-            style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              alignSelf: 'center',
-              marginRight: '10px',
-              backgroundImage: red_gradient
-            }}
-          ></div>
-        </Stack>
+        <CarbonStandardPopover
+          companyCarbonStandard={companyCarbonStandard}
+          greenGradient={green_gradient}
+          amberGradient={amber_gradient}
+          redGradient={red_gradient}
+        />
       </Popover>
     </Box>
   );

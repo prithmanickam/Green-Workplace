@@ -11,12 +11,13 @@ import { ThemeContext } from '../context/ThemeContext';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import InputAdornment from '@mui/material/InputAdornment';
 import Select from '@mui/material/Select';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
 import useAuth from '../hooks/useAuth';
+import useUserTeamsData from '../hooks/useUserTeamsData';
+import TeamFields from '../components/TeamFields';
 
 import {
   useJsApiLoader,
@@ -47,8 +48,6 @@ function FootprintMapPage() {
   const { userData } = useUser();
   const navigate = useNavigate()
 
-
-
   // use states constants
   const [day, setDay] = React.useState('');
   const [map, setMap] = useState(null);
@@ -61,9 +60,9 @@ function FootprintMapPage() {
   const [departureTime, setDepartureTime] = useState('08:00');
   const [carbonFootprint, setCarbonFootprint] = useState('');
   const [leafIconColour, setLeafIconColour] = useState('#eed202');
-  const [teams, setTeams] = useState([]);
   const [teamPercentages, setTeamPercentages] = useState({});
   const [totalPercentage, setTotalPercentage] = useState(0);
+  const { teams } = useUserTeamsData(userData?.id);
 
   const originRef = useRef();
   const destiantionRef = useRef();
@@ -76,36 +75,6 @@ function FootprintMapPage() {
       setCarbonFootprint(carbonFootprint);
     }
   }, [distance, doubledDistance, travelMode]);
-
-  useEffect(() => {
-    if (userData) {
-      fetch(`${baseURL}/getUserTeamsData`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: userData.id,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "ok") {
-            console.log("hi")
-            console.log(data.data)
-            const fetchedTeams = data.data;
-            console.log(fetchedTeams)
-            setTeams(fetchedTeams);
-
-          } else {
-            toast.error("Failed to fetch teams data. Please try again.");
-          }
-        })
-        .catch((error) => {
-          toast.error("An error occurred while fetching teams data.");
-        });
-    }
-  }, [userData]);
 
   useEffect(() => {
     if (duration !== '') {
@@ -233,39 +202,6 @@ function FootprintMapPage() {
     setTotalPercentage(total);
   };
 
-  const isSingleTeamUser = Array.isArray(teams) && teams.length === 1;
-
-  const teamFields = Array.isArray(teams) ? teams.map((team) => (
-    <Box key={team.teamName}>
-      <hr />
-      <Typography>{team.teamName}</Typography>
-
-      <TextField
-        //label="Percentage"
-        size="small"
-        style={{ width: '100%' }}
-        value={isSingleTeamUser ? 100 : teamPercentages[team.teamName] || ''}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">%</InputAdornment>,
-        }}
-        onChange={(event) => handleTeamPercentageChange(event, team.teamName)}
-      />
-      <Typography sx={{ fontSize: '14px', py: 1 }}>
-        Carbon Footprint:{' '}
-        {teamPercentages[team.teamName]
-          ? (
-            (parseFloat(teamPercentages[team.teamName]) / 100) *
-            parseFloat(carbonFootprint)
-          ).toFixed(2)
-          : 'N/A'}
-        kg CO2
-      </Typography>
-
-    </Box>
-  )) : null;
-
-
-
   function navigateBack() {
     navigate('/SetCarbonFootprint');
   }
@@ -315,8 +251,6 @@ function FootprintMapPage() {
         crossDomain: true,
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
         body: JSON.stringify({
           user_id: userData.id,
@@ -594,7 +528,13 @@ function FootprintMapPage() {
               <Typography sx={{ fontSize: '10.7px' }}>For the day you selected, enter the percent of time you spend between your teams in the office.</Typography>
               <Typography></Typography>
               <Box flexGrow={1}>
-                {teamFields}
+                <TeamFields
+                  teams={teams}
+                  teamPercentages={teamPercentages}
+                  handleTeamPercentageChange={handleTeamPercentageChange}
+                  carbonFootprint={carbonFootprint}
+                />
+
               </Box>
             </CardContent>
           </Card>

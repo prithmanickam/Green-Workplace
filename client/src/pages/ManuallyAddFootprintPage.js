@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, FormControl, InputLabel, Select, MenuItem, Button, Card, CardContent, TextField, IconButton, Typography, Grid } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SideNavbar from '../components/SideNavbar';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
-import InputAdornment from '@mui/material/InputAdornment';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import DirectionsBikeIcon from '@mui/icons-material/DirectionsBike';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
@@ -17,6 +16,8 @@ import ElectricScooterIcon from '@mui/icons-material/ElectricScooter';
 import SubwayIcon from '@mui/icons-material/Subway';
 import TramIcon from '@mui/icons-material/Tram';
 import useAuth from '../hooks/useAuth';
+import useUserTeamsData from '../hooks/useUserTeamsData';
+import TeamFields from '../components/TeamFields';
 
 const CO2_EMISSIONS_PER_MINUTE = {
   Car: 0.009,
@@ -33,7 +34,6 @@ const CO2_EMISSIONS_PER_MINUTE = {
 
 export default function ManuallyAddFootprint() {
   const { userData } = useUser();
-  const [teams, setTeams] = useState([]);
   const [selectedDay, setSelectedDay] = useState('');
   const [transportMode, setTransportMode] = useState('');
   const [entries, setEntries] = useState([]);
@@ -41,6 +41,7 @@ export default function ManuallyAddFootprint() {
   const [totalPercentage, setTotalPercentage] = useState(0);
   const [carbonFootprint, setCarbonFootprint] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
+  const { teams } = useUserTeamsData(userData?.id);
 
   useAuth(["Employee"]);
 
@@ -59,37 +60,6 @@ export default function ManuallyAddFootprint() {
       default: return null;
     }
   };
-
-  useEffect(() => {
-    if (userData) {
-      fetch(`${baseURL}/getUserTeamsData`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: userData.id,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "ok") {
-            console.log("hi")
-            console.log(data.data)
-            const fetchedTeams = data.data;
-            console.log(fetchedTeams)
-            setTeams(fetchedTeams);
-
-          } else {
-            toast.error("Failed to fetch teams data. Please try again.");
-          }
-        })
-        .catch((error) => {
-          toast.error("An error occurred while fetching teams data.");
-        });
-    }
-  }, [userData]);
-
 
   const handleDayChange = (event) => {
     setSelectedDay(event.target.value);
@@ -118,7 +88,7 @@ export default function ManuallyAddFootprint() {
   const addEntry = () => {
     setEntries(prevEntries => {
       const newEntries = [...prevEntries, { mode: transportMode, time: '00:00', carbonFootprint: '0.00' }];
-      updateTotalCarbonFootprint(newEntries);
+      updateTotalCarbonFootprint();
       updateTotalDuration(newEntries);
       return newEntries;
     });
@@ -129,7 +99,7 @@ export default function ManuallyAddFootprint() {
       const newEntries = [...prevEntries];
       newEntries[index].time = event.target.value;
       newEntries[index].carbonFootprint = calculateCarbonFootprint(newEntries[index].mode, event.target.value);
-      updateTotalCarbonFootprint(newEntries);
+      updateTotalCarbonFootprint();
       updateTotalDuration(newEntries);
       return newEntries;
     });
@@ -138,7 +108,7 @@ export default function ManuallyAddFootprint() {
   const deleteEntry = (index) => {
     setEntries(prevEntries => {
       const newEntries = prevEntries.filter((_, i) => i !== index);
-      updateTotalCarbonFootprint(newEntries);
+      updateTotalCarbonFootprint();
       updateTotalDuration(newEntries);
       return newEntries;
     });
@@ -164,36 +134,6 @@ export default function ManuallyAddFootprint() {
     return (CO2_EMISSIONS_PER_MINUTE[mode] * totalMinutes).toFixed(2);
   };
 
-  const isSingleTeamUser = Array.isArray(teams) && teams.length === 1;
-
-  const teamFields = Array.isArray(teams) ? teams.map((team) => (
-    <Box key={team.teamName}>
-      <hr />
-      <Typography>{team.teamName}</Typography>
-
-      <TextField
-        size="small"
-        style={{ width: '100%' }}
-        value={isSingleTeamUser ? 100 : teamPercentages[team.teamName] || ''}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">%</InputAdornment>,
-        }}
-        onChange={(event) => handleTeamPercentageChange(event, team.teamName)}
-      />
-      <Typography sx={{ fontSize: '14px', py: 1 }}>
-        Carbon Footprint:{' '}
-        {teamPercentages[team.teamName]
-          ? (
-            (parseFloat(teamPercentages[team.teamName]) / 100) *
-            parseFloat(carbonFootprint)
-          ).toFixed(2)
-          : 'N/A'}
-        kg CO2
-      </Typography>
-
-    </Box>
-  )) : null;
-
   const handleSubmit = () => {
     // Calculating total duration from entries
     const duration = entries.reduce((sum, entry) => {
@@ -202,7 +142,7 @@ export default function ManuallyAddFootprint() {
     }, 0);
 
     // Validation checks
-    if (duration === 0 || carbonFootprint === '0.00' || selectedDay === '') {
+    if (duration === 0 || parseFloat(carbonFootprint) === 0.00 || selectedDay === '') {
       toast.error("Duration, Carbon Footprint, or Day must not be empty.");
       return;
     }
@@ -224,8 +164,6 @@ export default function ManuallyAddFootprint() {
         crossDomain: true,
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
         body: JSON.stringify({
           user_id: userData.id,
@@ -340,7 +278,12 @@ export default function ManuallyAddFootprint() {
               <h2> Distribute carbon footprint with teams </h2>
               <Box flexGrow={1} sx={{ maxHeight: '350px', overflowY: 'auto', marginTop: 2 }}>
 
-                {teamFields}
+              <TeamFields
+                  teams={teams}
+                  teamPercentages={teamPercentages}
+                  handleTeamPercentageChange={handleTeamPercentageChange}
+                  carbonFootprint={carbonFootprint}
+                />
               </Box>
             </Grid>
           </Grid>

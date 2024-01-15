@@ -40,9 +40,6 @@ const job = schedule.scheduleJob('00 23 * * 0', async function () {
           }
         ]);
 
-      // if (insertError) {
-      //   console.error('Error inserting into Team_Member_History:', insertError);
-      // }
     }
   } catch (error) {
     console.error('Error in scheduled task:', error);
@@ -99,11 +96,6 @@ module.exports.postCarbonFootprint = async (req, res) => {
     ], { onConflict: "user_id" }
     );
 
-    // if (userCFError) {
-    //   //console.error("Error adding user carbon footprint:", userCFError);
-    //   return res.status(500).json({ status: "error" });
-    // }
-
     for (const teamInfo of teamData) {
       const { team_id, calculatedCarbonFootprint } = teamInfo;
 
@@ -117,10 +109,6 @@ module.exports.postCarbonFootprint = async (req, res) => {
           },
         ).eq("user_id", user_id).eq("team_id", team_id);
 
-      // if (teamCFError) {
-      //   //console.error("Error adding team carbon footprint:", teamCFError);
-      //   return res.status(500).json({ status: "error" });
-      // }
     }
 
     res.status(200).json({ status: "ok" });
@@ -172,20 +160,10 @@ module.exports.getCarbonFootprint = async (req, res) => {
       .select("team_id")
       .eq("user_id", user_id);
 
-    // if (getUserTeamsError) {
-    //   //console.error("Error finding user teams:", getUserTeamsError);
-    //   return res.status(500).json({ status: "error" });
-    // }
-
     const { data: userDuration, error: getUserDurationError } = await supabase
       .from("User")
       .select(`User_Monday_Stats(duration), User_Tuesday_Stats(duration), User_Wednesday_Stats(duration), User_Thursday_Stats(duration), User_Friday_Stats(duration)`)
       .eq('id', user_id);
-
-    // if (getUserDurationError) {
-    //   console.error("Error finding user teams:", getUserDurationError);
-    //   return res.status(500).json({ status: "error" });
-    // }
 
     totalStats["Monday"]["duration"] = `${userDuration[0].User_Monday_Stats ? userDuration[0].User_Monday_Stats.duration : `0 min`}`;
     totalStats["Tuesday"]["duration"] = `${userDuration[0].User_Tuesday_Stats ? userDuration[0].User_Tuesday_Stats.duration : `0 min`}`;
@@ -199,11 +177,6 @@ module.exports.getCarbonFootprint = async (req, res) => {
         .select(`monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf, Team(name)`)
         .eq("team_id", team.team_id)
         .eq("user_id", user_id)
-
-      // if (getTeamInfoError) {
-      //   console.error("Error finding team mem days cf:", getTeamInfoError);
-      //   return res.status(500).json({ status: "error" });
-      // }
 
       if (teamInfo[0].monday_cf) {
         stats.Monday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].monday_cf + 'kg CO2'));
@@ -249,7 +222,6 @@ module.exports.getCarbonFootprint = async (req, res) => {
 
     res.status(200).json({ status: "ok", stats, totalStats });
   } catch (error) {
-    //console.log(error)
     res.status(500).json({ status: "error" });
   }
 };
@@ -269,25 +241,14 @@ module.exports.resetCarbonFootprint = async (req, res) => {
         },
       ).eq("user_id", user_id);
 
-    // if (teamCFError) {
-    //   //console.error("Error adding team carbon footprint:", teamCFError);
-    //   return res.status(500).json({ status: "error" });
-    // }
-
     const { error: userCFError } = await supabase
       .from(tableName)
       .delete()
       .eq("user_id", user_id);
 
-    // if (userCFError) {
-    //   //console.error("Error adding user carbon footprint:", userCFError);
-    //   return res.status(500).json({ status: "error" });
-    // }
-
     res.status(200).json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ status: "error" });
-    //console.error(error);
   }
 };
 
@@ -306,11 +267,6 @@ module.exports.editCompanyCarbonStandard = async (req, res) => {
       })
       .eq("id", company_id);
 
-    // if (editCarbonStandardError) {
-    //   console.error("Error finding team:", editCarbonStandardError);
-    //   return res.status(500).json({ status: "error" });
-    // }
-
     res.status(200).json({ status: "ok" });
   } catch (error) {
     console.error(error);
@@ -328,11 +284,6 @@ module.exports.getCompanyCarbonStandard = async (req, res) => {
       .from("Company")
       .select("green_carbon_standard, amber_carbon_standard, red_carbon_standard")
       .eq("id", company_id);
-
-    // if (editCarbonStandardError) {
-    //   console.error("Error finding team:", editCarbonStandardError);
-    //   return res.status(500).json({ status: "error" });
-    // }
 
     const companyCarbonStandard = companyStandard[0]
 

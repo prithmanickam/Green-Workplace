@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
-import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Divider, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination } from '@mui/material';
-import { LineChart } from '@mui/x-charts/LineChart';
+import CustomLineChart from '../components/CustomLineChart';
+import CarbonStandardPopover from '../components/CarbonStandardPopover';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import Popover from '@mui/material/Popover';
 import InfoIcon from '@mui/icons-material/Info';
@@ -10,14 +11,14 @@ import { getGradientColors } from "../utils/gradientConstants";
 import { useUser } from '../context/UserContext';
 import { toast } from "react-toastify";
 import { BarChart } from '@mui/x-charts/BarChart';
-import "../App.css"
+import "../App.css";
 import useAuth from '../hooks/useAuth';
+import useCompanyCarbonStandard from '../hooks/useCompanyCarbonStandard';
 
 export default function CompanyDashboard() {
   const { userData } = useUser();
   const [companyData, setCompanyData] = useState({});
   const [totalCompanyEmployees, setTotalCompanyEmployees] = useState();
-  const [companyCarbonStandard, setCompanyCarbonStandard] = useState({});
   const { green_gradient, amber_gradient, red_gradient } = getGradientColors();
   const [gradient, setGradient] = useState('');
   const [teamsData, setTeamsData] = useState([]);
@@ -29,12 +30,12 @@ export default function CompanyDashboard() {
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
   const [lineChartLength, setLineChartLength] = useState('week');
-  const [lineChartData, setLineChartData] = useState({});
   const [barChartData, setBarChartData] = useState({});
   const [selectedOffice, setSelectedOffice] = useState('');
   const [officeChartData, setOfficeChartData] = useState([0, 0, 0, 0, 0]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(8);
+  const { companyCarbonStandard } = useCompanyCarbonStandard(userData?.company_id);
 
   useAuth(["Admin", "Employee"]);
 
@@ -72,7 +73,7 @@ export default function CompanyDashboard() {
         .then((data) => {
           if (data.status === "ok") {
             setCompanyData(data.companyInfo);
-            //setTotalCompanyEmployees(data.totalCompanyMembers)
+            setTotalCompanyEmployees(data.userCount)
             setTeamsData(data.teamsInfo);
             const sortedByCarbonFootprint = [...data.teamsInfo].sort((a, b) => sortOrder === 'asc' ? parseFloat(a.carbonFootprintAverage) - parseFloat(b.carbonFootprintAverage) : parseFloat(b.carbonFootprintAverage) - parseFloat(a.carbonFootprintAverage));
             setSortedTeamsData(sortedByCarbonFootprint);
@@ -83,50 +84,8 @@ export default function CompanyDashboard() {
         .catch((error) => {
           toast.error("An error occurred while fetching company dashboard data.");
         });
-
-
-      fetch(`${baseURL}/getCompanyCarbonStandard`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          company_id: userData.company_id,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "ok") {
-            setCompanyCarbonStandard(data.companyCarbonStandard);
-          } else {
-            toast.error("Failed to fetch company dashboard data.");
-          }
-        })
-        .catch((error) => {
-          toast.error("An error occurred while fetching company dashboard data.");
-        });
-
-      fetch(`${baseURL}/getAllUsers`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ company: userData.company_id }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "ok") {
-            setTotalCompanyEmployees(data.users.length)
-          } else {
-            toast.error("Failed to fetch user data. Please try again.");
-          }
-        })
-        .catch((error) => {
-          toast.error("An error occurred while fetching user data.");
-        });
     }
   }, [userData, sortOrder]);
-
 
   useEffect(() => {
     if (companyCarbonStandard && companyData) {
@@ -160,7 +119,7 @@ export default function CompanyDashboard() {
             setBarChartData(data.data);
             // Check if there are offices in the data and select the first offfice
             const offices = Object.keys(data.data);
-            if (offices.length > 0) {
+            if (offices.length > 0 && !selectedOffice) {
               setSelectedOffice(offices[0]);
             }
 
@@ -172,7 +131,7 @@ export default function CompanyDashboard() {
           toast.error("An error occurred while fetching line chart data.");
         });
     }
-  }, [userData, barChartData]);
+  }, [userData, barChartData, selectedOffice]);
 
   useEffect(() => {
     if (barChartData && selectedOffice) {
@@ -188,37 +147,6 @@ export default function CompanyDashboard() {
   const handleOfficeChange = (event) => {
     setSelectedOffice(event.target.value);
   };
-
-
-  useEffect(() => {
-    if (userData) {
-      fetch(`${baseURL}/getLineChartData`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: "company",
-          lineChartLength: lineChartLength,
-          user_id: userData.id,
-          team_id: 0,
-          company_id: userData.company_id
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status === "ok") {
-            setLineChartData(data.data);
-
-          } else {
-            toast.error("Failed to fetch line chart data.");
-          }
-        })
-        .catch((error) => {
-          toast.error("An error occurred while fetching line chart data.");
-        });
-    }
-  }, [userData, lineChartLength]);
 
   const handleLineChartLengthChange = (length) => {
     setLineChartLength(length);
@@ -326,23 +254,12 @@ export default function CompanyDashboard() {
             <Grid item xs={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
-                  {lineChartData?.footprintList && (
-                    <LineChart
-                      width={300}
-                      height={230}
-                      series={[
-                        { data: lineChartData.footprintList, label: 'Company Avg CF' },
-                      ]}
-                      xAxis={[{
-                        scaleType: 'point',
-                        data: lineChartData.dates,
-                        label: 'Last 4 ' + lineChartLength + 's',
-                      }]}
-                    />
-                  )}
-                  {!lineChartData?.footprintList && (
-                    <Typography>Loading line chart...</Typography>
-                  )}
+                  <CustomLineChart
+                    type="user"
+                    lineChartLength={lineChartLength}
+                    userData={userData}
+                    team_id={0}
+                  />
                   <div>
                     <Button
                       variant="outlined"
@@ -468,57 +385,12 @@ export default function CompanyDashboard() {
           horizontal: 'left',
         }}
       >
-        <Typography style={{ padding: '8px' }}>
-          Carbon Footprint Standard
-        </Typography>
-        <Divider />
-        <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
-            Good: &lt; {companyCarbonStandard.amber_carbon_standard} kg
-          </Typography>
-          <div
-            className="green-gradient"
-            style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              alignSelf: 'center',
-              marginRight: '10px',
-              backgroundImage: green_gradient
-            }}
-          ></div>
-        </Stack>
-        <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
-            Average: {companyCarbonStandard.amber_carbon_standard} &lt;= & &lt; {companyCarbonStandard.red_carbon_standard} kg
-          </Typography>
-          <div
-            className="amber-gradient"
-            style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              alignSelf: 'center',
-              marginRight: '10px',
-              backgroundImage: amber_gradient
-            }}
-          ></div>
-        </Stack>
-        <Stack direction="row" spacing={2} py={0.5} alignItems="center">
-          <Typography style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>
-            Bad: &gt;= {companyCarbonStandard.red_carbon_standard} kg
-          </Typography>
-          <div
-            style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              alignSelf: 'center',
-              marginRight: '10px',
-              backgroundImage: red_gradient
-            }}
-          ></div>
-        </Stack>
+         <CarbonStandardPopover
+          companyCarbonStandard={companyCarbonStandard}
+          greenGradient={green_gradient}
+          amberGradient={amber_gradient}
+          redGradient={red_gradient}
+        />
       </Popover>
     </Box >
   );

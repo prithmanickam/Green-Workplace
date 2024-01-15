@@ -125,7 +125,7 @@ module.exports.sendResetPasswordEmail = async (req, res) => {
 // For admin to send registration email to a users email inbox
 module.exports.sendRegistrationEmails = async (req, res) => {
   try {
-    const emails = req.body.emails;
+    let emails = req.body.emails;
     const company = req.body.company;
     const office = req.body.office;
 

@@ -133,8 +133,8 @@ describe("Carbon Footprint Controller Tests", () => {
       supabase.from.mockImplementation(() => ({
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
-        eq: jest.fn(() => Promise.resolve({
-          data: [{ monday_cf: 10, tuesday_cf: 20, }],
+        gt: jest.fn(() => Promise.resolve({
+          data: [{ monday_cf: 10, tuesday_cf: 20 }],
           error: null
         }))
       }));

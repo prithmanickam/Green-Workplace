@@ -81,8 +81,6 @@ export default function SetCarbonFootprint() {
       crossDomain: true,
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json",
-        "Access-Control-Allow-Origin": "*",
       },
       body: JSON.stringify({
         day,

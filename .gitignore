@@ -6,3 +6,6 @@ server/coverage/
 
 # Ignore node modules
 node_modules
+
+# Ignore local sonarqube scan
+.scannerwork

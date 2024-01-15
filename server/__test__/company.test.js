@@ -424,6 +424,10 @@ describe("Company Controller Tests", () => {
 
       const companyNameData = [{ name: "Example Inc." }];
 
+      // New mock data for user count
+      const userCountData = { count: 42 }; // Mock user count
+
+
       // Mock the team data retrieval
       supabase.from = jest.fn().mockReturnValueOnce({
         select: jest.fn().mockReturnThis(),
@@ -434,6 +438,13 @@ describe("Company Controller Tests", () => {
       supabase.from.mockReturnValueOnce({
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockResolvedValue({ data: companyNameData, error: null }),
+      });
+
+      // Mock the user count retrieval
+      supabase.from.mockReturnValueOnce({
+        select: jest.fn().mockReturnThis(),
+        neq: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockResolvedValue({ data: userCountData, error: null }),
       });
 
       await teamControllers.getCompanyDashboardData(req, res);
@@ -583,7 +594,7 @@ describe("Company Controller Tests", () => {
       supabase.from.mockImplementation(() => ({
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
-        eq: jest.fn(() => Promise.resolve({
+        gt: jest.fn(() => Promise.resolve({
           data: null,
           error: "Database error"
         }))

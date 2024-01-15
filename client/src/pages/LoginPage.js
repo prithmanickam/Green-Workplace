@@ -32,8 +32,6 @@ const LoginPage = () => {
         crossDomain: true,
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
         //and passing in email and password
         body: JSON.stringify({
