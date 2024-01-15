@@ -8,13 +8,14 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import RNPickerSelect from 'react-native-picker-select';
 import CustomModal from '../components/CustomModel';
 import { WaveIndicator } from 'react-native-indicators';
+import { modalStyles } from '../styles/ModalStyles';
 
 const CO2_EMISSIONS_PER_METER = {
 	Car: 0.00016637,
 	Bicycle: 0,
 	Bus: 0.0001195,
 	Train: 0.00003694,
-	Walking: 0,
+	Walking: 0.1,
 	Motorcycle: 0.00010086,
 	ElectricCar: 0.00005563,
 	Subway: 0.0000275,
@@ -34,6 +35,7 @@ const CO2_EMISSIONS_PER_MINUTE = {
 	Tram: 0.00404
 };
 
+const DIESEL_EMISSION_FACTOR = 0.966;
 
 export default function TransportDetectionPage() {
 	const [location, setLocation] = useState(null);
@@ -61,7 +63,7 @@ export default function TransportDetectionPage() {
 	const [isPredicting, setIsPredicting] = useState(false);
 	const [predictionEnded, setPredictionEnded] = useState(false);
 
-	const [transportMode, setTransportMode] = useState('');
+	const [transportMode, setTransportMode] = useState(null);
 	const [entries, setEntries] = useState([]);
 	const [totalCarbonFootprint, setTotalCarbonFootprint] = useState(0);
 	const [teams, setTeams] = useState([]);
@@ -80,8 +82,6 @@ export default function TransportDetectionPage() {
 	const [carSettings, setCarSettings] = useState({ engineType: 'petrol', passengers: 1 });
 	const [showCarSettingsModal, setShowCarSettingsModal] = useState(false);
 	const [editingEntryIndex, setEditingEntryIndex] = useState(-1);
-
-	const DIESEL_EMISSION_FACTOR = 0.966;
 
 	const getCurrentDay = () => {
 		const today = new Date().getDay();
@@ -143,7 +143,6 @@ export default function TransportDetectionPage() {
 					});
 					const data = await response.json();
 					if (data.status === 'ok') {
-						console.log("hi")
 						setUserData(data.data);
 					} else {
 						console.log("Cannot get user data")
@@ -204,8 +203,6 @@ export default function TransportDetectionPage() {
 		return (emissionRate * distance / passengers).toFixed(1);
 	};
 
-
-
 	const updateTotalCarbonFootprint = (updatedEntries) => {
 		const total = updatedEntries.reduce((sum, entry) => {
 			return sum + parseFloat(entry.carbonFootprint || 0);
@@ -213,9 +210,8 @@ export default function TransportDetectionPage() {
 		setTotalCarbonFootprint(total.toFixed(2));
 	};
 
-
 	const addEntry = () => {
-		if (transportMode === '') {
+		if (transportMode === null) {
 			setErrorTransportModalVisible(true);
 			return;
 		}
@@ -275,10 +271,7 @@ export default function TransportDetectionPage() {
 				.then((res) => res.json())
 				.then((data) => {
 					if (data.status === "ok") {
-						console.log("hi")
-						console.log(data.data)
 						const fetchedTeams = data.data;
-						console.log(fetchedTeams)
 						setTeams(fetchedTeams);
 
 					} else {
@@ -463,15 +456,11 @@ export default function TransportDetectionPage() {
 		// Ensure that data is an array of numbers 
 		const numericData = data.map(d => parseFloat(d)).filter(isFinite);
 
-		console.log("numeric DATA to calculate:", numericData)
-
 		if (numericData.length === 0) {
-			console.log("in here where data len is 0")
 			return { mean: null, min: null, max: null, std: null };
 		}
 
 		const sum = numericData.reduce((a, b) => a + b, 0);
-		console.log("sum", sum, "data len", numericData.length)
 		const mean = sum / numericData.length;
 		const min = Math.min(...numericData);
 		const max = Math.max(...numericData);
@@ -479,8 +468,6 @@ export default function TransportDetectionPage() {
 		// Calculate standard deviation
 		const variance = numericData.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / numericData.length;
 		const std = Math.sqrt(variance);
-
-		console.log(mean, min, max, std)
 
 		return {
 			mean: parseFloat(mean.toFixed(5)),
@@ -493,9 +480,6 @@ export default function TransportDetectionPage() {
 	// every 10 seconds it send data and get transport detection result
 	useEffect(() => {
 		const fetchData = () => {
-			console.log(currentDistanceTravelledRef.current);
-			console.log("Accel Data Ref Length:", accelerometerDataRef.current.length);
-			console.log("Gyro Data Ref Length:", gyroscopeDataRef.current.length);
 
 			if (!isFetching) {
 				setIsFetching(true);
@@ -514,8 +498,6 @@ export default function TransportDetectionPage() {
 					'android.sensor.gyroscope#max': gyroscopeStats.max,
 					'android.sensor.gyroscope#std': gyroscopeStats.std,
 				};
-
-				console.log("newData: ", newData);
 
 				// Send this sensor data to the backend
 				fetch(`https://green-workplace.onrender.com/api/getTransportMode`, {
@@ -556,7 +538,6 @@ export default function TransportDetectionPage() {
 						}
 					})
 					.catch((error) => {
-						console.error('Error:', error);
 						Toast.show({
 							type: 'error',
 							text1: 'Network Error',
@@ -680,7 +661,6 @@ export default function TransportDetectionPage() {
 
 		const hours = Math.floor(durationMinutes / 60);
 		const minutes = Math.floor(durationMinutes % 60);
-		console.log(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`)
 		return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 	};
 
@@ -695,10 +675,13 @@ export default function TransportDetectionPage() {
 				{ mode: primaryMode.mode, time: modeDuration, carbonFootprint: carbonFootprint, distance: primaryMode.distance }
 			]);
 		});
-
-		const newTotal = entries.reduce((sum, entry) => sum + parseFloat(entry.carbonFootprint || 0), 0);
-		setTotalCarbonFootprint(newTotal.toFixed(2));
 	};
+
+	useEffect(() => {
+		if (entries.length > 0) {
+			updateTotalCarbonFootprint(entries);
+		}
+	}, [entries]);
 
 	// Function to convert HH:MM string to minutes
 	const durationToMinutes = (duration) => {
@@ -948,7 +931,7 @@ export default function TransportDetectionPage() {
 					</Text>
 
 					<Text style={{ textAlign: 'center' }}>
-						Total Duration: {sameReturnJourney === "Yes" ? "(x2) " + calculateTotalDuration() : calculateTotalDuration()} kg CO2
+						Total Duration: {sameReturnJourney === "Yes" ? "(x2) " + calculateTotalDuration() : calculateTotalDuration()}
 					</Text>
 
 
@@ -1018,8 +1001,8 @@ export default function TransportDetectionPage() {
 				transparent={true}
 				onRequestClose={() => setShowCarSettingsModal(false)}
 			>
-				<View style={styles.centeredView}>
-					<View style={styles.modalView}>
+				<View style={modalStyles.centeredView}>
+					<View style={modalStyles.modalView}>
 						<Text>Select Engine Type:</Text>
 						{/* Dropdown or Picker for engine type */}
 						<RNPickerSelect

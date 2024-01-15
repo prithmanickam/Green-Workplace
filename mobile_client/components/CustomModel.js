@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { modalStyles } from '../styles/ModalStyles';
 
 const CustomModal = ({ modalVisible, setModalVisible, modalText, color }) => {
     return (
@@ -11,14 +12,14 @@ const CustomModal = ({ modalVisible, setModalVisible, modalText, color }) => {
                 setModalVisible(!modalVisible);
             }}
         >
-            <View style={styles.centeredView}>
-                <View style={styles.modalView}>
-                    <Text style={styles.modalText}>{modalText}</Text>
+            <View style={modalStyles.centeredView}>
+                <View style={modalStyles.modalView}>
+                    <Text style={modalStyles.modalText}>{modalText}</Text>
                     <TouchableOpacity
-                        style={[styles.button, { backgroundColor: color }]}
+                        style={[modalStyles.button, { backgroundColor: color }]}
                         onPress={() => setModalVisible(!modalVisible)}
                     >
-                        <Text style={styles.textStyleModal}>Close</Text>
+                        <Text style={modalStyles.textStyleModal}>Close</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -26,45 +27,5 @@ const CustomModal = ({ modalVisible, setModalVisible, modalText, color }) => {
     );
 };
 
-const styles = StyleSheet.create({
-    centeredView: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        marginTop: 22
-    },
-    modalView: {
-        margin: 20,
-        backgroundColor: "white",
-        borderRadius: 20,
-        padding: 35,
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5
-    },
-    button: {
-        borderRadius: 20,
-        padding: 10,
-        elevation: 2
-    },
-    buttonClose: {
-        backgroundColor: "#2196F3",
-    },
-    textStyleModal: {
-        color: "white",
-        fontWeight: "bold",
-        textAlign: "center"
-    },
-    modalText: {
-        marginBottom: 15,
-        textAlign: "center"
-    }
-});
 
 export default CustomModal;
