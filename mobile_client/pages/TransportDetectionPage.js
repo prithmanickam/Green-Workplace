@@ -15,7 +15,7 @@ const CO2_EMISSIONS_PER_METER = {
 	Bicycle: 0,
 	Bus: 0.0001195,
 	Train: 0.00003694,
-	Walking: 0.1,
+	Walking: 0,
 	Motorcycle: 0.00010086,
 	ElectricCar: 0.00005563,
 	Subway: 0.0000275,
