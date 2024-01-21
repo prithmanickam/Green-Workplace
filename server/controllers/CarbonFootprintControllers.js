@@ -64,7 +64,7 @@ const { classifier, targetMap } = loadModel(modelPath);
 
 module.exports.getTransportMode = async (req, res) => {
   try {
-    const { newData } = req.body;
+    const { newData, distance } = req.body;
     
     if (!newData || Object.keys(newData).length === 0) {
       return res.status(400).json({ status: "error", message: "No data provided." });
@@ -75,6 +75,23 @@ module.exports.getTransportMode = async (req, res) => {
 
     // Find the mode from the targetMap using the prediction
     const mode = Object.keys(targetMap).find(key => targetMap[key] === prediction[0]);
+
+    const { error: insertError } = await supabase
+      .from("Dataset2")
+      .insert([
+        {
+          'android.sensor.accelerometer#mean': newData['android.sensor.accelerometer#mean'],
+          'android.sensor.accelerometer#min': newData['android.sensor.accelerometer#min'],
+          'android.sensor.accelerometer#max': newData['android.sensor.accelerometer#max'],
+          'android.sensor.accelerometer#std': newData['android.sensor.accelerometer#std'],
+          'android.sensor.gyroscope#mean': newData['android.sensor.gyroscope#mean'],
+          'android.sensor.gyroscope#min': newData['android.sensor.gyroscope#min'],
+          'android.sensor.gyroscope#max': newData['android.sensor.gyroscope#max'],
+          'android.sensor.gyroscope#std': newData['android.sensor.gyroscope#std'],
+          'target': mode,
+          'distance_meters_twenty_sec': distance,
+        }
+      ]);
 
     res.status(200).json({ status: "ok", mode });
   } catch (error) {

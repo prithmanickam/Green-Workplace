@@ -57,6 +57,7 @@ export default function TransportDetectionPage() {
 	const [currentDistanceTravelled, setCurrentDistanceTravelled] = useState(0);
 
 	const currentDistanceTravelledRef = useRef(0);
+	const gpsSamplesRef = useRef([]);
 
 	const [isFetching, setIsFetching] = useState(false);
 
@@ -82,6 +83,8 @@ export default function TransportDetectionPage() {
 	const [carSettings, setCarSettings] = useState({ engineType: 'petrol', passengers: 1 });
 	const [showCarSettingsModal, setShowCarSettingsModal] = useState(false);
 	const [editingEntryIndex, setEditingEntryIndex] = useState(-1);
+	const [gpsSamples, setGpsSamples] = useState([]);
+
 
 	const getCurrentDay = () => {
 		const today = new Date().getDay();
@@ -377,6 +380,7 @@ export default function TransportDetectionPage() {
 	}, []);
 
 	useEffect(() => {
+
 		let locationSubscription;
 
 		(async () => {
@@ -389,17 +393,16 @@ export default function TransportDetectionPage() {
 			locationSubscription = await Location.watchPositionAsync(
 				{
 					accuracy: Location.Accuracy.High,
-					timeInterval: 2000,
-					distanceInterval: 1,
+					timeInterval: 6000,
 				},
 				(newLocation) => {
 
 					const accelDataLength = accelerometerDataRef.current.length;
+
 					if (accelDataLength === 0) {
 						setCurrentDistanceTravelled(0);
-
 					}
-
+					
 					if (previousLocation) {
 						const distance = getDistanceFromLatLonInMeters(
 							previousLocation.coords.latitude,
@@ -410,9 +413,12 @@ export default function TransportDetectionPage() {
 						if (isPredicting) {
 							setDistanceTraveled(prevDistance => prevDistance + distance);
 							setCurrentDistanceTravelled(current => parseFloat(current) + distance);
+
+							if (distance !== 0) {
+								setGpsSamples(prevSamples => [...prevSamples, distance.toFixed(1)]);
+							}
 						}
 					}
-
 					setPreviousLocation(newLocation);
 					setLocation(newLocation);
 				}
@@ -424,6 +430,7 @@ export default function TransportDetectionPage() {
 				locationSubscription.remove();
 			}
 		};
+
 	}, [previousLocation]);
 
 	function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
@@ -481,7 +488,7 @@ export default function TransportDetectionPage() {
 	useEffect(() => {
 		const fetchData = () => {
 
-			if (!isFetching) {
+			if (!isFetching ) {
 				setIsFetching(true);
 
 				const accelerometerStats = calculateStats(accelerometerDataRef.current);
@@ -505,16 +512,14 @@ export default function TransportDetectionPage() {
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({
-						newData
-					}),
+					body: JSON.stringify({ newData, distance: currentDistanceTravelledRef.current }),
 
 				})
 					.then((response) => response.json())
 					.then((data) => {
 						if (data.status === "ok") {
 							let accurateMode = data.mode;
-							if (currentDistanceTravelledRef.current < 20 && data.mode !== "Walking") {
+							if (currentDistanceTravelledRef.current < 40 && data.mode !== "Walking") {
 								accurateMode = "Still";
 							}
 
@@ -549,6 +554,7 @@ export default function TransportDetectionPage() {
 						accelerometerDataRef.current = [];
 						gyroscopeDataRef.current = [];
 						currentDistanceTravelledRef.current = 0;
+						setGpsSamples([]);
 						setIsFetching(false);
 					});
 			}
@@ -557,15 +563,15 @@ export default function TransportDetectionPage() {
 		let interval;
 
 		if (isPredicting) {
-			interval = setInterval(fetchData, 10000);
+			interval = setInterval(fetchData, 30000);
 		}
 
 		return () => {
 			if (interval) {
 				clearInterval(interval);
-			}
+			}6
 		};
-	}, [isPredicting, isFetching]);
+	}, [isPredicting, isFetching, gpsSamplesRef]);
 
 
 	useEffect(() => {
@@ -579,6 +585,10 @@ export default function TransportDetectionPage() {
 	useEffect(() => {
 		currentDistanceTravelledRef.current = currentDistanceTravelled;
 	}, [currentDistanceTravelled]);
+
+	useEffect(() => {
+		gpsSamplesRef.current = gpsSamples;
+	}, [gpsSamples]);
 
 
 	// Algorithm to predict overall journey from the transport predicted data
@@ -618,13 +628,13 @@ export default function TransportDetectionPage() {
 				}
 			} else if (mode === 'Walking') {
 				walkingCounter++;
-				if (walkingCounter >= 6 && vehicleModes.includes(currentMode)) {
+				if (walkingCounter >= 5 && vehicleModes.includes(currentMode)) {
 					let mostCommonMode = modeSequence.sort((a, b) =>
 						modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
 					).pop();
-					addSummaryEntry(mostCommonMode, startTime, modes[index - 6].time, totalDistance);
+					addSummaryEntry(mostCommonMode, startTime, modes[index - 5].time, totalDistance);
 					currentMode = 'Walking';
-					startTime = modes[index - 5].time;
+					startTime = modes[index - 4].time;
 					totalDistance = 0;
 					modeSequence = [];
 				}
@@ -764,6 +774,7 @@ export default function TransportDetectionPage() {
 			<ScrollView style={styles.scrollView}>
 
 				<Text style={styles.textWithPadding}>{text}</Text>
+				<Text style={styles.textWithPadding}>{gpsSamplesRef.current?.length}</Text>
 				<Text style={styles.textWithPadding}>Distance travelled since last detection: {currentDistanceTravelledRef.current?.toFixed(2)}m</Text>
 				<Text style={styles.textWithPadding}>Accelerometer Data:</Text>
 				<Text style={styles.textWithPadding}>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
