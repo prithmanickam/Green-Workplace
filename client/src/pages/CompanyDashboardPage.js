@@ -255,7 +255,7 @@ export default function CompanyDashboard() {
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <CustomLineChart
-                    type="user"
+                    type="company"
                     lineChartLength={lineChartLength}
                     userData={userData}
                     team_id={0}

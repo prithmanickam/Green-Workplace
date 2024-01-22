@@ -305,3 +305,7 @@
 
 ### 15 Jan 2023
 * *5 hours* Further refactoring code - remove code duplication (-4.3% Duplications), code smells (-~50).
+
+### 21 Jan 2023
+* *4 hours* Fixed Bugs and Added Edit Car Settings in Manually Set Carbon Footprint Page.
+

@@ -6,7 +6,7 @@ const path = require('path');
 
 const schedule = require('node-schedule');
 
-const job = schedule.scheduleJob('00 23 * * 0', async function () {
+const job = schedule.scheduleJob('55 23 * * 0', async function () {
   try {
     console.log('Executing the scheduled task every Sunday at evening');
 

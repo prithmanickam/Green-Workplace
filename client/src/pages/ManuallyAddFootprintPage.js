@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, FormControl, InputLabel, Select, MenuItem, Button, Card, CardContent, TextField, IconButton, Typography, Grid } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SideNavbar from '../components/SideNavbar';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
+import { useNavigate } from 'react-router-dom';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import DirectionsBikeIcon from '@mui/icons-material/DirectionsBike';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
@@ -15,21 +16,65 @@ import ElectricCarIcon from '@mui/icons-material/ElectricCar';
 import ElectricScooterIcon from '@mui/icons-material/ElectricScooter';
 import SubwayIcon from '@mui/icons-material/Subway';
 import TramIcon from '@mui/icons-material/Tram';
+import EditIcon from '@mui/icons-material/Edit';
 import useAuth from '../hooks/useAuth';
 import useUserTeamsData from '../hooks/useUserTeamsData';
 import TeamFields from '../components/TeamFields';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 
 const CO2_EMISSIONS_PER_MINUTE = {
-  Car: 0.009,
+  Car: 0.083185,
   Bicycle: 0,
-  Bus: 0.0022,
-  Train: 0.0005,
-  Walk: 0,
-  Motorcycle: 0.005,
-  ElectricCar: 0.001,
-  Scooter: 0.003,
-  Subway: 0.0003,
-  Tram: 0.0004
+  Bus: 0.03585,
+  Train: 0.03077102,
+  Walking: 0,
+  Motorcycle: 0.05043,
+  ElectricCar: 0.027815,
+  Subway: 0.011,
+  Tram: 0.00404
+};
+
+const CarEditModal = ({ open, handleClose, handleSave, engineType, setEngineType, numberOfEmployees, setNumberOfEmployees }) => {
+  return (
+    <Dialog open={open} onClose={handleClose}>
+      <DialogTitle>Edit Car Details</DialogTitle>
+      <DialogContent>
+        {/* Engine Type Field */}
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="engine-type-label">Engine Type</InputLabel>
+          <Select
+            labelId="engine-type-label"
+            id="engine-type"
+            value={engineType}
+            label="Engine Type"
+            onChange={(e) => setEngineType(e.target.value)}
+          >
+            <MenuItem value="Petrol">Petrol</MenuItem>
+            <MenuItem value="Diesel">Diesel</MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* Number of Employees Field */}
+        <TextField
+          margin="dense"
+          id="number-of-employees"
+          label="No. of Employees"
+          type="number"
+          fullWidth
+          variant="outlined"
+          value={numberOfEmployees}
+          onChange={(e) => setNumberOfEmployees(e.target.value)}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleSave}>Save</Button>
+      </DialogActions>
+    </Dialog>
+  );
 };
 
 export default function ManuallyAddFootprint() {
@@ -42,6 +87,11 @@ export default function ManuallyAddFootprint() {
   const [carbonFootprint, setCarbonFootprint] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const { teams } = useUserTeamsData(userData?.id);
+  const [carDetails, setCarDetails] = useState({ engineType: 'Petrol', numberOfEmployees: 1 });
+  const [isCarEditModalOpen, setIsCarEditModalOpen] = useState(false);
+  const [editingCarIndex, setEditingCarIndex] = useState(-1);
+  const [returnJourney, setReturnJourney] = useState('Yes');
+  const navigate = useNavigate()
 
   useAuth(["Employee"]);
 
@@ -69,21 +119,34 @@ export default function ManuallyAddFootprint() {
     setTransportMode(event.target.value);
   };
 
-  const updateTotalCarbonFootprint = () => {
-    const total = entries.reduce((sum, entry) => sum + parseFloat(entry.carbonFootprint || 0), 0);
+  const updateTotalCarbonFootprint = useCallback(() => {
+    let total = entries.reduce((sum, entry) => sum + parseFloat(entry.carbonFootprint || 0), 0);
+    if (returnJourney === 'Yes') {
+      total *= 2;
+    }
     setCarbonFootprint(total.toFixed(2));
-  };
+  }, [entries, returnJourney]);
 
-  const updateTotalDuration = (entries) => {
-    const totalMinutes = entries.reduce((sum, entry) => {
+  const updateTotalDuration = useCallback((entries) => {
+    let totalMinutes = entries.reduce((sum, entry) => {
       const [hours, minutes] = entry.time.split(':').map(Number);
       return sum + hours * 60 + minutes;
     }, 0);
 
+    if (returnJourney === 'Yes') {
+      totalMinutes *= 2;
+    }
+
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    setTotalDuration(`${hours}h ${minutes}m`);
-  };
+    setTotalDuration(`${hours} h ${minutes} mins`);
+  }, [returnJourney]);
+
+  useEffect(() => {
+    updateTotalCarbonFootprint();
+    updateTotalDuration(entries);
+  }, [returnJourney, entries, updateTotalCarbonFootprint, updateTotalDuration]);
+
 
   const addEntry = () => {
     setEntries(prevEntries => {
@@ -128,11 +191,20 @@ export default function ManuallyAddFootprint() {
     setTotalPercentage(total);
   };
 
-  const calculateCarbonFootprint = (mode, time) => {
+  const calculateCarbonFootprint = (mode, time, carDetails = {}) => {
     const [hours, minutes] = time.split(':').map(Number);
     const totalMinutes = hours * 60 + minutes;
-    return (CO2_EMISSIONS_PER_MINUTE[mode] * totalMinutes).toFixed(2);
+    let emissionRate = CO2_EMISSIONS_PER_MINUTE[mode];
+
+    if (mode === 'Car' && carDetails.engineType) {
+      // Adjust the emission rate based on engine type & no. of employees
+      emissionRate *= (carDetails.engineType === 'Diesel' ?  0.966 : 1); 
+      emissionRate /= carDetails.numberOfEmployees;
+    }
+
+    return (emissionRate * totalMinutes).toFixed(2);
   };
+
 
   const handleSubmit = () => {
     // Calculating total duration from entries
@@ -188,6 +260,39 @@ export default function ManuallyAddFootprint() {
     }
   };
 
+  const handleEditCar = (index) => {
+    setEditingCarIndex(index);
+    setIsCarEditModalOpen(true);
+    // Load the current details into the modal
+    setCarDetails({
+      engineType: entries[index].engineType || 'Petrol',
+      numberOfEmployees: entries[index].numberOfEmployees || 1,
+    });
+  };
+
+  const handleCloseCarEditModal = () => {
+    setIsCarEditModalOpen(false);
+  };
+
+  const handleSaveCarDetails = () => {
+    setEntries(prevEntries => {
+      const newEntries = [...prevEntries];
+      newEntries[editingCarIndex] = {
+        ...newEntries[editingCarIndex],
+        ...carDetails,
+        carbonFootprint: calculateCarbonFootprint(newEntries[editingCarIndex].mode, newEntries[editingCarIndex].time, carDetails),
+      };
+      updateTotalCarbonFootprint();
+      updateTotalDuration(newEntries);
+      return newEntries;
+    });
+    setIsCarEditModalOpen(false);
+  };
+
+  function navigateBack() {
+    navigate('/SetCarbonFootprint');
+  }
+
   return (
     <Box sx={{ display: 'flex' }}>
       <SideNavbar />
@@ -195,22 +300,42 @@ export default function ManuallyAddFootprint() {
         <div>
           <h1>Manually Add Your Carbon Footprint</h1>
 
-          <FormControl fullWidth margin="normal">
-            <InputLabel id="select-day-label">Select Days</InputLabel>
-            <Select
-              labelId="select-day-label"
-              id="select-day"
-              value={selectedDay}
-              label="Select Days"
-              onChange={handleDayChange}
-            >
-              <MenuItem value="Monday">Monday</MenuItem>
-              <MenuItem value="Tuesday">Tuesday</MenuItem>
-              <MenuItem value="Wednesday">Wednesday</MenuItem>
-              <MenuItem value="Thursday">Thursday</MenuItem>
-              <MenuItem value="Friday">Friday</MenuItem>
-            </Select>
-          </FormControl>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <FormControl fullWidth margin="normal">
+                <InputLabel id="select-day-label">Select Day</InputLabel>
+                <Select
+                  labelId="select-day-label"
+                  id="select-day"
+                  value={selectedDay}
+                  label="Select Day"
+                  onChange={handleDayChange}
+                >
+                  <MenuItem value="Monday">Monday</MenuItem>
+                  <MenuItem value="Tuesday">Tuesday</MenuItem>
+                  <MenuItem value="Wednesday">Wednesday</MenuItem>
+                  <MenuItem value="Thursday">Thursday</MenuItem>
+                  <MenuItem value="Friday">Friday</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl fullWidth margin="normal">
+                <InputLabel id="return-journey-label">Return Journey</InputLabel>
+                <Select
+                  labelId="return-journey-label"
+                  id="return-journey"
+                  value={returnJourney}
+                  label="Return Journey"
+                  onChange={(e) => setReturnJourney(e.target.value)}
+                >
+                  <MenuItem value="Yes">Yes</MenuItem>
+                  <MenuItem value="No">No</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+
           <Grid container spacing={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Grid item xs={9}>
               <FormControl fullWidth margin="normal">
@@ -253,6 +378,11 @@ export default function ManuallyAddFootprint() {
                     <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
                       <Box sx={{ marginRight: 2 }}>
                         {getTransportIcon(entry.mode)}
+                        {entry.mode === 'Car' && (
+                          <IconButton onClick={() => handleEditCar(index)}>
+                            <EditIcon />
+                          </IconButton>
+                        )}
                       </Box>
                       <Typography sx={{ marginRight: 2 }}>{entry.mode}</Typography>
                       <TextField
@@ -278,7 +408,7 @@ export default function ManuallyAddFootprint() {
               <h2> Distribute carbon footprint with teams </h2>
               <Box flexGrow={1} sx={{ maxHeight: '350px', overflowY: 'auto', marginTop: 2 }}>
 
-              <TeamFields
+                <TeamFields
                   teams={teams}
                   teamPercentages={teamPercentages}
                   handleTeamPercentageChange={handleTeamPercentageChange}
@@ -295,7 +425,7 @@ export default function ManuallyAddFootprint() {
                 Submit
               </Button>
 
-              <Button variant="contained" color="secondary">
+              <Button variant="contained" color="secondary" onClick={navigateBack}>
                 Back
               </Button>
             </Box>
@@ -303,6 +433,15 @@ export default function ManuallyAddFootprint() {
 
         </div>
       </Box>
+      <CarEditModal
+        open={isCarEditModalOpen}
+        handleClose={handleCloseCarEditModal}
+        handleSave={handleSaveCarDetails}
+        engineType={carDetails.engineType}
+        setEngineType={(type) => setCarDetails({ ...carDetails, engineType: type })}
+        numberOfEmployees={carDetails.numberOfEmployees}
+        setNumberOfEmployees={(num) => setCarDetails({ ...carDetails, numberOfEmployees: num })}
+      />
     </Box>
   );
 }

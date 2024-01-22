@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopNavbar from '../components/TopNavbar';
 import { Card, CardContent, Typography, Box, TextField, Button, Stack, ToggleButton, ToggleButtonGroup, Grid, Divider } from '@mui/material';
@@ -29,6 +29,18 @@ import {
 
 // Uni of Glasgow Coords (maps position on load)
 const center = { lat: 55.8721, lng: -4.2897 };
+
+const CO2_EMISSIONS_PER_METER = {
+  Car: 0.00016637,
+  Bicycle: 0,
+  Bus: 0.0001195,
+  Train: 0.00003694,
+  Walking: 0,
+  Motorcycle: 0.00010086,
+  ElectricCar: 0.00005563,
+  Subway: 0.0000275,
+  Tram: 0.0000202
+};
 
 function FootprintMapPage() {
 
@@ -61,6 +73,7 @@ function FootprintMapPage() {
   const [carbonFootprint, setCarbonFootprint] = useState('');
   const [leafIconColour, setLeafIconColour] = useState('#eed202');
   const [teamPercentages, setTeamPercentages] = useState({});
+  const [transitDistances, setTransitDistances] = useState({});
   const [totalPercentage, setTotalPercentage] = useState(0);
   const { teams } = useUserTeamsData(userData?.id);
 
@@ -69,12 +82,36 @@ function FootprintMapPage() {
 
   useAuth(["Employee"]);
 
+  
+  const calculateCarbonFootprint = useCallback((distance, travelMode) => {
+
+    if (travelMode === 'DRIVING') {
+      const carbonFootprint = distance * 1000 * 0.00016637;
+      return carbonFootprint.toFixed(2);
+
+    } else if (travelMode === 'TRANSIT') {
+      let totalCarbonFootprint = 0;
+      totalCarbonFootprint += transitDistances.walking * CO2_EMISSIONS_PER_METER.Walking;
+      totalCarbonFootprint += transitDistances.bus * CO2_EMISSIONS_PER_METER.Bus;
+      totalCarbonFootprint += transitDistances.train * CO2_EMISSIONS_PER_METER.Train;
+      totalCarbonFootprint += transitDistances.subway * CO2_EMISSIONS_PER_METER.Subway;
+      totalCarbonFootprint += transitDistances.tram * CO2_EMISSIONS_PER_METER.Tram;
+
+      const carbonFootprint = totalCarbonFootprint*2;
+      return carbonFootprint.toFixed(2);
+
+    } else {
+      // For walking or cycling
+      return 0;
+    }
+  }, [transitDistances]);
+
   useEffect(() => {
     if (distance !== '') {
       const carbonFootprint = calculateCarbonFootprint(parseFloat(doubledDistance), travelMode);
       setCarbonFootprint(carbonFootprint);
     }
-  }, [distance, doubledDistance, travelMode]);
+  }, [distance, doubledDistance, travelMode, calculateCarbonFootprint]);
 
   useEffect(() => {
     if (duration !== '') {
@@ -150,6 +187,50 @@ function FootprintMapPage() {
       setDistance(results.routes[0].legs[0].distance.text);
       setDuration(results.routes[0].legs[0].duration.text);
 
+      let totalWalkingDistance = 0;
+      let totalBusDistance = 0;
+      let totalTrainDistance = 0;
+      let totalSubwayDistance = 0;
+      let totalTramDistance = 0;
+
+      results.routes[0].legs.forEach((leg) => {
+        leg.steps.forEach((step) => {
+          const stepDistance = step.distance.value; // Distance in meters
+
+          if (step.travel_mode === 'WALKING') {
+            totalWalkingDistance += stepDistance;
+          } else if (step.travel_mode === 'TRANSIT') {
+            const vehicleType = step.transit.line.vehicle.type;
+            switch (vehicleType) {
+              case 'BUS':
+                totalBusDistance += stepDistance;
+                break;
+              case 'HEAVY_RAIL': // represents Trains
+                totalTrainDistance += stepDistance;
+                break;
+              case 'SUBWAY': // represents metro or underground tubes
+                totalSubwayDistance += stepDistance;
+                break;
+              case 'TRAM': 
+                totalTramDistance += stepDistance;
+                break;
+              default:
+                console.log(`Unhandled vehicle type: ${vehicleType}`);
+            }
+          }
+        });
+      });
+
+      const totalDistances = {
+        walking: totalWalkingDistance,
+        bus: totalBusDistance,
+        train: totalTrainDistance,
+        subway: totalSubwayDistance,
+        tram: totalTramDistance
+      };
+
+      setTransitDistances(totalDistances)
+
       if (travelMode === 'DRIVING') {
         setLeafIconColour('#C00000');
 
@@ -162,29 +243,6 @@ function FootprintMapPage() {
     } else {
       console.error('Google Maps API has not loaded');
       toast.error("Google Maps API has not loaded")
-    }
-  }
-
-  function calculateCarbonFootprint(distance, travelMode) {
-
-    if (travelMode === 'DRIVING') {
-      console.log("drive")
-      // My assumptions for driving
-      const fuelEfficiency = 10; // in km/l
-      const carbonEmissionsPerLiter = 2.3; // in kg/liter
-      const fuelConsumed = distance / fuelEfficiency; // in liters
-      const carbonFootprint = fuelConsumed * carbonEmissionsPerLiter; // kg CO2
-      return carbonFootprint.toFixed(2);
-
-    } else if (travelMode === 'TRANSIT') {
-      // Assumption that 100 grams of CO2 per passenger-kilometer (0.1 kg/km)
-      const averageEmissionsPerKm = 0.1;
-      const carbonFootprint = distance * averageEmissionsPerKm; // kg CO2
-      return carbonFootprint.toFixed(2);
-
-    } else {
-      // For walking or cycling
-      return 0;
     }
   }
 
@@ -271,7 +329,6 @@ function FootprintMapPage() {
         });
     }
   }
-
 
   return (
     <>

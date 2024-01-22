@@ -53,7 +53,7 @@ export default function CustomLineChart({ type, lineChartLength, userData, team_
         <LineChart
           width={300}
           height={230}
-          series={[{ data: lineChartData.footprintList, label: `${type} Avg CF` }]}
+          series={[{ data: lineChartData.footprintList, label: `${type.charAt(0).toUpperCase() + type.slice(1)} Avg CF` }]}
           xAxis={[{
             scaleType: 'point',
             data: lineChartData.dates,
