@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, StatusBar, Button, TextInput, Modal } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, StatusBar, Button, TextInput, Modal, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import Toast from 'react-native-toast-message';
@@ -37,6 +37,14 @@ const CO2_EMISSIONS_PER_MINUTE = {
 
 const DIESEL_EMISSION_FACTOR = 0.966;
 
+const PASTEL_COLORS = {
+	Car: '#f8a5c2',
+	Bicycle: '#b8e994',
+	Walking: '#b8e994',
+	default: '#ffdd71'
+};
+
+
 export default function TransportDetectionPage() {
 	const [location, setLocation] = useState(null);
 	const [previousLocation, setPreviousLocation] = useState(null);
@@ -59,6 +67,8 @@ export default function TransportDetectionPage() {
 	const currentDistanceTravelledRef = useRef(0);
 	const gpsSamplesRef = useRef([]);
 
+	const [showSensorData, setShowSensorData] = useState(false);
+
 	const [isFetching, setIsFetching] = useState(false);
 
 	const [isPredicting, setIsPredicting] = useState(false);
@@ -73,6 +83,7 @@ export default function TransportDetectionPage() {
 
 	const dayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 	const transportOptions = ['Car', 'Bicycle', 'Bus', 'Train', 'Walking', 'Motorcycle', 'ElectricCar', 'Subway', 'Tram'];
+	const percentageOptions = Array.from({ length: 101 }, (_, i) => ({ label: `${i}%`, value: i.toString() }));
 	const dayPickerItems = dayOptions.map(day => ({ label: day, value: day }));
 	const transportPickerItems = transportOptions.map(mode => ({ label: mode, value: mode }));
 	const hourOptions = Array.from({ length: 24 }, (_, i) => ({ label: `${i}`.padStart(2, '0'), value: `${i}`.padStart(2, '0') }));
@@ -161,17 +172,16 @@ export default function TransportDetectionPage() {
 
 
 	const handleTeamPercentageChange = (teamName, newValue) => {
-		const newPercentages = { ...teamPercentages };
-		newPercentages[teamName] = newValue;
-		setTeamPercentages(newPercentages);
+		setTeamPercentages(prevPercentages => ({
+			...prevPercentages,
+			[teamName]: newValue
+		}));
 
-		// Recalculate total percentage
-		const total = Object.values(newPercentages).reduce(
-			(accumulator, percentage) => accumulator + parseFloat(percentage || 0),
-			0
-		);
+		const total = Object.values({ ...teamPercentages, [teamName]: newValue })
+			.reduce((acc, value) => acc + Number(value), 0);
 		setTotalPercentage(total);
 	};
+
 
 	// Function to calculate the team's share of the carbon footprint
 	const calculateTeamCarbonFootprint = (teamName) => {
@@ -276,6 +286,11 @@ export default function TransportDetectionPage() {
 					if (data.status === "ok") {
 						const fetchedTeams = data.data;
 						setTeams(fetchedTeams);
+						const initialPercentages = fetchedTeams.reduce((acc, team) => {
+							acc[team.teamName] = '0'; 
+							return acc;
+						}, {});
+						setTeamPercentages(initialPercentages);
 
 					} else {
 						Toast.show({
@@ -402,7 +417,7 @@ export default function TransportDetectionPage() {
 					if (accelDataLength === 0) {
 						setCurrentDistanceTravelled(0);
 					}
-					
+
 					if (previousLocation) {
 						const distance = getDistanceFromLatLonInMeters(
 							previousLocation.coords.latitude,
@@ -488,7 +503,7 @@ export default function TransportDetectionPage() {
 	useEffect(() => {
 		const fetchData = () => {
 
-			if (!isFetching ) {
+			if (!isFetching) {
 				setIsFetching(true);
 
 				const accelerometerStats = calculateStats(accelerometerDataRef.current);
@@ -569,7 +584,7 @@ export default function TransportDetectionPage() {
 		return () => {
 			if (interval) {
 				clearInterval(interval);
-			}6
+			} 6
 		};
 	}, [isPredicting, isFetching, gpsSamplesRef]);
 
@@ -767,289 +782,317 @@ export default function TransportDetectionPage() {
 
 
 	return (
-		<View style={styles.container}>
-			<Toast ref={(ref) => Toast.setRef(ref)} />
+		<ScrollView style={styles.mainScrollView}>
+			<View style={styles.container}>
+				<Toast ref={(ref) => Toast.setRef(ref)} />
 
-			<Text>Mobile Sensor and GPS Data</Text>
-			<ScrollView style={styles.scrollView}>
+				{/* Button to toggle sensor data and detection history visibility */}
+				<TouchableOpacity
+					style={[styles.button, { backgroundColor: '#ff8547' }]}
+					onPress={() => setShowSensorData(!showSensorData)}
+					activeOpacity={0.7}
+				>
+					<Icon name={showSensorData ? "minus" : "plus"} size={20} color="black" style={styles.iconStyle} />
+					<Text style={styles.buttonText}>
+						{showSensorData ? "STOP VIEWING DATA" : "VIEW SENSOR DATA & DETECTION HISTORY"}
+					</Text>
+				</TouchableOpacity>
 
-				<Text style={styles.textWithPadding}>{text}</Text>
-				<Text style={styles.textWithPadding}>{gpsSamplesRef.current?.length}</Text>
-				<Text style={styles.textWithPadding}>Distance travelled since last detection: {currentDistanceTravelledRef.current?.toFixed(2)}m</Text>
-				<Text style={styles.textWithPadding}>Accelerometer Data:</Text>
-				<Text style={styles.textWithPadding}>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
-				<Text style={styles.textWithPadding}>Gyroscope Data:</Text>
-				<Text style={styles.textWithPadding}>x: {currentGyroscope.x?.toFixed(2)}, y: {currentGyroscope.y?.toFixed(2)}, z: {currentGyroscope.z?.toFixed(2)}</Text>
-			</ScrollView>
+				{/* Conditional rendering based on showSensorData */}
+				{showSensorData && (
+					<>
+						<Text style={styles.generalText}>Mobile Sensor and GPS Data</Text>
+						<ScrollView style={styles.scrollView}>
+
+							<Text style={styles.textWithPadding}>{text}</Text>
+							<Text style={styles.textWithPadding}>{gpsSamplesRef.current?.length}</Text>
+							<Text style={styles.textWithPadding}>Distance travelled since last detection: {currentDistanceTravelledRef.current?.toFixed(2)}m</Text>
+							<Text style={styles.textWithPadding}>Accelerometer Data:</Text>
+							<Text style={styles.textWithPadding}>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
+							<Text style={styles.textWithPadding}>Gyroscope Data:</Text>
+							<Text style={styles.textWithPadding}>x: {currentGyroscope.x?.toFixed(2)}, y: {currentGyroscope.y?.toFixed(2)}, z: {currentGyroscope.z?.toFixed(2)}</Text>
+						</ScrollView>
+
+						<Text style={styles.generalText}>Transport Detection History</Text>
+						<ScrollView style={styles.scrollView}>
+							{transportModes.map((item, index) => (
+								<View key={index} style={styles.textAndIcon}>
+									<Icon name={getIconName(item.mode)} size={20} color="#000" />
+									<Text style={styles.textStyle}>
+										{item.mode} - {item.time} - {item.distance.toFixed(2)}m
+									</Text>
+								</View>
+							))}
+						</ScrollView>
+					</>
+				)}
+
+				<Button
+					title={isPredicting ? "Stop Predicting" : "Start Predicting"}
+					onPress={isPredicting ? stopPredicting : startPredicting}
+					color={isPredicting ? "#CC0000" : "green"}
+				/>
 
 
-			<Button
-				title={isPredicting ? "Stop Predicting" : "Start Predicting"}
-				onPress={isPredicting ? stopPredicting : startPredicting}
-				color={isPredicting ? "#CC0000" : "green"}
-			/>
-
-
-			{isPredicting &&
-				<View style={styles.indicatorContainer}>
-					<WaveIndicator color="#1ED760" />
-				</View>
-			}
-
-			<Text>Transport Detection History</Text>
-
-			<ScrollView style={styles.scrollView}>
-				{transportModes.map((item, index) => (
-					<View key={index} style={styles.textAndIcon}>
-						<Icon name={getIconName(item.mode)} size={20} color="#000" />
-						<Text style={styles.textStyle}>
-							{item.mode} - {item.time} - {item.distance.toFixed(2)}m
-						</Text>
+				{isPredicting &&
+					<View style={styles.indicatorContainer}>
+						<WaveIndicator color="#1ED760" />
 					</View>
-				))}
-			</ScrollView>
+				}
 
-			{predictionEnded && (
-				<Text>Ammend Your Predicted Commute Journey</Text>
-			)}
+				{predictionEnded && (
+					<Text style={styles.generalText}>Amend Your Predicted Commute Journey</Text>
+				)}
 
-			{predictionEnded && (
-				<ScrollView style={styles.largerScrollView}>
+				{predictionEnded && (
+					<>
 
-					<Text style={styles.centeredBoldText}>Automatically Added Transport Entries:</Text>
+						<Text style={styles.centeredBoldText}>Automatically Added Transport Entries:</Text>
 
-					{(
-						getPrimaryTransportModes(transportModes).map((mode, index) => (
-							<Text key={index} style={{ textAlign: 'center' }}>
-								{mode.mode} from {mode.endTime} to {mode.startTime} | {mode.distance.toFixed(2)}m
-							</Text>
-						))
-					)}
+						{(
+							getPrimaryTransportModes(transportModes).map((mode, index) => (
+								<Text key={index} style={styles.generalText}>
+									{mode.mode} from {mode.endTime} to {mode.startTime} | {mode.distance.toFixed(2)}m
+								</Text>
+							))
+						)}
 
+						<View style={styles.divider} />
 
-					<View style={styles.divider} />
+						<Text style={styles.centeredBoldText}>Additional Information:</Text>
 
-					<Text style={styles.centeredBoldText}>Additional Information:</Text>
-
-					<View style={styles.row}>
-						<Text style={styles.label}>Select Day:</Text>
-						<RNPickerSelect
-							onValueChange={(value) => setSelectedDay(value)}
-							items={dayPickerItems}
-							style={pickerSelectStyles}
-							value={selectedDay}
-							placeholder={{
-								label: 'Select a day.',
-								value: null,
-							}}
-							useNativeAndroidPickerStyle={false}
-						/>
-					</View>
-
-					<View style={styles.row}>
-						<Text style={styles.label}>Same Return Journey:</Text>
-						<RNPickerSelect
-							onValueChange={(value) => setSameReturnJourney(value)}
-							items={[
-								{ label: "Yes", value: "Yes" },
-								{ label: "No", value: "No" }
-							]}
-							style={pickerSelectStyles}
-							value={sameReturnJourney}
-							placeholder={{}}
-							useNativeAndroidPickerStyle={false}
-						/>
-					</View>
-
-					<View style={styles.divider} />
-
-					<Text style={styles.centeredBoldText}>Add/Delete Transport Entries:</Text>
-
-					<View style={styles.row}>
-						<Text style={styles.label}>Select Transport Mode:</Text>
-						<RNPickerSelect
-							onValueChange={(value) => setTransportMode(value)}
-							items={transportPickerItems}
-							style={pickerSelectStyles}
-							value={transportMode}
-							placeholder={{
-								label: 'Select mode.',
-								value: null,
-							}}
-							useNativeAndroidPickerStyle={false}
-						/>
-					</View>
-
-					<View style={styles.row}>
-						<Text style={styles.label}>Duration of Mode:</Text>
-						<View style={styles.durationPicker}>
+						<View style={styles.row}>
+							<Text style={styles.label}>Select Day:</Text>
 							<RNPickerSelect
-								onValueChange={(value) => setDurationHour(value)}
-								items={hourOptions}
+								onValueChange={(value) => setSelectedDay(value)}
+								items={dayPickerItems}
 								style={pickerSelectStyles}
-								value={durationHour}
-								placeholder={{ label: 'HH', value: null }}
+								value={selectedDay}
+								placeholder={{
+									label: 'Select a day.',
+									value: null,
+								}}
 								useNativeAndroidPickerStyle={false}
 							/>
 						</View>
-						<Text>:</Text>
-						<View style={styles.durationPicker}>
+
+						<View style={styles.row}>
+							<Text style={styles.label}>Same Return Journey:</Text>
 							<RNPickerSelect
-								onValueChange={(value) => setDurationMinute(value)}
-								items={minuteOptions}
+								onValueChange={(value) => setSameReturnJourney(value)}
+								items={[
+									{ label: "Yes", value: "Yes" },
+									{ label: "No", value: "No" }
+								]}
 								style={pickerSelectStyles}
-								value={durationMinute}
-								placeholder={{ label: 'MM', value: null }}
+								value={sameReturnJourney}
+								placeholder={{}}
 								useNativeAndroidPickerStyle={false}
 							/>
 						</View>
-					</View>
 
+						<View style={styles.divider} />
 
-					<Button title="Add Entry" onPress={addEntry} />
+						<Text style={styles.centeredBoldText}>Add/Delete Transport Entries:</Text>
 
-					{entries.map((entry, index) => (
-						<View key={index} style={styles.entryContainer}>
-							<Icon
-								name={getIconName(entry.mode)}
-								size={20}
-								color="black"
-								onPress={() => deleteEntry(index)}
+						<View style={styles.row}>
+							<Text style={styles.label}>Select Transport Mode:</Text>
+							<RNPickerSelect
+								onValueChange={(value) => setTransportMode(value)}
+								items={transportPickerItems}
+								style={pickerSelectStyles}
+								value={transportMode}
+								placeholder={{
+									label: 'Select mode.',
+									value: null,
+								}}
+								useNativeAndroidPickerStyle={false}
 							/>
-							{entry.mode === 'Car' && (
-								<Icon
-									name="edit"
-									size={20}
-									color="blue"
-									onPress={() => editCarEntry(index)}
+						</View>
+
+						<View style={styles.row}>
+							<Text style={styles.label}>Duration of Mode:</Text>
+							<View style={styles.durationPicker}>
+								<RNPickerSelect
+									onValueChange={(value) => setDurationHour(value)}
+									items={hourOptions}
+									style={pickerSelectStyles}
+									value={durationHour}
+									placeholder={{ label: 'HH', value: null }}
+									useNativeAndroidPickerStyle={false}
 								/>
-							)}
-							<Text style={styles.entryText}>
-								{entry.mode} - {entry.time} - {typeof entry.distance === 'number' ? entry.distance.toFixed(1) : 'N/A'}m - {entry.carbonFootprint} kg CO2
-							</Text>
-							<Icon
-								name="trash"
-								size={20}
-								color="red"
-								onPress={() => deleteEntry(index)}
-							/>
+							</View>
+							<Text>:</Text>
+							<View style={styles.durationPicker}>
+								<RNPickerSelect
+									onValueChange={(value) => setDurationMinute(value)}
+									items={minuteOptions}
+									style={pickerSelectStyles}
+									value={durationMinute}
+									placeholder={{ label: 'MM', value: null }}
+									useNativeAndroidPickerStyle={false}
+								/>
+							</View>
 						</View>
-					))}
 
 
-					<Text style={{ textAlign: 'center' }}>
-						Total Carbon Footprint: {sameReturnJourney === "Yes" ? "(x2) " + (totalCarbonFootprint * 2) : totalCarbonFootprint} kg CO2
-					</Text>
+						<Button title="Add Entry" onPress={addEntry} />
 
-					<Text style={{ textAlign: 'center' }}>
-						Total Duration: {sameReturnJourney === "Yes" ? "(x2) " + calculateTotalDuration() : calculateTotalDuration()}
-					</Text>
+						{entries.map((entry, index) => (
+							<View key={index} style={[styles.entryContainer, { backgroundColor: PASTEL_COLORS[entry.mode] || PASTEL_COLORS.default }]}>
+								<Icon
+									name={getIconName(entry.mode)}
+									size={20}
+									color="black"
+									onPress={() => deleteEntry(index)}
+								/>
+								{entry.mode === 'Car' && (
+									<Icon
+										name="edit"
+										size={20}
+										color="blue"
+										onPress={() => editCarEntry(index)}
+									/>
+								)}
+								<Text style={styles.entryText}>
+									{entry.mode} - {entry.time} - {typeof entry.distance === 'number' ? entry.distance.toFixed(1) : 'N/A'}m - {entry.carbonFootprint} kg CO2
+								</Text>
+								<Icon
+									name="trash"
+									size={20}
+									color="red"
+									onPress={() => deleteEntry(index)}
+								/>
+							</View>
+						))}
 
 
-					<View style={styles.divider} />
+						<Text style={styles.generalText}>
+							Total Carbon Footprint: {sameReturnJourney === "Yes" ? "(x2) " + (totalCarbonFootprint * 2) : totalCarbonFootprint} kg CO2
+						</Text>
 
-					<Text style={styles.centeredBoldText}>Distribute Footprint to Your Teams</Text>
+						<Text style={styles.generalText}>
+							Total Duration: {sameReturnJourney === "Yes" ? "(x2) " + calculateTotalDuration() : calculateTotalDuration()}
+						</Text>
 
-					{/* Team Fields */}
-					{teams.map((team, index) => (
-						<View key={index} style={styles.teamRow}>
-							<Text style={styles.teamName}>{team.teamName}</Text>
-							<TextInput
-								style={styles.teamInput}
-								value={teamPercentages[team.teamName]}
-								onChangeText={(value) => handleTeamPercentageChange(team.teamName, value)}
-								keyboardType="numeric"
-								placeholder="%"
-							/>
-							<Text style={styles.teamFootprint}>
-								Carbon Footprint: {calculateTeamCarbonFootprint(team.teamName)} kg CO2
-							</Text>
-						</View>
-					))}
 
-					<Button
-						title="Submit"
-						onPress={handleSubmit}
-						color="green"
-					/>
+						<View style={styles.divider} />
 
-				</ScrollView>
-			)}
-			<StatusBar style="auto" />
-			<CustomModal
-				modalVisible={errorTransportModalVisible}
-				setModalVisible={setErrorTransportModalVisible}
-				modalText="Please select a transport mode."
-				color="red"
-			/>
-			<CustomModal
-				modalVisible={errorDayModalVisible}
-				setModalVisible={setErrorDayModalVisible}
-				modalText="Select the day before submitting."
-				color="red"
-			/>
-			<CustomModal
-				modalVisible={errorPercentagesModalVisible}
-				setModalVisible={setErrorPercentagesModalVisible}
-				modalText="Enter percentage distribution for your teams. Needs to add to 100."
-				color="red"
-			/>
-			<CustomModal
-				modalVisible={errorSubmitModalVisible}
-				setModalVisible={setErrorSubmitModalVisible}
-				modalText="Error submitting carbon footprint. Check your connection."
-				color="red"
-			/>
-			<CustomModal
-				modalVisible={successModalVisible}
-				setModalVisible={setSuccessModalVisible}
-				modalText="Successfully Saved Carbon Footprint."
-				color="green"
-			/>
-			<Modal
-				visible={showCarSettingsModal}
-				animationType="slide"
-				transparent={true}
-				onRequestClose={() => setShowCarSettingsModal(false)}
-			>
-				<View style={modalStyles.centeredView}>
-					<View style={modalStyles.modalView}>
-						<Text>Select Engine Type:</Text>
-						{/* Dropdown or Picker for engine type */}
-						<RNPickerSelect
-							onValueChange={(value) => setCarSettings(prev => ({ ...prev, engineType: value }))}
-							items={[{ label: 'Petrol', value: 'petrol' }, { label: 'Diesel', value: 'diesel' }]}
-							value={carSettings.engineType}
-						/>
-						<Text>No. of Employee Passengers:</Text>
-						<TextInput
-							style={styles.inputBox}
-							onChangeText={handlePassengerChange}
-							value={carSettings.passengers.toString()}
-							keyboardType="numeric"
-						/>
+						<Text style={styles.centeredBoldText}>Distribute Footprint to Your Teams</Text>
+
+						{/* Team Fields */}
+						{teams.map((team, index) => (
+							<View key={index} style={styles.teamRow}>
+								<Text style={styles.teamName}>{team.teamName}</Text>
+								<RNPickerSelect
+									onValueChange={(value) => handleTeamPercentageChange(team.teamName, value)}
+									items={percentageOptions}
+									style={pickerSelectStyles}
+									value={teamPercentages[team.teamName]}
+									placeholder={{ label: 'Select %', value: '0' }}
+									useNativeAndroidPickerStyle={false}
+								/>
+								<Text style={styles.teamFootprint}>
+									Carbon Footprint: {calculateTeamCarbonFootprint(team.teamName)} kg CO2
+								</Text>
+							</View>
+						))}
+
 
 						<Button
-							title="Save Settings"
-							onPress={saveCarSettings}
+							title="Submit"
+							onPress={handleSubmit}
+							color="green"
 						/>
+					</>
 
+				)}
+				<StatusBar style="auto" />
+				<CustomModal
+					modalVisible={errorTransportModalVisible}
+					setModalVisible={setErrorTransportModalVisible}
+					modalText="Please select a transport mode."
+					color="red"
+				/>
+				<CustomModal
+					modalVisible={errorDayModalVisible}
+					setModalVisible={setErrorDayModalVisible}
+					modalText="Select the day before submitting."
+					color="red"
+				/>
+				<CustomModal
+					modalVisible={errorPercentagesModalVisible}
+					setModalVisible={setErrorPercentagesModalVisible}
+					modalText="Enter percentage distribution for your teams. Needs to add to 100."
+					color="red"
+				/>
+				<CustomModal
+					modalVisible={errorSubmitModalVisible}
+					setModalVisible={setErrorSubmitModalVisible}
+					modalText="Error submitting carbon footprint. Check your connection."
+					color="red"
+				/>
+				<CustomModal
+					modalVisible={successModalVisible}
+					setModalVisible={setSuccessModalVisible}
+					modalText="Successfully Saved Carbon Footprint."
+					color="green"
+				/>
+				<Modal
+					visible={showCarSettingsModal}
+					animationType="slide"
+					transparent={true}
+					onRequestClose={() => setShowCarSettingsModal(false)}
+				>
+					<View style={modalStyles.centeredView}>
+						<View style={modalStyles.modalView}>
+							<Text style={styles.generalText}>Select Engine Type:</Text>
+							{/* Dropdown or Picker for engine type */}
+							<RNPickerSelect
+								onValueChange={(value) => setCarSettings(prev => ({ ...prev, engineType: value }))}
+								items={[{ label: 'Petrol', value: 'petrol' }, { label: 'Diesel', value: 'diesel' }]}
+								value={carSettings.engineType}
+							/>
+							<Text style={styles.generalText}>No. of Employee Passengers:</Text>
+							<TextInput
+								style={styles.inputBox}
+								onChangeText={handlePassengerChange}
+								value={carSettings.passengers.toString()}
+								keyboardType="numeric"
+							/>
+
+							<Button
+								title="Save Settings"
+								onPress={saveCarSettings}
+							/>
+
+						</View>
 					</View>
-				</View>
-			</Modal>
+				</Modal>
 
-		</View>
+			</View>
+		</ScrollView>
 	);
 }
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#F5F5F5',
+		backgroundColor: '#121212',
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
+
+	mainScrollView: {
+		backgroundColor: '#121212',
+	},
+
+	generalText: {
+		color: '#ffffff',
+	},
+
 	scrollView: {
+		minHeight: 100,
 		maxHeight: 100,
 		width: '80%',
 		marginHorizontal: 20,
@@ -1057,8 +1100,9 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: 'grey',
 		borderRadius: 10,
-		backgroundColor: '#fff',
+		backgroundColor: '#282828',
 	},
+
 	largerScrollView: {
 		maxHeight: 250,
 		width: '80%',
@@ -1085,11 +1129,13 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		justifyContent: 'center',
 		marginVertical: 4,
+		color: '#fff',
 	},
 
 	textStyle: {
 		marginLeft: 10,
 		marginRight: 10,
+		color: '#fff',
 	},
 
 	entryContainer: {
@@ -1097,6 +1143,14 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		alignItems: 'center',
 		padding: 10,
+		borderRadius: 10, 
+		marginVertical: 4,
+		marginHorizontal: 10,
+	},
+
+	entryText: {
+		flex: 1,
+		marginLeft: 10,
 	},
 
 	row: {
@@ -1108,10 +1162,12 @@ const styles = StyleSheet.create({
 
 	label: {
 		marginRight: 10,
+		color: '#fff',
 	},
 
 	textWithPadding: {
 		marginLeft: 6,
+		color: '#fff',
 	},
 
 	divider: {
@@ -1121,12 +1177,15 @@ const styles = StyleSheet.create({
 		backgroundColor: 'grey',
 		marginVertical: 10,
 	},
+
 	centeredBoldText: {
 		textAlign: 'center',
 		fontWeight: 'bold',
+		color: '#ffffff',
 	},
+
 	durationPicker: {
-		width: 70,
+		width: 80,
 	},
 	teamRow: {
 		flexDirection: 'row',
@@ -1137,6 +1196,7 @@ const styles = StyleSheet.create({
 	teamName: {
 		flex: 2,
 		marginRight: 10,
+		color: '#fff',
 	},
 	teamInput: {
 		flex: 1,
@@ -1147,6 +1207,7 @@ const styles = StyleSheet.create({
 	},
 	teamFootprint: {
 		flex: 2,
+		color: '#fff',
 	},
 	inputBox: {
 		borderWidth: 1,
@@ -1156,6 +1217,20 @@ const styles = StyleSheet.create({
 		marginTop: 5,
 		marginBottom: 5,
 		width: '80%',
+	},
+	button: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		paddingVertical: 10,
+		paddingHorizontal: 20,
+		borderRadius: 20,
+		marginVertical: 10,
+	},
+	buttonText: {
+		marginLeft: 10,
+		color: 'white', 
+		textTransform: 'uppercase', 
 	},
 });
 
@@ -1167,21 +1242,20 @@ const pickerSelectStyles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: 'gray',
 		borderRadius: 4,
-		color: 'black',
-		paddingRight: 30,
-		backgroundColor: 'white',
+		color: 'white', 
+		paddingRight: 10,
+		backgroundColor: '#282828', 
 		marginRight: 10,
 	},
 	inputAndroid: {
 		fontSize: 16,
 		paddingHorizontal: 10,
-		paddingVertical: 8,
-		borderWidth: 0.5,
-		borderColor: 'purple',
+		paddingVertical: 5, borderWidth: 0.5,
+		borderColor: 'gray',
 		borderRadius: 8,
-		color: 'black',
-		paddingRight: 30,
-		backgroundColor: 'white',
+		color: 'white', 
+		paddingRight: 10,
+		backgroundColor: '#282828', 
 		marginRight: 10,
 	},
 });

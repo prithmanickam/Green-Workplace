@@ -309,3 +309,9 @@
 ### 21 Jan 2023
 * *4 hours* Fixed Bugs and Added Edit Car Settings in Manually Set Carbon Footprint Page.
 
+### 22 Jan 2023
+* *8 hours* Dissertation section 1 to 3 further refined.
+
+### 23 Jan 2023
+* *6 hours* Improved UI of Mobile app - Added Dark Mode and Fixed dropdown buttons.
+
