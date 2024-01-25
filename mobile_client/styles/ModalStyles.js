@@ -9,7 +9,7 @@ export const modalStyles = StyleSheet.create({
     },
     modalView: {
         margin: 20,
-        backgroundColor: "white",
+        backgroundColor: '#282828',
         borderRadius: 20,
         padding: 35,
         alignItems: "center",
@@ -37,6 +37,7 @@ export const modalStyles = StyleSheet.create({
     },
     modalText: {
         marginBottom: 15,
-        textAlign: "center"
+        textAlign: "center",
+        color: '#ffffff',        
     }
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, StatusBar, Button, TextInput, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, StatusBar, Modal, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import Toast from 'react-native-toast-message';
@@ -65,7 +65,6 @@ export default function TransportDetectionPage() {
 	const [currentDistanceTravelled, setCurrentDistanceTravelled] = useState(0);
 
 	const currentDistanceTravelledRef = useRef(0);
-	const gpsSamplesRef = useRef([]);
 
 	const [showSensorData, setShowSensorData] = useState(false);
 
@@ -94,8 +93,6 @@ export default function TransportDetectionPage() {
 	const [carSettings, setCarSettings] = useState({ engineType: 'petrol', passengers: 1 });
 	const [showCarSettingsModal, setShowCarSettingsModal] = useState(false);
 	const [editingEntryIndex, setEditingEntryIndex] = useState(-1);
-	const [gpsSamples, setGpsSamples] = useState([]);
-
 
 	const getCurrentDay = () => {
 		const today = new Date().getDay();
@@ -287,7 +284,7 @@ export default function TransportDetectionPage() {
 						const fetchedTeams = data.data;
 						setTeams(fetchedTeams);
 						const initialPercentages = fetchedTeams.reduce((acc, team) => {
-							acc[team.teamName] = '0'; 
+							acc[team.teamName] = '0';
 							return acc;
 						}, {});
 						setTeamPercentages(initialPercentages);
@@ -428,10 +425,6 @@ export default function TransportDetectionPage() {
 						if (isPredicting) {
 							setDistanceTraveled(prevDistance => prevDistance + distance);
 							setCurrentDistanceTravelled(current => parseFloat(current) + distance);
-
-							if (distance !== 0) {
-								setGpsSamples(prevSamples => [...prevSamples, distance.toFixed(1)]);
-							}
 						}
 					}
 					setPreviousLocation(newLocation);
@@ -569,7 +562,6 @@ export default function TransportDetectionPage() {
 						accelerometerDataRef.current = [];
 						gyroscopeDataRef.current = [];
 						currentDistanceTravelledRef.current = 0;
-						setGpsSamples([]);
 						setIsFetching(false);
 					});
 			}
@@ -586,7 +578,7 @@ export default function TransportDetectionPage() {
 				clearInterval(interval);
 			} 6
 		};
-	}, [isPredicting, isFetching, gpsSamplesRef]);
+	}, [isPredicting, isFetching]);
 
 
 	useEffect(() => {
@@ -600,11 +592,6 @@ export default function TransportDetectionPage() {
 	useEffect(() => {
 		currentDistanceTravelledRef.current = currentDistanceTravelled;
 	}, [currentDistanceTravelled]);
-
-	useEffect(() => {
-		gpsSamplesRef.current = gpsSamples;
-	}, [gpsSamples]);
-
 
 	// Algorithm to predict overall journey from the transport predicted data
 	const getPrimaryTransportModes = (modes) => {
@@ -782,11 +769,12 @@ export default function TransportDetectionPage() {
 
 
 	return (
-		<ScrollView style={styles.mainScrollView}>
+		<ScrollView style={styles.mainScrollView} contentContainerStyle={styles.contentContainer}>
 			<View style={styles.container}>
 				<Toast ref={(ref) => Toast.setRef(ref)} />
 
 				{/* Button to toggle sensor data and detection history visibility */}
+
 				<TouchableOpacity
 					style={[styles.button, { backgroundColor: '#ff8547' }]}
 					onPress={() => setShowSensorData(!showSensorData)}
@@ -805,7 +793,6 @@ export default function TransportDetectionPage() {
 						<ScrollView style={styles.scrollView}>
 
 							<Text style={styles.textWithPadding}>{text}</Text>
-							<Text style={styles.textWithPadding}>{gpsSamplesRef.current?.length}</Text>
 							<Text style={styles.textWithPadding}>Distance travelled since last detection: {currentDistanceTravelledRef.current?.toFixed(2)}m</Text>
 							<Text style={styles.textWithPadding}>Accelerometer Data:</Text>
 							<Text style={styles.textWithPadding}>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
@@ -817,7 +804,7 @@ export default function TransportDetectionPage() {
 						<ScrollView style={styles.scrollView}>
 							{transportModes.map((item, index) => (
 								<View key={index} style={styles.textAndIcon}>
-									<Icon name={getIconName(item.mode)} size={20} color="#000" />
+									<Icon name={getIconName(item.mode)} size={20} color="white" />
 									<Text style={styles.textStyle}>
 										{item.mode} - {item.time} - {item.distance.toFixed(2)}m
 									</Text>
@@ -827,11 +814,16 @@ export default function TransportDetectionPage() {
 					</>
 				)}
 
-				<Button
-					title={isPredicting ? "Stop Predicting" : "Start Predicting"}
+
+				<TouchableOpacity
+					style={[styles.customButton, { backgroundColor: isPredicting ? "#CC0000" : "green" }]}
 					onPress={isPredicting ? stopPredicting : startPredicting}
-					color={isPredicting ? "#CC0000" : "green"}
-				/>
+					activeOpacity={0.7}
+				>
+					<Text style={styles.customButtonText}>
+						{isPredicting ? "Stop Predicting" : "Start Predicting"}
+					</Text>
+				</TouchableOpacity>
 
 
 				{isPredicting &&
@@ -841,7 +833,7 @@ export default function TransportDetectionPage() {
 				}
 
 				{predictionEnded && (
-					<Text style={styles.generalText}>Amend Your Predicted Commute Journey</Text>
+					<Text style={styles.headingText}>Amend Your Predicted Commute Journey</Text>
 				)}
 
 				{predictionEnded && (
@@ -922,7 +914,7 @@ export default function TransportDetectionPage() {
 									useNativeAndroidPickerStyle={false}
 								/>
 							</View>
-							<Text>:</Text>
+							<Text style={styles.label}>:</Text>
 							<View style={styles.durationPicker}>
 								<RNPickerSelect
 									onValueChange={(value) => setDurationMinute(value)}
@@ -935,8 +927,15 @@ export default function TransportDetectionPage() {
 							</View>
 						</View>
 
-
-						<Button title="Add Entry" onPress={addEntry} />
+						<TouchableOpacity
+							style={[styles.customButton, { backgroundColor: "#2488DD" }]}
+							onPress={addEntry}
+							activeOpacity={0.7}
+						>
+							<Text style={styles.customButtonText}>
+								{"Add Entry"}
+							</Text>
+						</TouchableOpacity>
 
 						{entries.map((entry, index) => (
 							<View key={index} style={[styles.entryContainer, { backgroundColor: PASTEL_COLORS[entry.mode] || PASTEL_COLORS.default }]}>
@@ -945,12 +944,13 @@ export default function TransportDetectionPage() {
 									size={20}
 									color="black"
 									onPress={() => deleteEntry(index)}
+									style={styles.iconStyle}
 								/>
 								{entry.mode === 'Car' && (
 									<Icon
 										name="edit"
 										size={20}
-										color="blue"
+										color="#2488DD"
 										onPress={() => editCarEntry(index)}
 									/>
 								)}
@@ -966,14 +966,16 @@ export default function TransportDetectionPage() {
 							</View>
 						))}
 
+						<View style={styles.totalContainer}>
+							<Text style={styles.totalText}>
+								Total Carbon Footprint: {sameReturnJourney === "Yes" ? "(x2) " + (totalCarbonFootprint * 2) : totalCarbonFootprint} kg CO2
+							</Text>
 
-						<Text style={styles.generalText}>
-							Total Carbon Footprint: {sameReturnJourney === "Yes" ? "(x2) " + (totalCarbonFootprint * 2) : totalCarbonFootprint} kg CO2
-						</Text>
+							<Text style={styles.totalText}>
+								Total Duration: {sameReturnJourney === "Yes" ? "(x2) " + calculateTotalDuration() : calculateTotalDuration()}
+							</Text>
+						</View>
 
-						<Text style={styles.generalText}>
-							Total Duration: {sameReturnJourney === "Yes" ? "(x2) " + calculateTotalDuration() : calculateTotalDuration()}
-						</Text>
 
 
 						<View style={styles.divider} />
@@ -989,7 +991,7 @@ export default function TransportDetectionPage() {
 									items={percentageOptions}
 									style={pickerSelectStyles}
 									value={teamPercentages[team.teamName]}
-									placeholder={{ label: 'Select %', value: '0' }}
+									placeholder={{ label: '0%', value: '0' }}
 									useNativeAndroidPickerStyle={false}
 								/>
 								<Text style={styles.teamFootprint}>
@@ -998,12 +1000,15 @@ export default function TransportDetectionPage() {
 							</View>
 						))}
 
-
-						<Button
-							title="Submit"
+						<TouchableOpacity
+							style={[styles.customButton, { backgroundColor: "green" }]}
 							onPress={handleSubmit}
-							color="green"
-						/>
+							activeOpacity={0.7}
+						>
+							<Text style={styles.customButtonText}>
+								{"Submit"}
+							</Text>
+						</TouchableOpacity>
 					</>
 
 				)}
@@ -1046,25 +1051,38 @@ export default function TransportDetectionPage() {
 				>
 					<View style={modalStyles.centeredView}>
 						<View style={modalStyles.modalView}>
-							<Text style={styles.generalText}>Select Engine Type:</Text>
+							<Text style={styles.modalLabelText}>Select Engine Type:</Text>
 							{/* Dropdown or Picker for engine type */}
 							<RNPickerSelect
 								onValueChange={(value) => setCarSettings(prev => ({ ...prev, engineType: value }))}
 								items={[{ label: 'Petrol', value: 'petrol' }, { label: 'Diesel', value: 'diesel' }]}
 								value={carSettings.engineType}
+								style={pickerSelectStyles}
 							/>
-							<Text style={styles.generalText}>No. of Employee Passengers:</Text>
-							<TextInput
-								style={styles.inputBox}
-								onChangeText={handlePassengerChange}
+							<Text style={styles.modalLabelText}>No. of Employee Passengers:</Text>
+							<RNPickerSelect
+								onValueChange={(value) => setCarSettings(prev => ({ ...prev, passengers: value }))}
+								items={[
+									{ label: '1', value: '1' },
+									{ label: '2', value: '2' },
+									{ label: '3', value: '3' },
+									{ label: '4', value: '4' },
+									{ label: '5', value: '5' }
+								]}
 								value={carSettings.passengers.toString()}
-								keyboardType="numeric"
+								style={pickerSelectStyles}
+								useNativeAndroidPickerStyle={false}
 							/>
 
-							<Button
-								title="Save Settings"
+							<TouchableOpacity
+								style={[styles.customButton, { backgroundColor: "#2488DD" }]}
 								onPress={saveCarSettings}
-							/>
+								activeOpacity={0.7}
+							>
+								<Text style={styles.customButtonText}>
+									{"Save Settings"}
+								</Text>
+							</TouchableOpacity>
 
 						</View>
 					</View>
@@ -1085,6 +1103,13 @@ const styles = StyleSheet.create({
 
 	mainScrollView: {
 		backgroundColor: '#121212',
+		flexGrow: 1,
+	},
+
+	contentContainer: {
+		flexGrow: 1,
+		justifyContent: 'center',
+
 	},
 
 	generalText: {
@@ -1113,6 +1138,13 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 		backgroundColor: '#fff',
 	},
+
+	buttonContainer: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		width: '100%',
+	},
+
 	textItem: {
 		marginVertical: 5,
 	},
@@ -1122,7 +1154,16 @@ const styles = StyleSheet.create({
 		height: 50,
 		justifyContent: 'center',
 		alignItems: 'center',
+	},
 
+	headingText: {
+		color: '#ffffff',
+		textDecorationLine: 'underline',
+		fontWeight: 'bold',
+		fontSize: 17,
+		textAlign: 'center',
+		paddingTop: 15,
+		paddingBottom: 15,
 	},
 
 	textAndIcon: {
@@ -1143,7 +1184,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		alignItems: 'center',
 		padding: 10,
-		borderRadius: 10, 
+		borderRadius: 10,
 		marginVertical: 4,
 		marginHorizontal: 10,
 	},
@@ -1187,17 +1228,20 @@ const styles = StyleSheet.create({
 	durationPicker: {
 		width: 80,
 	},
+
 	teamRow: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center',
 		padding: 10,
 	},
+
 	teamName: {
 		flex: 2,
 		marginRight: 10,
 		color: '#fff',
 	},
+
 	teamInput: {
 		flex: 1,
 		borderWidth: 1,
@@ -1205,10 +1249,12 @@ const styles = StyleSheet.create({
 		padding: 8,
 		marginRight: 10,
 	},
+
 	teamFootprint: {
 		flex: 2,
 		color: '#fff',
 	},
+
 	inputBox: {
 		borderWidth: 1,
 		borderColor: 'gray',
@@ -1218,6 +1264,7 @@ const styles = StyleSheet.create({
 		marginBottom: 5,
 		width: '80%',
 	},
+
 	button: {
 		flexDirection: 'row',
 		alignItems: 'center',
@@ -1227,11 +1274,55 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		marginVertical: 10,
 	},
+
 	buttonText: {
 		marginLeft: 10,
-		color: 'white', 
-		textTransform: 'uppercase', 
+		color: 'white',
+		textTransform: 'uppercase',
 	},
+
+	customButton: {
+		backgroundColor: 'green',
+		paddingVertical: 10,
+		paddingHorizontal: 20,
+		borderRadius: 5,
+		alignItems: 'center',
+		justifyContent: 'center',
+		elevation: 2,
+		marginTop: 10,
+		marginBottom: 10,
+	},
+
+	customButtonText: {
+		color: '#ffffff',
+		fontSize: 16,
+	},
+
+	iconStyle: {
+		marginRight: 4,
+	},
+
+	totalContainer: {
+		backgroundColor: '#ECEEF3',
+		borderWidth: 1,
+		borderColor: 'grey',
+		borderRadius: 10,
+		padding: 10,
+		marginVertical: 5,
+		alignItems: 'center',
+	},
+
+	totalText: {
+		color: 'black',
+		fontSize: 16,
+	},
+
+	modalLabelText: {
+		color: '#ffffff',
+		paddingTop: 12,
+		paddingBottom: 12,
+	},
+
 });
 
 const pickerSelectStyles = StyleSheet.create({
@@ -1242,9 +1333,9 @@ const pickerSelectStyles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: 'gray',
 		borderRadius: 4,
-		color: 'white', 
+		color: 'white',
 		paddingRight: 10,
-		backgroundColor: '#282828', 
+		backgroundColor: '#383838',
 		marginRight: 10,
 	},
 	inputAndroid: {
@@ -1253,9 +1344,9 @@ const pickerSelectStyles = StyleSheet.create({
 		paddingVertical: 5, borderWidth: 0.5,
 		borderColor: 'gray',
 		borderRadius: 8,
-		color: 'white', 
+		color: 'white',
 		paddingRight: 10,
-		backgroundColor: '#282828', 
+		backgroundColor: '#383838',
 		marginRight: 10,
 	},
 });

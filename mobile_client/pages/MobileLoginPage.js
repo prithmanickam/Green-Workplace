@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
@@ -37,11 +37,11 @@ const LoginPage = ({ navigation }) => {
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.greenWorkplaceText}>Green-Workplace 
-			<Icon name={"leaf"} size={30} color="#1ED760" />
-			
+			<Text style={styles.greenWorkplaceText}>Green-Workplace
+				<Icon name={"leaf"} size={30} color="#1ED760" />
+
 			</Text>
-			
+
 			<Text style={styles.loginText}>Login</Text>
 			<TextInput
 				style={styles.input}
@@ -56,7 +56,16 @@ const LoginPage = ({ navigation }) => {
 				onChangeText={setPassword}
 				secureTextEntry
 			/>
-			<Button title="Log In" color={"green"} onPress={handleSubmit} />
+			<TouchableOpacity
+				style={[styles.customButton, { backgroundColor: "green" }]}
+				onPress={handleSubmit}
+				activeOpacity={0.7}
+			>
+				<Text style={styles.customButtonText}>
+					{"Submit"}
+				</Text>
+			</TouchableOpacity>
+			
 		</View>
 	);
 };
@@ -64,10 +73,10 @@ const LoginPage = ({ navigation }) => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		justifyContent: 'flex-start', 
+		justifyContent: 'flex-start',
 		alignItems: 'center',
-		paddingTop: 100, 
-		paddingHorizontal: 20, 
+		paddingTop: 100,
+		paddingHorizontal: 20,
 	},
 	input: {
 		width: '100%',
@@ -79,10 +88,26 @@ const styles = StyleSheet.create({
 	},
 	greenWorkplaceText: {
 		fontSize: 30,
-		marginBottom: 80, 
+		marginBottom: 80,
 	},
 	loginText: {
 		fontSize: 15,
+	},
+	customButton: {
+		backgroundColor: 'green',
+		paddingVertical: 10,
+		paddingHorizontal: 20,
+		borderRadius: 5,
+		alignItems: 'center',
+		justifyContent: 'center',
+		elevation: 2,
+		marginTop: 10,
+		marginBottom: 10,
+	},
+
+	customButtonText: {
+		color: '#ffffff',
+		fontSize: 16,
 	},
 });
 
