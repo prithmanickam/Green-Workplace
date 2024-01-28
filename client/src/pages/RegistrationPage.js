@@ -12,12 +12,36 @@ import Card from "@mui/material/Card";
 import { useParams } from "react-router-dom";
 import TopNavbar from '../components/TopNavbar';
 import { baseURL } from "../utils/constant";
+import LinearProgress from '@mui/material/LinearProgress';
+import { styled } from '@mui/material/styles';
+
+const CapsLockWarning = styled(Typography)(({ theme }) => ({
+	color: theme.palette.warning.main,
+	fontSize: '0.8rem',
+	marginTop: '4px',
+}));
+
+const StrengthLabel = styled(Typography)(({ theme }) => ({
+	fontSize: '0.8rem',
+	fontWeight: 500,
+	marginTop: '4px',
+	marginBottom: '8px',
+}));
+
+const getPasswordStrengthProps = (strength) => {
+	if (strength < 40) return { color: 'error', label: 'Weak' };
+	if (strength < 60) return { color: 'warning', label: 'Medium' };
+	if (strength < 80) return { color: 'info', label: 'Good' };
+	return { color: 'success', label: 'Strong' };
+};
 
 export default function Registration() {
 	const { registrationtoken } = useParams(); // Get registration token from URL
 	const [email, setEmail] = useState("");
 	const [company, setCompany] = useState("");
 	const [office, setOffice] = useState("");
+	const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+	const [passwordStrength, setPasswordStrength] = useState("");
 
 	useEffect(() => {
 		// Fetch the user's email using the registration token
@@ -86,6 +110,29 @@ export default function Registration() {
 					}
 				});
 		}
+	};
+
+	const handlePasswordChange = (e) => {
+		const password = e.target.value;
+		const strength = calculateStrength(password);
+		setPasswordStrength(strength);
+	};
+
+
+	const checkCapsLock = (e) => {
+		const isCapsLock = e.getModifierState("CapsLock");
+		setIsCapsLockOn(isCapsLock);
+	};
+
+
+	const calculateStrength = (password) => {
+		let strength = 0;
+		if (password.length > 5) strength += 20;
+		if (/[a-z]/.test(password)) strength += 20;
+		if (/[A-Z]/.test(password)) strength += 20;
+		if (/\d/.test(password)) strength += 20;
+		if (/[^A-Za-z0-9]/.test(password)) strength += 20;
+		return strength;
 	};
 
 	return (
@@ -179,6 +226,8 @@ export default function Registration() {
 										type="password"
 										id="password"
 										autoComplete="new-password"
+										onChange={handlePasswordChange}
+										onKeyUp={checkCapsLock}
 									/>
 								</Grid>
 								<Grid item xs={12}>
@@ -193,6 +242,19 @@ export default function Registration() {
 									/>
 								</Grid>
 							</Grid>
+							{isCapsLockOn && (
+								<CapsLockWarning>
+									Caps Lock is on
+								</CapsLockWarning>
+							)}
+							<StrengthLabel style={{ color: getPasswordStrengthProps(passwordStrength).color }}>
+								Password Strength: {getPasswordStrengthProps(passwordStrength).label}
+							</StrengthLabel>
+							<LinearProgress
+								variant="determinate"
+								value={passwordStrength}
+								color={getPasswordStrengthProps(passwordStrength).color}
+							/>
 							<Button
 								type="submit"
 								fullWidth

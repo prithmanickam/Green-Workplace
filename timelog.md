@@ -315,6 +315,9 @@
 ### 23 Jan 2023
 * *6 hours* Improved UI of Mobile app - Added Dark Mode and Fixed dropdown buttons.
 
-### 23 Jan 2023
+### 25 Jan 2023
 * *5 hours* Improved UI of Mobile app - Padding, colour, layout, also works for iOS.
+
+### 28 Jan 2023
+* *1 hour* Added Password Strength and Caps Lock signals
 
