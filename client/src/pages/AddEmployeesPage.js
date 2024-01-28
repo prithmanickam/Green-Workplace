@@ -16,7 +16,8 @@ import TablePagination from '@mui/material/TablePagination';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
-import { Select, MenuItem, FormControl, InputLabel, Stack } from '@mui/material';
+import { Select, MenuItem, FormControl, InputLabel, Stack, Typography } from '@mui/material';
+import LinearProgress from '@mui/material/LinearProgress';
 import useAuth from '../hooks/useAuth';
 
 export default function AddEmployees() {
@@ -26,6 +27,10 @@ export default function AddEmployees() {
   const [offices, setOffices] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(8);
+  const [showUndo, setShowUndo] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [progress, setProgress] = useState(100);
+  const [sendDelay, setSendDelay] = useState(null);
   const { userData } = useUser();
 
   useAuth(["Admin"]);
@@ -104,29 +109,67 @@ export default function AddEmployees() {
   };
 
   // Send registration emails to emails that were entered in the input box
-  const handleAddEmails = () => {
-    const emails = emailInput.split(',').map((email) => email.trim());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress((prevProgress) => (prevProgress > 0 ? prevProgress - 0.5 : 0));
+    }, 23);
 
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
+
+  const handleAddEmails = () => {
+    if (!emailInput.trim()) {
+      toast.error("Please enter at least one email address.");
+      return;
+    }
+
+    const emails = emailInput.split(',').map(email => email.trim());
+
+    setShowUndo(true);
+    setProgress(100);
+    setTimeLeft(5); // 5 seconds countdown
+
+    const delay = setTimeout(() => {
+      setShowUndo(false);
+      sendEmails(emails);
+    }, 5000);
+
+    const countdown = setInterval(() => {
+      setTimeLeft((t) => t > 0 ? t - 1 : 0);
+    }, 1000);
+
+    setTimeout(() => clearInterval(countdown), 5000);
+
+    setSendDelay(delay);
+  };
+
+  const sendEmails = (emails) => {
     fetch(`${baseURL}/sendRegistrationEmails`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ emails, company: userData.company_id, office: selectedOffice }), // Send the list of emails to the server
+      body: JSON.stringify({ emails, company: userData.company_id, office: selectedOffice }),
     })
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         if (data.status === "ok") {
           toast.success("Registration emails sent successfully!");
         } else {
           toast.error("Failed to send registration emails. Please try again.");
         }
       })
-      .catch((error) => {
+      .catch(error => {
         toast.error("An error occurred while sending registration emails.");
       });
-
     setEmailInput('');
+  };
+
+  const handleUndo = () => {
+    clearTimeout(sendDelay);
+    setShowUndo(false);
   };
 
 
@@ -163,15 +206,37 @@ export default function AddEmployees() {
                       </Select>
                     </FormControl>
                   </Stack>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleAddEmails}
-                    sx={{ marginTop: '16px' }}
-                  >
-                    Send
-                  </Button>
+                  <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={6}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleAddEmails}
+                      sx={{ marginTop: '16px' }}
+                    >
+                      Send
+                    </Button>
 
+                  </Grid>
+                  <Grid item xs={6} textAlign="right">
+                    {showUndo && (
+                      <>
+                        <Button
+                          variant="contained"
+                          color="warning"
+                          onClick={handleUndo}
+                          sx={{ marginTop: '16px', marginBottom:'16px'  }}
+                        >
+                          Undo
+                        </Button>
+                        <LinearProgress variant="determinate" value={progress} />
+                        <Typography>
+                          Sending in {timeLeft} seconds...
+                        </Typography>
+                      </>
+                    )}
+                  </Grid>
+                  </Grid>
                 </CardContent>
               </Card>
             </Grid>
