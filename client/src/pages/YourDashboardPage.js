@@ -173,10 +173,10 @@ export default function YourDashboard() {
               <Card sx={{ height: '100%', backgroundImage: gradient }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <Typography variant="h6" paragraph>
-                    Your Total Weekly Commuting Carbon Footprint:
+                    Your Total Commuting Carbon Footprint This Week:
                   </Typography>
                   <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {dashboardData.totalCarbonFootprint} kg CO2
+                    {dashboardData.totalCarbonFootprint} kg CO2e
                   </Typography>
                   <IconButton
                     onClick={handleInfoPopoverOpen}
@@ -246,7 +246,7 @@ export default function YourDashboard() {
                           Team Owner: {team.firstname} {team.lastname}
                         </Typography>
                         <Typography variant="body1" style={{ marginBottom: '8px' }}>
-                          Your Carbon Footprint: {carbonFootprint} kg CO2
+                          Your Carbon Footprint: {carbonFootprint} kg CO2e
                         </Typography>
                         <Typography variant="body1" style={{ marginBottom: '8px' }}>
                           Your Work At Office Preference: {confirmedPreferences[team.teamId] ? confirmedPreferences[team.teamId].join(', ') : 'None selected'}

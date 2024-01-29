@@ -219,7 +219,7 @@ export default function TeamDashboard() {
                     This Weeks Teams Average Commuting Carbon Footprint:
                   </Typography>
                   <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {teamDashboardData.carbon_footprint_metric} kg CO2
+                    {teamDashboardData.carbon_footprint_metric} kg CO2e
                   </Typography>
                   <IconButton
                     onClick={handleInfoPopoverOpen}
@@ -303,7 +303,7 @@ export default function TeamDashboard() {
                                 Email: {teamMember.email}
                               </Typography>
                               <Typography variant="body1" style={{ marginBottom: '8px' }}>
-                                Weekly Carbon Footprint: {teamMember.carbon_footprint} kg CO2
+                                Weekly Carbon Footprint: {teamMember.carbon_footprint} kg CO2e
                               </Typography>
                               <Typography variant="body1" style={{ marginBottom: '8px' }}>
                                 Work At Office preference: {teamMember.wao_preference ? teamMember.wao_preference.join(', ') : 'Not specified'}

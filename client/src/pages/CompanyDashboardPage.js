@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
 import CustomLineChart from '../components/CustomLineChart';
+import CustomBarChart from '../components/CustomBarChart';
+import CustomPieChart from '../components/CustomPieChart';
 import CarbonStandardPopover from '../components/CarbonStandardPopover';
-import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import Popover from '@mui/material/Popover';
 import InfoIcon from '@mui/icons-material/Info';
+import ViewCompactIcon from '@mui/icons-material/ViewCompact';
+import ViewSummaryIcon from '@mui/icons-material/ViewQuilt';
+import ForestIcon from '@mui/icons-material/Forest';
 import { baseURL } from "../utils/constant";
 import { getGradientColors } from "../utils/gradientConstants";
 import { useUser } from '../context/UserContext';
 import { toast } from "react-toastify";
-import { BarChart } from '@mui/x-charts/BarChart';
 import "../App.css";
 import useAuth from '../hooks/useAuth';
 import useCompanyCarbonStandard from '../hooks/useCompanyCarbonStandard';
+
 
 export default function CompanyDashboard() {
   const { userData } = useUser();
   const [companyData, setCompanyData] = useState({});
   const [totalCompanyEmployees, setTotalCompanyEmployees] = useState();
+  const [totalCarbonFootprint, setTotalCarbonFootprint] = useState();
   const { green_gradient, amber_gradient, red_gradient } = getGradientColors();
   const [gradient, setGradient] = useState('');
   const [teamsData, setTeamsData] = useState([]);
@@ -29,13 +35,14 @@ export default function CompanyDashboard() {
   const [sortBy, setSortBy] = useState('carbonFootprintAverage');
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
-  const [lineChartLength, setLineChartLength] = useState('week');
   const [barChartData, setBarChartData] = useState({});
   const [selectedOffice, setSelectedOffice] = useState('');
   const [officeChartData, setOfficeChartData] = useState([0, 0, 0, 0, 0]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(8);
   const { companyCarbonStandard } = useCompanyCarbonStandard(userData?.company_id);
+  const [dashboardMode, setDashboardMode] = useState('summary');
+  const [continentAverages, setContinentAverages] = useState({});
 
   useAuth(["Admin", "Employee"]);
 
@@ -58,6 +65,12 @@ export default function CompanyDashboard() {
     setInfoPopoverAnchorEl(null);
   };
 
+  const handleModeChange = (event, newMode) => {
+    if (newMode !== null) {
+      setDashboardMode(newMode);
+    }
+  };
+
   useEffect(() => {
     if (userData) {
       fetch(`${baseURL}/getCompanyDashboardData`, {
@@ -74,6 +87,10 @@ export default function CompanyDashboard() {
           if (data.status === "ok") {
             setCompanyData(data.companyInfo);
             setTotalCompanyEmployees(data.userCount)
+            setContinentAverages(data.continentAverages)
+            console.log(data.continentAverages)
+            console.log("hi")
+            setTotalCarbonFootprint(data.totalCompanyCarbonFootprint)
             setTeamsData(data.teamsInfo);
             const sortedByCarbonFootprint = [...data.teamsInfo].sort((a, b) => sortOrder === 'asc' ? parseFloat(a.carbonFootprintAverage) - parseFloat(b.carbonFootprintAverage) : parseFloat(b.carbonFootprintAverage) - parseFloat(a.carbonFootprintAverage));
             setSortedTeamsData(sortedByCarbonFootprint);
@@ -148,10 +165,6 @@ export default function CompanyDashboard() {
     setSelectedOffice(event.target.value);
   };
 
-  const handleLineChartLengthChange = (length) => {
-    setLineChartLength(length);
-  };
-
   const handleSortChange = (event) => {
     const sortKey = event.target.value;
     setSortBy(sortKey);
@@ -184,45 +197,46 @@ export default function CompanyDashboard() {
     <Box sx={{ display: 'flex' }}>
       <SideNavbar />
       <Box component="main" sx={{ flexGrow: 1, py: 10, px: 5, display: 'flex', flexDirection: 'column' }}>
-        <h1>Company Dashboard </h1>
-        <div style={{ flex: 1, display: 'flex' }}>
+        <Grid container justifyContent="space-between" alignItems="center">
+          <Grid item>
+            <h1>Company Dashboard</h1>
+          </Grid>
+          <Grid item>
+            <Grid item>
+              <ToggleButtonGroup
+                value={dashboardMode}
+                exclusive
+                onChange={handleModeChange}
+                aria-label="dashboard mode"
+              >
+                <ToggleButton value="summary" aria-label="summary mode">
+                  <ViewSummaryIcon />
+                </ToggleButton>
+                <ToggleButton value="compact" aria-label="compact mode">
+                  <ViewCompactIcon />
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        {dashboardMode === 'summary' ? (
+          // Render summary version (3 cards)
           <Grid container spacing={3}>
-            {/* First row */}
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
 
-                  <BarChart
-                    xAxis={[{ scaleType: 'band', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], label: 'Days' }]}
-                    series={[{
-                      data: officeChartData,
-                      color: '#eed202',
-                      label: 'No. of Employees in Office',
-                    }]}
-                    width={300}
-                    height={200}
+                  <CustomBarChart
+                    officeChartData={officeChartData}
+                    selectedOffice={selectedOffice}
+                    handleOfficeChange={handleOfficeChange}
+                    offices={Object.keys(barChartData)}
                   />
-
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Typography variant="h8" paragraph>
-                      Select Office:
-                    </Typography>
-
-                    <Select
-                      value={selectedOffice}
-                      onChange={handleOfficeChange}
-                    >
-
-                      {Object.keys(barChartData).map((office) => (
-                        <MenuItem key={office} value={office}>{office}</MenuItem>
-                      ))}
-                    </Select>
-
-                  </Stack>
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Card sx={{ height: '100%', backgroundImage: gradient }} >
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <Typography variant="h6" paragraph>
@@ -236,10 +250,10 @@ export default function CompanyDashboard() {
                   </Typography>
 
                   <Typography variant="h7" paragraph>
-                    Company Average Weekly Commuting Carbon Footprint:
+                  Company Average Commuting Carbon Footprint Per Employee this Week:
                   </Typography>
                   <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {companyData.averageCarbonFootprint} kg CO2
+                    {companyData.averageCarbonFootprint} kg CO2e
                   </Typography>
                   <IconButton
                     onClick={handleInfoPopoverOpen}
@@ -251,47 +265,131 @@ export default function CompanyDashboard() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <CustomLineChart
                     type="company"
-                    lineChartLength={lineChartLength}
+                    lineChartLength={"week"}
                     userData={userData}
                     team_id={0}
                   />
-                  <div>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleLineChartLengthChange('week')}
-                      style={{
-                        borderColor: lineChartLength === 'week' ? '#02B2AF' : 'grey',
-                        color: lineChartLength === 'week' ? '#02B2AF' : 'grey',
-                        marginRight: '10px'
-                      }}
-                    >
-                      Week
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleLineChartLengthChange('month')}
-                      style={{
-                        borderColor: lineChartLength === 'month' ? '#02B2AF' : 'grey',
-                        color: lineChartLength === 'month' ? '#02B2AF' : 'grey'
-                      }}
-                    >
-                      Month
-                    </Button>
-                  </div>
+
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        ) : (
+          // Render detailed version (6 cards)
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card sx={{ height: '100%' }} >
+                <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
+                  <Typography variant="h6" paragraph>
+                    Company Info:
+                  </Typography>
+                  <Typography variant="h7" paragraph style={{ marginBottom: '4px' }}>
+                    Name: {companyData.name}
+                  </Typography>
+                  <Typography variant="h7" paragraph style={{}}>
+                    No. of Employees: {totalCompanyEmployees}
+                  </Typography>
+
+
                 </CardContent>
               </Card>
             </Grid>
 
+            <Grid item xs={12} sm={6} md={4}>
+              <Card sx={{ height: '100%', backgroundImage: gradient }} >
+                <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
+
+                  <Typography variant="h7" paragraph>
+                    Company Average Commuting Carbon Footprint Per Employee this Week:
+                  </Typography>
+                  <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
+                    {companyData.averageCarbonFootprint} kg CO2e
+                  </Typography>
+                  <IconButton
+                    onClick={handleInfoPopoverOpen}
+                    aria-label="info"
+                    style={{ marginLeft: '10px' }}
+                  >
+                    <InfoIcon />
+                  </IconButton>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <Card sx={{ height: '100%' }} >
+                <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
+                  <Typography variant="h7" paragraph>
+                    Company Total Commuting Carbon Footprint this Week:
+                  </Typography>
+                  <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
+                    {totalCarbonFootprint.toFixed(2)} kg CO2e
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2 }}>
+                    <Typography style={{ fontSize: '0.9rem', marginRight: '8px' }}>
+                      Requires approximately
+                    </Typography>
+                    <ForestIcon />
+                    <Typography style={{ fontSize: '0.9rem', marginLeft: '8px' }}>
+                      {(totalCarbonFootprint / 22).toFixed(1)} trees to offset
+                    </Typography>
+                  </Box>
+
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent style={{ minHeight: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+
+                  <CustomBarChart
+                    officeChartData={officeChartData}
+                    selectedOffice={selectedOffice}
+                    handleOfficeChange={handleOfficeChange}
+                    offices={Object.keys(barChartData)}
+                  />
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <Card sx={{ height: '100%' }}>
+                <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
+                  <CustomLineChart
+                    type="company"
+                    lineChartLength={"week"}
+                    userData={userData}
+                    team_id={0}
+                  />
+
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card sx={{ height: '100%' }} >
+                <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
+                  <Typography variant="h7" paragraph>
+                    CO2e Distribution by Region:
+
+                  </Typography>
+                  <CustomPieChart data={continentAverages} />
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )}
+
+        <div style={{ flex: 1, display: 'flex' }}>
+          <Grid container spacing={3}>
+
             {/* Second row */}
-            <Grid item xs={12}>
-              <Typography variant="h6" >
+            <Grid item xs={12} >
+              <Typography variant="h6" sx={{ paddingTop: '10px' }}>
                 Teams:
               </Typography>
               <Stack direction="row" spacing={2} py={2} alignItems="center">
@@ -365,7 +463,6 @@ export default function CompanyDashboard() {
                     onPageChange={handleChangePage}
                     onRowsPerPageChange={handleChangeRowsPerPage}
                   />
-
                 </TableContainer>
               </Grid>
             </Grid>
@@ -385,7 +482,7 @@ export default function CompanyDashboard() {
           horizontal: 'left',
         }}
       >
-         <CarbonStandardPopover
+        <CarbonStandardPopover
           companyCarbonStandard={companyCarbonStandard}
           greenGradient={green_gradient}
           amberGradient={amber_gradient}

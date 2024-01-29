@@ -297,7 +297,6 @@ module.exports.getCompanyDashboardData = async (req, res) => {
 
   try {
 
-
     const { data: teams, getTeamsError } = await supabase
       .from("Team")
       .select(`
@@ -317,18 +316,16 @@ module.exports.getCompanyDashboardData = async (req, res) => {
     let totalCompanyCarbonFootprint = 0;
     let totalCompanyMembers = 0;
 
+    let continentData = {};
+
     for (const team of teams) {
-      // Calculate the carbon footprint sum for this team
       const carbonFootprintSum = team.Team_Member.reduce((sum, member) => {
-        const daySum = member.monday_cf + member.tuesday_cf + member.wednesday_cf + member.thursday_cf + member.friday_cf;
-        return sum + daySum;
+        return sum + member.monday_cf + member.tuesday_cf + member.wednesday_cf + member.thursday_cf + member.friday_cf;
       }, 0);
 
-      // Calculate the carbon footprint average
       const totalMembers = team.Team_Member.length;
       const carbonFootprintAverage = totalMembers > 0 ? (carbonFootprintSum / totalMembers).toFixed(2) : 'N/A';
 
-      // Team information object
       const teamInfo = {
         id: team.id,
         name: team.name,
@@ -341,12 +338,20 @@ module.exports.getCompanyDashboardData = async (req, res) => {
 
       teamsInfo.push(teamInfo);
 
-      // Update company-wide totals
       totalCompanyCarbonFootprint += carbonFootprintSum;
       totalCompanyMembers += totalMembers;
+
+      const division = team.divisions || "";
+      const continent = division.split('/')[0] || "Unknown";
+
+      if (!continentData[continent]) {
+        continentData[continent] = { totalFootprint: 0, totalMembers: 0 };
+      }
+
+      continentData[continent].totalFootprint += carbonFootprintSum;
+      continentData[continent].totalMembers += totalMembers;
     }
 
-    // Calculate the average and total carbon footprint for the entire company
     const averageCompanyCarbonFootprint = totalCompanyMembers > 0 ? (totalCompanyCarbonFootprint / totalCompanyMembers).toFixed(2) : 'N/A';
 
     const companyInfo = {
@@ -360,18 +365,24 @@ module.exports.getCompanyDashboardData = async (req, res) => {
       .select("name")
       .eq("id", company_id);
 
-    companyInfo.name = companyName[0].name
+    if (companyName && companyName.length > 0) {
+      companyInfo.name = companyName[0].name;
+    }
 
     const { count: userCount } = await supabase
-    .from("User")
-    .select("id", { count: 'exact' })  
-    .neq("type", "Admin")
-    .eq("company_id", company_id);
+      .from("User")
+      .select("id", { count: 'exact' })
+      .neq("type", "Admin")
+      .eq("company_id", company_id);
 
-    res.status(200).json({ status: "ok", teamsInfo, companyInfo, userCount });
+    const continentAverages = {};
+    for (const [continent, data] of Object.entries(continentData)) {
+      continentAverages[continent] = data.totalMembers > 0 ? (data.totalFootprint / data.totalMembers).toFixed(2) : 'N/A';
+    }
+
+    res.status(200).json({ status: "ok", teamsInfo, companyInfo, userCount, totalCompanyCarbonFootprint, continentAverages });
   } catch (error) {
     console.log(error);
     res.status(500).json({ status: "error" });
   }
 };
-

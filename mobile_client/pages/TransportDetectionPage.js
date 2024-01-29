@@ -955,7 +955,7 @@ export default function TransportDetectionPage() {
 									/>
 								)}
 								<Text style={styles.entryText}>
-									{entry.mode} - {entry.time} - {typeof entry.distance === 'number' ? entry.distance.toFixed(1) : 'N/A'}m - {entry.carbonFootprint} kg CO2
+									{entry.mode} - {entry.time} - {typeof entry.distance === 'number' ? entry.distance.toFixed(1) : 'N/A'}m - {entry.carbonFootprint} kg CO2e
 								</Text>
 								<Icon
 									name="trash"
@@ -968,7 +968,7 @@ export default function TransportDetectionPage() {
 
 						<View style={styles.totalContainer}>
 							<Text style={styles.totalText}>
-								Total Carbon Footprint: {sameReturnJourney === "Yes" ? "(x2) " + (totalCarbonFootprint * 2) : totalCarbonFootprint} kg CO2
+								Total Carbon Footprint: {sameReturnJourney === "Yes" ? "(x2) " + (totalCarbonFootprint * 2) : totalCarbonFootprint} kg CO2e
 							</Text>
 
 							<Text style={styles.totalText}>
@@ -995,7 +995,7 @@ export default function TransportDetectionPage() {
 									useNativeAndroidPickerStyle={false}
 								/>
 								<Text style={styles.teamFootprint}>
-									Carbon Footprint: {calculateTeamCarbonFootprint(team.teamName)} kg CO2
+									Carbon Footprint: {calculateTeamCarbonFootprint(team.teamName)} kg CO2e
 								</Text>
 							</View>
 						))}

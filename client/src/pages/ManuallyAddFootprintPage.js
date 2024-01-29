@@ -392,7 +392,7 @@ export default function ManuallyAddFootprint() {
                         sx={{ marginRight: 2 }}
                       />
                       <Typography sx={{ marginRight: 2 }}>
-                        {entry.carbonFootprint} kg CO2
+                        {entry.carbonFootprint} kg CO2e
                       </Typography>
                       <IconButton onClick={() => deleteEntry(index)}>
                         <DeleteIcon />
@@ -418,7 +418,7 @@ export default function ManuallyAddFootprint() {
             </Grid>
           </Grid>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 2 }}>
-            <h2> Total Carbon Footprint: {carbonFootprint} kg CO2, Total Duration: {totalDuration}</h2>
+            <h2> Total Carbon Footprint: {carbonFootprint} kg CO2e, Total Duration: {totalDuration}</h2>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 300, marginTop: 1 }}>
               <Button variant="contained" color="success" onClick={handleSubmit}>

@@ -179,7 +179,7 @@ export default function SetCarbonFootprint() {
                             Duration: {totalStats[card.day].duration}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Carbon Footprint: {totalStats[card.day].carbon_footprint} kg CO2
+                            Carbon Footprint: {totalStats[card.day].carbon_footprint} kg CO2e
                           </Typography>
                         </>
                       )}

@@ -196,38 +196,38 @@ module.exports.getCarbonFootprint = async (req, res) => {
         .eq("user_id", user_id)
 
       if (teamInfo[0].monday_cf) {
-        stats.Monday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].monday_cf + 'kg CO2'));
+        stats.Monday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].monday_cf + 'kg CO2e'));
         totalStats["Monday"]["carbon_footprint"] += teamInfo[0].monday_cf;
       } else {
-        stats.Monday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
+        stats.Monday.push(teamInfo[0].Team.name + ': ' + "0kg CO2e")
       }
 
       if (teamInfo[0].tuesday_cf) {
-        stats.Tuesday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].tuesday_cf + 'kg CO2'));
+        stats.Tuesday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].tuesday_cf + 'kg CO2e'));
         totalStats["Tuesday"]["carbon_footprint"] += teamInfo[0].tuesday_cf;
       } else {
-        stats.Tuesday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
+        stats.Tuesday.push(teamInfo[0].Team.name + ': ' + "0kg CO2e")
       }
 
       if (teamInfo[0].wednesday_cf) {
-        stats.Wednesday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].wednesday_cf + 'kg CO2'));
+        stats.Wednesday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].wednesday_cf + 'kg CO2e'));
         totalStats["Wednesday"]["carbon_footprint"] += teamInfo[0].wednesday_cf;
       } else {
-        stats.Wednesday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
+        stats.Wednesday.push(teamInfo[0].Team.name + ': ' + "0kg CO2e")
       }
 
       if (teamInfo[0].thursday_cf) {
-        stats.Thursday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].thursday_cf + 'kg CO2'));
+        stats.Thursday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].thursday_cf + 'kg CO2e'));
         totalStats["Thursday"]["carbon_footprint"] += teamInfo[0].thursday_cf;
       } else {
-        stats.Thursday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
+        stats.Thursday.push(teamInfo[0].Team.name + ': ' + "0kg CO2e")
       }
 
       if (teamInfo[0].friday_cf) {
-        stats.Friday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].friday_cf + 'kg CO2'));
+        stats.Friday.push(teamInfo[0].Team.name + ': ' + (teamInfo[0].friday_cf + 'kg CO2e'));
         totalStats["Friday"]["carbon_footprint"] += teamInfo[0].friday_cf;
       } else {
-        stats.Friday.push(teamInfo[0].Team.name + ': ' + "0kg CO2")
+        stats.Friday.push(teamInfo[0].Team.name + ': ' + "0kg CO2e")
       }
     }
 

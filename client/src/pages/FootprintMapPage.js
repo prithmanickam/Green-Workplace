@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopNavbar from '../components/TopNavbar';
-import { Card, CardContent, Typography, Box, TextField, Button, Stack, ToggleButton, ToggleButtonGroup, Grid, Divider } from '@mui/material';
+import { Card, CardContent, Typography, Box, TextField, Button, Stack, ToggleButton, ToggleButtonGroup, Grid, Divider, IconButton } from '@mui/material';
 import DriveIcon from '@mui/icons-material/DriveEta';
 import WalkIcon from '@mui/icons-material/DirectionsWalk';
 import BicycleIcon from '@mui/icons-material/DirectionsBike';
 import TransitIcon from '@mui/icons-material/DirectionsTransit';
 import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
+import Collapse from '@mui/material/Collapse';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { ThemeContext } from '../context/ThemeContext';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -76,13 +79,18 @@ function FootprintMapPage() {
   const [transitDistances, setTransitDistances] = useState({});
   const [totalPercentage, setTotalPercentage] = useState(0);
   const { teams } = useUserTeamsData(userData?.id);
+  const [teamFieldsOpen, setTeamFieldsOpen] = useState(true);
+
+  const handleToggleTeamFields = () => {
+    setTeamFieldsOpen(!teamFieldsOpen);
+  };
 
   const originRef = useRef();
   const destiantionRef = useRef();
 
   useAuth(["Employee"]);
 
-  
+
   const calculateCarbonFootprint = useCallback((distance, travelMode) => {
 
     if (travelMode === 'DRIVING') {
@@ -97,7 +105,7 @@ function FootprintMapPage() {
       totalCarbonFootprint += transitDistances.subway * CO2_EMISSIONS_PER_METER.Subway;
       totalCarbonFootprint += transitDistances.tram * CO2_EMISSIONS_PER_METER.Tram;
 
-      const carbonFootprint = totalCarbonFootprint*2;
+      const carbonFootprint = totalCarbonFootprint * 2;
       return carbonFootprint.toFixed(2);
 
     } else {
@@ -211,7 +219,7 @@ function FootprintMapPage() {
               case 'SUBWAY': // represents metro or underground tubes
                 totalSubwayDistance += stepDistance;
                 break;
-              case 'TRAM': 
+              case 'TRAM':
                 totalTramDistance += stepDistance;
                 break;
               default:
@@ -520,7 +528,7 @@ function FootprintMapPage() {
                   <Divider />
                 </Box>
                 <Typography style={{ fontSize: '15px' }}>Carbon Footprint:</Typography>
-                <Typography style={{ fontSize: '15px', fontWeight: 'bold' }}>{carbonFootprint} kg CO2</Typography>
+                <Typography style={{ fontSize: '15px', fontWeight: 'bold' }}>{carbonFootprint} kg CO2e</Typography>
               </Grid>
               <Grid item xs={3} container justifyContent="flex-end">
                 <EnergySavingsLeafIcon sx={{ color: leafIconColour, fontSize: 30 }} />
@@ -582,17 +590,22 @@ function FootprintMapPage() {
         >
           <Card>
             <CardContent>
-              <Typography sx={{ fontSize: '10.7px' }}>For the day you selected, enter the percent of time you spend between your teams in the office.</Typography>
-              <Typography></Typography>
-              <Box flexGrow={1}>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography sx={{ fontSize: '10.7px' }}>
+                  For the day you selected, enter the percent of time you spend between your teams in the office.
+                </Typography>
+                <IconButton onClick={handleToggleTeamFields}>
+                  {teamFieldsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </IconButton>
+              </Box>
+              <Collapse in={teamFieldsOpen}>
                 <TeamFields
                   teams={teams}
                   teamPercentages={teamPercentages}
                   handleTeamPercentageChange={handleTeamPercentageChange}
                   carbonFootprint={carbonFootprint}
                 />
-
-              </Box>
+              </Collapse>
             </CardContent>
           </Card>
         </Box>

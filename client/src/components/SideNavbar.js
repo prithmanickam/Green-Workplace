@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
@@ -30,6 +30,8 @@ import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 import ChatIcon from '@mui/icons-material/Chat';
 import AppsIcon from '@mui/icons-material/Apps';
 import BusinessIcon from '@mui/icons-material/Business';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const drawerWidth = 240;
 
@@ -88,7 +90,11 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 );
 
 export default function SideNavbar() {
-  const [open, setOpen] = React.useState(true);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [open, setOpen] = useState(!isMobile);
+
+  
   const [selectedRoute, setSelectedRoute] = React.useState('/homepage');
   const navigate = useNavigate();
   const { mode, toggleMode } = React.useContext(ThemeContext)
@@ -103,6 +109,12 @@ export default function SideNavbar() {
   if (userData && userData.type === 'Admin') {
     menuItems = adminMenuItems;
   }
+  
+  // Automatically collapse/expand the drawer based on screen size
+  useEffect(() => {
+    setOpen(!isMobile); 
+  }, [isMobile]);
+
 
   const handleMenuItemClick = (route) => {
     setSelectedRoute(route);
