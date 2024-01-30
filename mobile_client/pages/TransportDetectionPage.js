@@ -595,6 +595,7 @@ export default function TransportDetectionPage() {
 
 	// Algorithm to predict overall journey from the transport predicted data
 	const getPrimaryTransportModes = (modes) => {
+		
 		if (!modes || modes.length === 0) {
 			return []; // Return an empty array if no valid modes are provided
 		}
@@ -652,7 +653,7 @@ export default function TransportDetectionPage() {
 			addSummaryEntry(mostCommonMode, startTime, modes[modes.length - 1].time, totalDistance);
 		}
 
-		return summary;
+		return summary.reverse();
 	};
 
 	// Function to calculate the duration between two times in HH:MM format
