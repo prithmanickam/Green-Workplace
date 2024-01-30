@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
 import CustomLineChart from '../components/CustomLineChart';
 import CarbonStandardPopover from '../components/CarbonStandardPopover';
-import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, Button, TablePagination } from '@mui/material';
+import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, TablePagination } from '@mui/material';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
 import { baseURL } from "../utils/constant";
@@ -28,7 +28,6 @@ export default function TeamDashboard() {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [userTeams, setUserTeams] = useState([]);
-  const [lineChartLength, setLineChartLength] = useState('week');
   const { companyCarbonStandard } = useCompanyCarbonStandard(userData?.company_id);
   const { green_gradient, amber_gradient, red_gradient } = getGradientColors();
   const [gradient, setGradient] = useState('');
@@ -36,7 +35,6 @@ export default function TeamDashboard() {
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(8);
-
 
 
   useAuth(["Employee"]);
@@ -93,10 +91,6 @@ export default function TeamDashboard() {
         });
     }
   }, [userData, selectedTeam]);
-
-  const handleLineChartLengthChange = (length) => {
-    setLineChartLength(length);
-  };
 
   useEffect(() => {
     if (selectedTeamId) {
@@ -238,37 +232,12 @@ export default function TeamDashboard() {
                     selectedTeamId && userData && (
                       <CustomLineChart
                         type="team"
-                        lineChartLength={lineChartLength}
+                        lineChartLength={"week"}
                         userData={userData}
                         team_id={selectedTeamId}
                       />
                     )
                   }
-                  <div>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleLineChartLengthChange('week')}
-                      style={{
-                        borderColor: lineChartLength === 'week' ? '#02B2AF' : 'grey',
-                        color: lineChartLength === 'week' ? '#02B2AF' : 'grey',
-                        marginRight: '10px'
-                      }}
-                    >
-                      Week
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleLineChartLengthChange('month')}
-                      style={{
-                        borderColor: lineChartLength === 'month' ? '#02B2AF' : 'grey',
-                        color: lineChartLength === 'month' ? '#02B2AF' : 'grey'
-                      }}
-                    >
-                      Month
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
             </Grid>

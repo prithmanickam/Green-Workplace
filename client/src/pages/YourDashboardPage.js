@@ -21,7 +21,6 @@ export default function YourDashboard() {
   const [gradient, setGradient] = useState('');
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
-  const [lineChartLength, setLineChartLength] = useState('week');
   const { companyCarbonStandard } = useCompanyCarbonStandard(userData?.company_id);
 
   useAuth(["Employee"]);
@@ -32,11 +31,6 @@ export default function YourDashboard() {
 
   const handleInfoPopoverClose = () => {
     setInfoPopoverAnchorEl(null);
-  };
-
-  const handleLineChartLengthChange = (length) => {
-    console.log("pressed")
-    setLineChartLength(length);
   };
 
   useEffect(() => {
@@ -194,35 +188,10 @@ export default function YourDashboard() {
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <CustomLineChart
                     type="user"
-                    lineChartLength={lineChartLength}
+                    lineChartLength={"week"}
                     userData={userData}
                     team_id={0}
                   />
-                  <div>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleLineChartLengthChange('week')}
-                      style={{
-                        borderColor: lineChartLength === 'week' ? '#02B2AF' : 'grey',
-                        color: lineChartLength === 'week' ? '#02B2AF' : 'grey',
-                        marginRight: '10px'
-                      }}
-                    >
-                      Week
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleLineChartLengthChange('month')}
-                      style={{
-                        borderColor: lineChartLength === 'month' ? '#02B2AF' : 'grey',
-                        color: lineChartLength === 'month' ? '#02B2AF' : 'grey'
-                      }}
-                    >
-                      Month
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
             </Grid>
