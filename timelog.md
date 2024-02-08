@@ -321,10 +321,11 @@
 ### 28 Jan 2023
 * *1 hour* Added Password Strength and Caps Lock signals
 * *1 hour* Undo send for Add Employees Page
-* *8 hour* Added more detailed Dashboard View. Fixed Typos, Bugs, UI Improvement
+* *8 hours* Added more detailed Dashboard View. Fixed Typos, Bugs, UI Improvement
 
 ### 7 February 2023
-* *5 hour* Started UI/Graphics improvements to web app
+* *5 hours* Started UI/Graphics improvements to web app
 
 ### 8 February 2023
-* *5 hour* Completed UI/Graphics improvements to web app
+* *5 hours* Completed UI/Graphics improvements to web app
+* *1 hour* Added Help/Documentation Button to Mobile app and fixed UI further

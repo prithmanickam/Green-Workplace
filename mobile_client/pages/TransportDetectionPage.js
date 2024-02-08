@@ -109,6 +109,7 @@ export default function TransportDetectionPage() {
 	const [errorDayModalVisible, setErrorDayModalVisible] = useState(false);
 	const [errorPercentagesModalVisible, setErrorPercentagesModalVisible] = useState(false);
 	const [errorSubmitModalVisible, setErrorSubmitModalVisible] = useState(false);
+	const [showHelpModal, setShowHelpModal] = useState(false);
 
 
 	const getIconName = (mode) => {
@@ -520,7 +521,7 @@ export default function TransportDetectionPage() {
 					headers: {
 						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify({ newData, distance: currentDistanceTravelledRef.current }),
+					body: JSON.stringify({ newData }),
 
 				})
 					.then((response) => response.json())
@@ -595,7 +596,7 @@ export default function TransportDetectionPage() {
 
 	// Algorithm to predict overall journey from the transport predicted data
 	const getPrimaryTransportModes = (modes) => {
-		
+
 		if (!modes || modes.length === 0) {
 			return []; // Return an empty array if no valid modes are provided
 		}
@@ -773,6 +774,14 @@ export default function TransportDetectionPage() {
 		<ScrollView style={styles.mainScrollView} contentContainerStyle={styles.contentContainer}>
 			<View style={styles.container}>
 				<Toast ref={(ref) => Toast.setRef(ref)} />
+
+				<TouchableOpacity
+					style={styles.helpButton}
+					onPress={() => setShowHelpModal(true)}
+				>
+					<Text style={styles.helpButtonText}>Help / Documentation</Text>
+				</TouchableOpacity>
+
 
 				{/* Button to toggle sensor data and detection history visibility */}
 
@@ -1088,6 +1097,28 @@ export default function TransportDetectionPage() {
 						</View>
 					</View>
 				</Modal>
+				<Modal
+					animationType="slide"
+					transparent={true}
+					visible={showHelpModal}
+					onRequestClose={() => setShowHelpModal(false)} // This allows Android users to close the modal using the back button.
+				>
+					<View style={styles.centeredView}>
+						<View style={styles.modalView}>
+							<Text style={styles.modalText}>
+								Press the start button when you leave your home and press the stop button when you arrive at your office. Once stopped, you can amend the transport entries that have been automatically added. If you commute the same way back home today, select "Yes" for Return Journey. Distribute the carbon footprint score that has been calculated amongst your teams, which needs to add to 100, and then press submit.
+							</Text>
+							<TouchableOpacity
+								style={[styles.button, styles.buttonClose]}
+								onPress={() => setShowHelpModal(false)} // Correctly toggles the visibility off.
+							>
+								<Text style={styles.textStyle}>Close</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</Modal>
+
+
 
 			</View>
 		</ScrollView>
@@ -1322,6 +1353,50 @@ const styles = StyleSheet.create({
 		color: '#ffffff',
 		paddingTop: 12,
 		paddingBottom: 12,
+	},
+	centeredView: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		marginTop: 22
+	},
+	modalView: {
+		margin: 20,
+		backgroundColor: "white",
+		borderRadius: 20,
+		padding: 35,
+		alignItems: "center",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2
+		},
+		shadowOpacity: 0.25,
+		shadowRadius: 4,
+		elevation: 5
+	},
+	helpButton: {
+		borderRadius: 20,
+		padding: 10,
+		elevation: 2,
+		backgroundColor: "#2196F3",
+		marginTop: 25,
+	},
+	helpButtonText: {
+		color: "white",
+		fontWeight: "bold",
+		textAlign: "center"
+	},
+	modalText: {
+		marginBottom: 15,
+		textAlign: "center"
+	},
+	buttonClose: {
+		backgroundColor: "#2196F3", 
+		marginTop: 15,
+		paddingHorizontal: 20, 
+		paddingVertical: 10, 
+		borderRadius: 20, 
 	},
 
 });

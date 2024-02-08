@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
@@ -37,21 +37,23 @@ const LoginPage = ({ navigation }) => {
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.greenWorkplaceText}>Green-Workplace
-				<Icon name={"leaf"} size={30} color="#1ED760" />
-
-			</Text>
+			<Image
+                source={require('../assets/green-workplace-logo.png')} 
+                style={styles.logo}
+            />
 
 			<Text style={styles.loginText}>Login</Text>
 			<TextInput
 				style={styles.input}
 				placeholder="Email"
+				placeholderTextColor="white" 
 				value={email}
 				onChangeText={setEmail}
 			/>
 			<TextInput
 				style={styles.input}
 				placeholder="Password"
+				placeholderTextColor="white" 
 				value={password}
 				onChangeText={setPassword}
 				secureTextEntry
@@ -72,44 +74,52 @@ const LoginPage = ({ navigation }) => {
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
-		justifyContent: 'flex-start',
-		alignItems: 'center',
-		paddingTop: 100,
-		paddingHorizontal: 20,
+	  flex: 1,
+	  justifyContent: 'flex-start',
+	  alignItems: 'center',
+	  paddingTop: 100,
+	  paddingHorizontal: 20,
+	  backgroundColor: '#121212', 
 	},
 	input: {
-		width: '100%',
-		margin: 10,
-		padding: 10,
-		borderWidth: 1,
-		borderColor: 'gray',
-		borderRadius: 5,
+	  width: '100%',
+	  margin: 10,
+	  padding: 10,
+	  borderWidth: 1,
+	  borderColor: 'gray',
+	  borderRadius: 5,
+	  backgroundColor: '#383838', 
+	  color: 'white', 
 	},
 	greenWorkplaceText: {
-		fontSize: 30,
-		marginBottom: 80,
+	  fontSize: 30,
+	  marginBottom: 80,
+	  color: 'white',
 	},
 	loginText: {
-		fontSize: 15,
+	  fontSize: 18,
+	  color: 'white', 
 	},
+	logo: {
+        width: 280, 
+        height: 37, 
+        marginBottom: 80,
+    },
 	customButton: {
-		backgroundColor: 'green',
-		paddingVertical: 10,
-		paddingHorizontal: 20,
-		borderRadius: 5,
-		alignItems: 'center',
-		justifyContent: 'center',
-		elevation: 2,
-		marginTop: 10,
-		marginBottom: 10,
+	  backgroundColor: 'green',
+	  paddingVertical: 10,
+	  paddingHorizontal: 20,
+	  borderRadius: 5,
+	  alignItems: 'center',
+	  justifyContent: 'center',
+	  elevation: 2,
+	  marginTop: 10,
+	  marginBottom: 10,
 	},
-
 	customButtonText: {
-		color: '#ffffff',
-		fontSize: 16,
+	  color: '#ffffff', 
+	  fontSize: 16,
 	},
-});
-
+  });  
 
 export default LoginPage;
