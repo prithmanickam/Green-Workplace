@@ -10,6 +10,12 @@ import { ThemeContext } from '../context/ThemeContext';
 import { useUser } from '../context/UserContext';
 import { getThemeColors } from '../utils/themeUtils';
 import useAuth from '../hooks/useAuth';
+const companyDashboardPicture = process.env.PUBLIC_URL + '/company-dashboard-picture.png';
+const teamDashboardPicture = process.env.PUBLIC_URL + '/team-dashboard-picture.png';
+const yourDashboardPicture = process.env.PUBLIC_URL + '/your-dashboard-picture.png';
+const teamChatPicture = process.env.PUBLIC_URL + '/team-chat-picture.png';
+const teamOwnerFunctionsPicture = process.env.PUBLIC_URL + '/team-owner-functions-picture.png';
+const setFootprintPicture = process.env.PUBLIC_URL + '/set-footprint-picture.png';
 
 export default function HomePage() {
   const { mode } = React.useContext(ThemeContext)
@@ -43,7 +49,7 @@ export default function HomePage() {
       id: 1,
       name: "Company Dashboard",
       description: "View all teams' carbon footprint and sort by highest. See company collective metrics.",
-      picture: greyBackground,
+      picture: companyDashboardPicture,
       link: "CompanyDashboard"
     },
     {
@@ -73,43 +79,43 @@ export default function HomePage() {
     {
       id: 1,
       name: "Set Carbon Footprint",
-      description: "Set your route to work for the days you are working at office and it will calculate your carbon footprint. You can use a map or set it manually.",
-      picture: greyBackground,
+      description: "Calculate and set your carbon footprint by either Google Maps API or Manually entering your journey.",
+      picture: setFootprintPicture,
       link: "SetCarbonFootprint"
     },
     {
       id: 2,
       name: "Your Dashboard",
-      description: "Show your carbon footprint metrics and history. Also to set your preference for Work At Office days.",
-      picture: greyBackground,
+      description: "Show your carbon footprint metrics and history. Also to set your Work At Office days preference.",
+      picture: yourDashboardPicture,
       link: "YourDashboard"
     },
     {
       id: 3,
       name: "Team Chat",
       description: "Communicate with your team via chat.",
-      picture: greyBackground,
+      picture: teamChatPicture,
       link: "TeamChat"
     },
     {
       id: 4,
       name: "Team Dashboard",
       description: "Show the teams weekly carbon footprint and what the team decided set your preference for WAO.",
-      picture: greyBackground,
+      picture: teamDashboardPicture,
       link: "TeamDashboard"
     },
     {
       id: 5,
       name: "Team Owner Functions",
       description: "Team owner functions i.e. Add/delete team members, set the teams WAO days, and edit team name.",
-      picture: greyBackground,
+      picture: teamOwnerFunctionsPicture,
       link: "TeamOwnerFunctions"
     },
     {
       id: 6,
       name: "Company Dashboard",
       description: "View all teams' carbon footprint and sort by highest. See company collective metrics.",
-      picture: greyBackground,
+      picture: companyDashboardPicture,
       link: "CompanyDashboard"
     },
   ];

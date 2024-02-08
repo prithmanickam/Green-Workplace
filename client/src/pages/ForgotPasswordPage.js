@@ -64,8 +64,7 @@ const ForgotPasswordPage = () => {
           sm={4}
           md={8}
           sx={{
-            backgroundImage:
-              "url(https://source.unsplash.com/random?wallpapers)",
+            backgroundImage: `url(${process.env.PUBLIC_URL}/login-screen-bg.png)`,
             backgroundRepeat: "no-repeat",
             backgroundColor: (t) =>
               t.palette.mode === "light"

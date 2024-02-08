@@ -142,7 +142,7 @@ export default function YourDashboard() {
         <div style={{ flex: 1, display: 'flex' }}>
           <Grid container spacing={3}>
             {/* First row */}
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px' }}>
                   <Typography variant="h6" paragraph>
@@ -163,7 +163,7 @@ export default function YourDashboard() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Card sx={{ height: '100%', backgroundImage: gradient }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <Typography variant="h6" paragraph>
@@ -183,7 +183,7 @@ export default function YourDashboard() {
               </Card>
             </Grid>
 
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <CustomLineChart

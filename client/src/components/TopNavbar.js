@@ -7,7 +7,6 @@ import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
-import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
@@ -30,7 +29,7 @@ function TopNavbar() {
   const { sameThemeColour, oppositeThemeColour } = getThemeColors(mode);
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: sameThemeColour}}>
+    <AppBar position="static" sx={{ backgroundColor: sameThemeColour }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -43,14 +42,14 @@ function TopNavbar() {
                 to="/homepage"
                 sx={{
                   mr: 2,
-                  display: { xs: 'none', md: 'flex' },
+                  display: 'flex',
                   fontFamily: 'Arial',
                   fontWeight: 700,
                   color: '#1ED760',
                   textDecoration: 'none',
                 }}
               >
-                Green-Workplace
+                <img src={`${process.env.PUBLIC_URL}/green-workplace-logo.png`} alt="Green Workplace Logo" style={{ width: '200px', marginTop: '5px' }} />
               </Typography>
             ) : (
               <Typography
@@ -60,21 +59,24 @@ function TopNavbar() {
                 to="/login"
                 sx={{
                   mr: 2,
-                  display: { xs: 'none', md: 'flex' },
+                  display: 'flex',
                   fontFamily: 'Arial',
                   fontWeight: 700,
                   color: '#1ED760',
                   textDecoration: 'none',
                 }}
               >
-                Green-Workplace
+                <img src={`${process.env.PUBLIC_URL}/green-workplace-logo.png`} alt="Green Workplace Logo" style={{ width: '200px', marginTop: '5px' }} />
               </Typography>
             )}
-            <EnergySavingsLeafIcon sx={{ color: "#1ED760", display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+            
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h5 style={{ color: oppositeThemeColour }}>{mode.charAt(0).toUpperCase() + mode.slice(1)} Mode</h5>
+            <Typography sx={{ color: oppositeThemeColour, display: { xs: 'none', md: 'block', fontSize: '0.875rem' } }}>
+              {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+            </Typography>
+
             <IconButton sx={{ mr: 1, color: oppositeThemeColour }} onClick={() => toggleMode()}>
               {mode === 'dark' ? <Brightness4Icon /> : <Brightness7Icon />}
             </IconButton>

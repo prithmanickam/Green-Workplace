@@ -15,7 +15,6 @@ import CompanyDashboardPage from './pages/CompanyDashboardPage';
 import CompanyAdminFunctionsPage from './pages/CompanyAdminFunctionsPage';
 import YourDashboardPage from './pages/YourDashboardPage';
 import TeamDashboardPage from './pages/TeamDashboardPage';
-import TransportModeDetection from './pages/TransportModeDetection';
 import ManuallyAddFootprintPage from './pages/ManuallyAddFootprintPage';
 import TeamChatPage from './pages/TeamChatPage';
 import TeamOwnerFunctionsPage from './pages/TeamOwnerFunctionsPage';
@@ -132,10 +131,6 @@ const App = () => {
               <Route
                 path="/TeamOwnerFunctions"
                 element={<ProtectedRoute element={<TeamOwnerFunctionsPage />} isLoggedIn={isLoggedIn} />}
-              />
-              <Route
-                path="/SetCarbonFootprint/TransportModeDetection"
-                element={<ProtectedRoute element={<TransportModeDetection />} isLoggedIn={isLoggedIn} />}
               />
               <Route
                 path="/SetCarbonFootprint/ManuallyAddFootprint"

@@ -194,6 +194,10 @@ export default function ManuallyAddFootprint() {
   const calculateCarbonFootprint = (mode, time, carDetails = {}) => {
     const [hours, minutes] = time.split(':').map(Number);
     const totalMinutes = hours * 60 + minutes;
+    if (mode === 'Walk' || mode === 'Bicycle') {
+      return '0.00';
+    }
+
     let emissionRate = CO2_EMISSIONS_PER_MINUTE[mode];
 
     if (mode === 'Car' && carDetails.engineType) {

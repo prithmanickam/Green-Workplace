@@ -139,22 +139,6 @@ export default function SetCarbonFootprint() {
                 Add Manually
               </Button>
             </Link>
-            <Link to={"/SetCarbonFootprint/TransportModeDetection"}>
-              <Button
-                aria-label='center back'
-                sx={{
-                  mt: 3, mb: 2,
-                  color: "white",
-                  font: "Arial",
-                  backgroundColor: "#eed202",
-                  borderRadius: "10px",
-                  "&:hover": {
-                    backgroundColor: "#8B8000",
-                  },
-                }}>
-                Add using Machine Learning
-              </Button>
-            </Link>
           </Stack>
         </div>
 

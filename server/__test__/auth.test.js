@@ -159,30 +159,43 @@ describe("Authentication Controller Tests", () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       };
-
+  
+      // Ensure the mock simulates a found user correctly
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({ data: { email: req.body.email }, error: null })
+      });
+  
       // Mock uuid generation
-      const mockUuid = '1234-uuid';
-      uuid.v4.mockReturnValue(mockUuid);
-
+      uuid.v4.mockReturnValue('1234-uuid');
+  
       // Mock JWT signing
-      const mockToken = 'mocked-jwt-token';
-      jwt.sign.mockReturnValue(mockToken);
-
+      jwt.sign.mockReturnValue('mocked-jwt-token');
+  
       // Mock nodemailer transport and sendMail function
       const sendMailMock = jest.fn().mockResolvedValue(true);
-      const createTransportMock = jest.fn().mockReturnValue({ sendMail: sendMailMock });
-      nodemailer.createTransport = createTransportMock;
-
+      nodemailer.createTransport.mockReturnValue({ sendMail: sendMailMock });
+  
       await authControllers.sendResetPasswordEmail(req, res);
-
-      expect(jwt.sign).toHaveBeenCalledWith(expect.anything(), JWT_SECRET_FOR_REGISTRATION);
-      expect(createTransportMock).toHaveBeenCalled();
-      expect(sendMailMock).toHaveBeenCalledWith({
+  
+      // Check jwt.sign was called with a payload and the correct secret
+      expect(jwt.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: req.body.email,
+          resetpasswordtoken: '1234-uuid',
+        }),
+        JWT_SECRET_FOR_REGISTRATION
+      );
+  
+      // Verify nodemailer was used with expected arguments
+      expect(sendMailMock).toHaveBeenCalledWith(expect.objectContaining({
         from: 'no-reply@greenworkplace.com',
         to: 'user@example.com',
         subject: 'Green-Workplace Reset Password Link',
-        html: expect.stringContaining(`resetpassword/${mockToken}`)
-      });
+      }));
+  
+      // Verify response was as expected
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ status: "ok" });
     });

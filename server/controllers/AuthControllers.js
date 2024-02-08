@@ -76,6 +76,18 @@ module.exports.sendResetPasswordEmail = async (req, res) => {
   try {
     const email = req.body.email;
 
+    // First, check if the email exists in the database
+    const { data: user, error } = await supabase
+      .from("User")
+      .select("email")
+      .eq("email", email)
+      .single();
+
+    // If user does not exist, send a response indicating that
+    if (!user) {
+      return res.status(404).json({ status: "error", error: "Email does not exist" });
+    }
+
     // Create a payload for the JWT token containing email 
     const payload = {
       email,

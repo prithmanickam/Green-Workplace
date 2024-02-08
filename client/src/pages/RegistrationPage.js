@@ -141,8 +141,7 @@ export default function Registration() {
 			<Container
 				component="main"
 				sx={{
-					backgroundImage:
-						"url(https://source.unsplash.com/random?wallpapers)",
+					backgroundImage: `url(${process.env.PUBLIC_URL}/screen-bg.png)`,
 					backgroundSize: "cover",
 					minHeight: "100vh",
 					display: "flex",

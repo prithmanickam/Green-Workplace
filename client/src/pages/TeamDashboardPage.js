@@ -147,8 +147,6 @@ export default function TeamDashboard() {
   };
 
 
-
-
   return (
     <Box sx={{ display: 'flex' }}>
       <SideNavbar />
@@ -182,7 +180,7 @@ export default function TeamDashboard() {
         <div style={{ flex: 1, display: 'flex' }}>
           <Grid container spacing={3}>
             {/* First row */}
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px' }}>
                   <Typography variant="h6" paragraph>
@@ -206,7 +204,7 @@ export default function TeamDashboard() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Card sx={{ height: '100%', backgroundImage: gradient }} >
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   <Typography variant="h6" paragraph>
@@ -225,7 +223,7 @@ export default function TeamDashboard() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent style={{ minHeight: '100px', textAlign: 'center' }}>
                   {
@@ -256,13 +254,28 @@ export default function TeamDashboard() {
                         <CardContent>
                           <Grid container alignItems="center">
                             <Grid item xs={2}>
-                              <Grid container alignItems="center" justifyContent="center">
+                              <Box position="relative" display="flex" justifyContent="center" alignItems="center">
+                                {/* Displaying the rank */}
+                                {index + page * rowsPerPage < 3 && (
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      position: 'absolute',
+                                      top: -20,
+                                      fontWeight: 'bold',
+                                      color: (index + page * rowsPerPage) === 0 ? 'gold' : (index + page * rowsPerPage) === 1 ? 'silver' : '#cd7f32',
+                                      zIndex: 2, // Ensure text is above the avatar
+                                    }}
+                                  >
+                                    {index + page * rowsPerPage === 0 ? '1st' : index + page * rowsPerPage === 1 ? '2nd' : '3rd'}
+                                  </Typography>
+                                )}
                                 <Avatar
                                   alt={teamMember.firstname}
                                   src="/path_to_image.jpg"
                                   sx={{ width: 75, height: 75, marginRight: 2, ...getAvatarStyle(index + page * rowsPerPage) }}
                                 />
-                              </Grid>
+                              </Box>
                             </Grid>
                             <Grid item xs={10}>
                               <Typography variant="h6" paragraph>

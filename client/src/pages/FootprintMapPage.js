@@ -121,38 +121,37 @@ function FootprintMapPage() {
     }
   }, [distance, doubledDistance, travelMode, calculateCarbonFootprint]);
 
+  // Utility function to convert minutes into hours and minutes format
+  const formatDuration = (totalMinutes) => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${hours > 0 ? `${hours} h and ` : ''}${minutes} min`;
+  };
+
   useEffect(() => {
     if (duration !== '') {
-      setDoubledDistance(`${distance.slice(0, -3) * 2} km`)
-      const regex = /(\d+)\s*hour(s)?\s*(\d+)?\s*min(s)?/;
-      const matches = duration.match(regex);
-
-      if (!matches) {
-        const minutesRegex = /(\d+)\s*min(s)?/;
-        const minutesMatch = duration.match(minutesRegex);
-
-        if (!minutesMatch) {
-          return "Invalid input format";
+      setDoubledDistance(`${distance.slice(0, -3) * 2} km`);
+      
+      const regexHoursAndMinutes = /(\d+)\s*hours?\s*(\d+)?\s*mins?/;
+      const regexMinutesOnly = /(\d+)\s*mins?/;
+      let totalMinutes = 0;
+      
+      const matchesHoursAndMinutes = duration.match(regexHoursAndMinutes);
+      if (matchesHoursAndMinutes) {
+        const hours = parseInt(matchesHoursAndMinutes[1]);
+        const minutes = parseInt(matchesHoursAndMinutes[2] || '0');
+        totalMinutes = (hours * 60) + minutes;
+      } else {
+        const matchesMinutesOnly = duration.match(regexMinutesOnly);
+        if (matchesMinutesOnly) {
+          totalMinutes = parseInt(matchesMinutesOnly[1]);
         }
-
-        const minutes = parseInt(minutesMatch[1]);
-        const doubledMinutes = minutes * 2;
-        setDoubledDuration(`${doubledMinutes} mins`);
-        return
-
       }
-
-      const hours = parseInt(matches[1]) || 0;
-      const minutes = parseInt(matches[3]) || 0;
-
-      const totalMinutes = hours * 60 + minutes;
+  
+      // Double the duration
       const doubledTotalMinutes = totalMinutes * 2;
-
-      const doubledHours = Math.floor(doubledTotalMinutes / 60);
-      const doubledMinutes = doubledTotalMinutes % 60;
-
-      setDoubledDuration(`${doubledHours} hours ${doubledMinutes} mins`);
-      return
+      const formattedDoubledDuration = formatDuration(doubledTotalMinutes);
+      setDoubledDuration(formattedDoubledDuration);
     }
   }, [distance, duration]);
 

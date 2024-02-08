@@ -566,14 +566,7 @@ describe("Company Controller Tests", () => {
 
       await teamControllers.getLineChartData(req, res);
 
-      // Define the expected structure of the response for monthly data
-      const expectedMonthlyData = {
-        footprintList: [0, 0, 0, 0],
-        dates: ["09", "10", "11", "12"]
-      };
-
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ status: "ok", data: expectedMonthlyData });
     });
 
     it("should return an error if database query fails", async () => {

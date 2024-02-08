@@ -159,14 +159,15 @@ export default function SideNavbar() {
             </IconButton>
             <Link to="/homepage" style={{ textDecoration: 'none' }}>
               <Typography variant="h6" noWrap sx={{ color: '#1ED760', fontFamily: 'Arial', fontWeight: 700 }}>
-                Green-Workplace
+              <img src={`${process.env.PUBLIC_URL}/green-workplace-logo.png`} alt="Green Workplace Logo" style={{ width: '200px', marginTop: '5px'}} />
               </Typography>
             </Link>
-            <EnergySavingsLeafIcon sx={{ color: "#1ED760", display: { xs: 'none', md: 'flex' }, mr: 1 }} />
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h5 style={{ color: oppositeThemeColour }}>{mode.charAt(0).toUpperCase() + mode.slice(1)} Mode</h5>
+          <Typography sx={{ color: oppositeThemeColour, display: { xs: 'none', md: 'block', fontSize: '0.875rem' } }}>
+              {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+            </Typography>
             <IconButton sx={{ mr: 1, color: oppositeThemeColour }} onClick={() => toggleMode()}>
               {mode === 'dark' ? <Brightness4Icon /> : <Brightness7Icon />}
             </IconButton>

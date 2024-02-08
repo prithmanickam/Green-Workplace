@@ -67,6 +67,7 @@ const LoginPage = () => {
         sx={{ height: "90vh", width: "100%", px: 4 }}
       >
         <CssBaseline />
+        
         <Grid
           component={Paper}
           elevation={10}
@@ -75,8 +76,7 @@ const LoginPage = () => {
           sm={4}
           md={8}
           sx={{
-            backgroundImage:
-              "url(https://source.unsplash.com/random?wallpapers)",
+            backgroundImage: `url(${process.env.PUBLIC_URL}/login-screen-bg.png)`,
             backgroundRepeat: "no-repeat",
             backgroundColor: (t) =>
               t.palette.mode === "light"
