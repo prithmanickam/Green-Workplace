@@ -329,3 +329,6 @@
 ### 8 February 2023
 * *5 hours* Completed UI/Graphics improvements to web app
 * *1 hour* Added Help/Documentation Button to Mobile app and fixed UI further
+
+### 9 February 2023
+* *8 hours* Implemented Overlap Sliding Window Method for Mobile App

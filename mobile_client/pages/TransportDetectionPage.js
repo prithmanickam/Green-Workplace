@@ -50,29 +50,38 @@ export default function TransportDetectionPage() {
 	const [previousLocation, setPreviousLocation] = useState(null);
 	const [distanceTraveled, setDistanceTraveled] = useState(0);
 	const [errorMsg, setErrorMsg] = useState(null);
+	const [transportModes, setTransportModes] = useState([]);
 
 	const [currentAcceleration, setCurrentAcceleration] = useState({});
 	const [currentGyroscope, setCurrentGyroscope] = useState({});
 
-	const [transportModes, setTransportModes] = useState([]);
+	const currentWindowRef = useRef(1);
+
+	//window1
 
 	const [gyroscopeData, setGyroscopeData] = useState([]);
 	const [accelerometerData, setAccelerometerData] = useState([]);
-
 	const accelerometerDataRef = useRef([]);
 	const gyroscopeDataRef = useRef([]);
 
 	const [currentDistanceTravelled, setCurrentDistanceTravelled] = useState(0);
-
 	const currentDistanceTravelledRef = useRef(0);
 
+	//window2
+
+	const [gyroscopeDataW2, setGyroscopeDataW2] = useState([]);
+	const [accelerometerDataW2, setAccelerometerDataW2] = useState([]);
+	const accelerometerDataRefW2 = useRef([]);
+	const gyroscopeDataRefW2 = useRef([]);
+
+	const [currentDistanceTravelledW2, setCurrentDistanceTravelledW2] = useState(0);
+	const currentDistanceTravelledRefW2 = useRef(0);
+
+
 	const [showSensorData, setShowSensorData] = useState(false);
-
 	const [isFetching, setIsFetching] = useState(false);
-
 	const [isPredicting, setIsPredicting] = useState(false);
 	const [predictionEnded, setPredictionEnded] = useState(false);
-
 	const [transportMode, setTransportMode] = useState(null);
 	const [entries, setEntries] = useState([]);
 	const [totalCarbonFootprint, setTotalCarbonFootprint] = useState(0);
@@ -378,12 +387,14 @@ export default function TransportDetectionPage() {
 
 			const accelerationMagnitude = Math.sqrt((x * x) + (y * y) + (z * z));
 			setAccelerometerData(currentList => [...currentList, accelerationMagnitude.toFixed(2)]);
+			setAccelerometerDataW2(currentList => [...currentList, accelerationMagnitude.toFixed(2)]);
 		});
 
 		const gyroSubscription = Gyroscope.addListener(data => {
 			setCurrentGyroscope(data);
 			const gyroscopeMagnitude = Math.sqrt((data.x * data.x) + (data.y * data.y) + (data.z * data.z));
 			setGyroscopeData(currentList => [...currentList, gyroscopeMagnitude.toFixed(2)]);
+			setGyroscopeDataW2(currentList => [...currentList, gyroscopeMagnitude.toFixed(2)]);
 		});
 
 		return () => {
@@ -406,7 +417,7 @@ export default function TransportDetectionPage() {
 			locationSubscription = await Location.watchPositionAsync(
 				{
 					accuracy: Location.Accuracy.High,
-					timeInterval: 6000,
+					timeInterval: 8000,
 				},
 				(newLocation) => {
 
@@ -426,6 +437,7 @@ export default function TransportDetectionPage() {
 						if (isPredicting) {
 							setDistanceTraveled(prevDistance => prevDistance + distance);
 							setCurrentDistanceTravelled(current => parseFloat(current) + distance);
+							setCurrentDistanceTravelledW2(current => parseFloat(current) + distance);
 						}
 					}
 					setPreviousLocation(newLocation);
@@ -497,23 +509,44 @@ export default function TransportDetectionPage() {
 	useEffect(() => {
 		const fetchData = () => {
 
+
 			if (!isFetching) {
 				setIsFetching(true);
 
-				const accelerometerStats = calculateStats(accelerometerDataRef.current);
-				const gyroscopeStats = calculateStats(gyroscopeDataRef.current);
+				console.log(currentWindowRef.current)
+				let newData = {}
 
-				const newData = {
-					'distance_meters_ten_sec': currentDistanceTravelledRef.current,
-					'android.sensor.accelerometer#mean': accelerometerStats.mean,
-					'android.sensor.accelerometer#min': accelerometerStats.min,
-					'android.sensor.accelerometer#max': accelerometerStats.max,
-					'android.sensor.accelerometer#std': accelerometerStats.std,
-					'android.sensor.gyroscope#mean': gyroscopeStats.mean,
-					'android.sensor.gyroscope#min': gyroscopeStats.min,
-					'android.sensor.gyroscope#max': gyroscopeStats.max,
-					'android.sensor.gyroscope#std': gyroscopeStats.std,
-				};
+				if (currentWindowRef.current === 1) {
+					const accelerometerStats = calculateStats(accelerometerDataRef.current);
+					const gyroscopeStats = calculateStats(gyroscopeDataRef.current);
+
+					newData = {
+						'distance_meters_ten_sec': currentDistanceTravelledRef.current,
+						'android.sensor.accelerometer#mean': accelerometerStats.mean,
+						'android.sensor.accelerometer#min': accelerometerStats.min,
+						'android.sensor.accelerometer#max': accelerometerStats.max,
+						'android.sensor.accelerometer#std': accelerometerStats.std,
+						'android.sensor.gyroscope#mean': gyroscopeStats.mean,
+						'android.sensor.gyroscope#min': gyroscopeStats.min,
+						'android.sensor.gyroscope#max': gyroscopeStats.max,
+						'android.sensor.gyroscope#std': gyroscopeStats.std,
+					};
+				} else {
+					const accelerometerStats = calculateStats(accelerometerDataRefW2.current);
+					const gyroscopeStats = calculateStats(gyroscopeDataRefW2.current);
+
+					newData = {
+						'distance_meters_ten_sec': currentDistanceTravelledRefW2.current,
+						'android.sensor.accelerometer#mean': accelerometerStats.mean,
+						'android.sensor.accelerometer#min': accelerometerStats.min,
+						'android.sensor.accelerometer#max': accelerometerStats.max,
+						'android.sensor.accelerometer#std': accelerometerStats.std,
+						'android.sensor.gyroscope#mean': gyroscopeStats.mean,
+						'android.sensor.gyroscope#min': gyroscopeStats.min,
+						'android.sensor.gyroscope#max': gyroscopeStats.max,
+						'android.sensor.gyroscope#std': gyroscopeStats.std,
+					}
+				}
 
 				// Send this sensor data to the backend
 				fetch(`https://green-workplace.onrender.com/api/getTransportMode`, {
@@ -522,7 +555,6 @@ export default function TransportDetectionPage() {
 						'Content-Type': 'application/json',
 					},
 					body: JSON.stringify({ newData }),
-
 				})
 					.then((response) => response.json())
 					.then((data) => {
@@ -559,10 +591,21 @@ export default function TransportDetectionPage() {
 						});
 					})
 					.finally(() => {
+
+						if (currentWindowRef === 1) {
+							accelerometerDataRef.current = [];
+							gyroscopeDataRef.current = [];
+							currentDistanceTravelledRef.current = 0;
+							currentWindowRef.current = 2;
+
+						} else {
+							accelerometerDataRefW2.current = [];
+							gyroscopeDataRefW2.current = [];
+							currentDistanceTravelledRefW2.current = 0;
+							currentWindowRef.current = 1;
+						}
+
 						// Reset data and indicate fetch is complete
-						accelerometerDataRef.current = [];
-						gyroscopeDataRef.current = [];
-						currentDistanceTravelledRef.current = 0;
 						setIsFetching(false);
 					});
 			}
@@ -571,7 +614,7 @@ export default function TransportDetectionPage() {
 		let interval;
 
 		if (isPredicting) {
-			interval = setInterval(fetchData, 30000);
+			interval = setInterval(fetchData, 20000);
 		}
 
 		return () => {
@@ -593,6 +636,20 @@ export default function TransportDetectionPage() {
 	useEffect(() => {
 		currentDistanceTravelledRef.current = currentDistanceTravelled;
 	}, [currentDistanceTravelled]);
+
+	//window2
+
+	useEffect(() => {
+		accelerometerDataRefW2.current = accelerometerDataW2;
+	}, [accelerometerDataW2]);
+
+	useEffect(() => {
+		gyroscopeDataRefW2.current = gyroscopeDataW2;
+	}, [gyroscopeDataW2]);
+
+	useEffect(() => {
+		currentDistanceTravelledRefW2.current = currentDistanceTravelledW2;
+	}, [currentDistanceTravelledW2]);
 
 	// Algorithm to predict overall journey from the transport predicted data
 	const getPrimaryTransportModes = (modes) => {
@@ -632,13 +689,13 @@ export default function TransportDetectionPage() {
 				}
 			} else if (mode === 'Walking') {
 				walkingCounter++;
-				if (walkingCounter >= 5 && vehicleModes.includes(currentMode)) {
+				if (walkingCounter >= 6 && vehicleModes.includes(currentMode)) {
 					let mostCommonMode = modeSequence.sort((a, b) =>
 						modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
 					).pop();
-					addSummaryEntry(mostCommonMode, startTime, modes[index - 5].time, totalDistance);
+					addSummaryEntry(mostCommonMode, startTime, modes[index - 6].time, totalDistance);
 					currentMode = 'Walking';
-					startTime = modes[index - 4].time;
+					startTime = modes[index - 5].time;
 					totalDistance = 0;
 					modeSequence = [];
 				}
@@ -803,7 +860,8 @@ export default function TransportDetectionPage() {
 						<ScrollView style={styles.scrollView}>
 
 							<Text style={styles.textWithPadding}>{text}</Text>
-							<Text style={styles.textWithPadding}>Distance travelled since last detection: {currentDistanceTravelledRef.current?.toFixed(2)}m</Text>
+							<Text style={styles.textWithPadding}>Window 1 Distance travelled: {currentDistanceTravelledRef.current?.toFixed(2)}m</Text>
+							<Text style={styles.textWithPadding}>Window 2 Distance travelled: {currentDistanceTravelledRefW2.current?.toFixed(2)}m</Text>
 							<Text style={styles.textWithPadding}>Accelerometer Data:</Text>
 							<Text style={styles.textWithPadding}>x: {currentAcceleration.x?.toFixed(2)}, y: {currentAcceleration.y?.toFixed(2)}, z: {currentAcceleration.z?.toFixed(2)}</Text>
 							<Text style={styles.textWithPadding}>Gyroscope Data:</Text>
@@ -1392,11 +1450,11 @@ const styles = StyleSheet.create({
 		textAlign: "center"
 	},
 	buttonClose: {
-		backgroundColor: "#2196F3", 
+		backgroundColor: "#2196F3",
 		marginTop: 15,
-		paddingHorizontal: 20, 
-		paddingVertical: 10, 
-		borderRadius: 20, 
+		paddingHorizontal: 20,
+		paddingVertical: 10,
+		borderRadius: 20,
 	},
 
 });
