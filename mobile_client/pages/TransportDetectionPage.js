@@ -48,7 +48,7 @@ const PASTEL_COLORS = {
 export default function TransportDetectionPage() {
 	const [location, setLocation] = useState(null);
 	const [previousLocation, setPreviousLocation] = useState(null);
-	const [distanceTraveled, setDistanceTraveled] = useState(0);
+	const [distanceTravelled, setDistanceTravelled] = useState(0);
 	const [errorMsg, setErrorMsg] = useState(null);
 	const [transportModes, setTransportModes] = useState([]);
 
@@ -364,8 +364,9 @@ export default function TransportDetectionPage() {
 		setIsPredicting(true);
 		setPredictionEnded(false);
 		setTransportModes([]);
-		setDistanceTraveled(0);
+		setDistanceTravelled(0);
 		setCurrentDistanceTravelled(0);
+		setCurrentDistanceTravelledW2(0);
 	};
 
 	const stopPredicting = () => {
@@ -421,12 +422,6 @@ export default function TransportDetectionPage() {
 				},
 				(newLocation) => {
 
-					const accelDataLength = accelerometerDataRef.current.length;
-
-					if (accelDataLength === 0) {
-						setCurrentDistanceTravelled(0);
-					}
-
 					if (previousLocation) {
 						const distance = getDistanceFromLatLonInMeters(
 							previousLocation.coords.latitude,
@@ -435,7 +430,7 @@ export default function TransportDetectionPage() {
 							newLocation.coords.longitude
 						);
 						if (isPredicting) {
-							setDistanceTraveled(prevDistance => prevDistance + distance);
+							setDistanceTravelled(prevDistance => prevDistance + distance);
 							setCurrentDistanceTravelled(current => parseFloat(current) + distance);
 							setCurrentDistanceTravelledW2(current => parseFloat(current) + distance);
 						}
@@ -475,7 +470,7 @@ export default function TransportDetectionPage() {
 	if (errorMsg) {
 		text = errorMsg;
 	} else if (location) {
-		text = `Latitude: ${location.coords.latitude}\nLongitude: ${location.coords.longitude}\nTotal Distance traveled: ${distanceTraveled.toFixed(2)} meters`;
+		text = `Latitude: ${location.coords.latitude}\nLongitude: ${location.coords.longitude}\nTotal Distance travelled: ${distanceTravelled.toFixed(2)} meters`;
 	}
 
 	// Function to calculate stats
@@ -513,7 +508,6 @@ export default function TransportDetectionPage() {
 			if (!isFetching) {
 				setIsFetching(true);
 
-				console.log(currentWindowRef.current)
 				let newData = {}
 
 				if (currentWindowRef.current === 1) {
@@ -573,8 +567,7 @@ export default function TransportDetectionPage() {
 								text2: 'Fetched transport mode: ' + accurateMode
 							});
 
-							setAccelerometerData([]);
-							setGyroscopeData([]);
+							
 						} else {
 							Toast.show({
 								type: 'error',
@@ -592,13 +585,18 @@ export default function TransportDetectionPage() {
 					})
 					.finally(() => {
 
-						if (currentWindowRef === 1) {
+						if (currentWindowRef.current === 1) {
+							setAccelerometerData([]);
+							setGyroscopeData([]);
+							setCurrentDistanceTravelled(0)
 							accelerometerDataRef.current = [];
 							gyroscopeDataRef.current = [];
 							currentDistanceTravelledRef.current = 0;
 							currentWindowRef.current = 2;
-
 						} else {
+							setAccelerometerDataW2([]);
+							setGyroscopeDataW2([]);
+							setCurrentDistanceTravelledW2(0)
 							accelerometerDataRefW2.current = [];
 							gyroscopeDataRefW2.current = [];
 							currentDistanceTravelledRefW2.current = 0;
@@ -650,6 +648,10 @@ export default function TransportDetectionPage() {
 	useEffect(() => {
 		currentDistanceTravelledRefW2.current = currentDistanceTravelledW2;
 	}, [currentDistanceTravelledW2]);
+
+	useEffect(() => {
+		currentWindowRef.current = currentWindowRef;
+	}, [currentWindowRef]);
 
 	// Algorithm to predict overall journey from the transport predicted data
 	const getPrimaryTransportModes = (modes) => {

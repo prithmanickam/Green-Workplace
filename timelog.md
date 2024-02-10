@@ -332,3 +332,6 @@
 
 ### 9 February 2023
 * *8 hours* Implemented Overlap Sliding Window Method for Mobile App
+
+### 10 February 2023
+* *1 hour* Fixing bugs from Overlap Sliding Window Method for Mobile App
