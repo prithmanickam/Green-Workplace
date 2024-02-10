@@ -417,7 +417,7 @@ export default function TransportDetectionPage() {
 			locationSubscription = await Location.watchPositionAsync(
 				{
 					accuracy: Location.Accuracy.High,
-					timeInterval: 8000,
+					timeInterval: 7000,
 				},
 				(newLocation) => {
 
@@ -614,13 +614,13 @@ export default function TransportDetectionPage() {
 		let interval;
 
 		if (isPredicting) {
-			interval = setInterval(fetchData, 20000);
+			interval = setInterval(fetchData, 21000);
 		}
 
 		return () => {
 			if (interval) {
 				clearInterval(interval);
-			} 6
+			} 
 		};
 	}, [isPredicting, isFetching]);
 
