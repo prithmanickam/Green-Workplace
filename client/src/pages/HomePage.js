@@ -16,6 +16,9 @@ const yourDashboardPicture = process.env.PUBLIC_URL + '/your-dashboard-picture.p
 const teamChatPicture = process.env.PUBLIC_URL + '/team-chat-picture.png';
 const teamOwnerFunctionsPicture = process.env.PUBLIC_URL + '/team-owner-functions-picture.png';
 const setFootprintPicture = process.env.PUBLIC_URL + '/set-footprint-picture.png';
+const addEmployeesPicture = process.env.PUBLIC_URL + '/add-employees-picture.png';
+const addTeamsPicture = process.env.PUBLIC_URL + '/add-teams-picture.png';
+const adminFunctionsPicture = process.env.PUBLIC_URL + '/admin-functions-picture.png';
 
 export default function HomePage() {
   const { mode } = React.useContext(ThemeContext)
@@ -55,22 +58,22 @@ export default function HomePage() {
     {
       id: 2,
       name: "Company Admin Functions",
-      description: "Manage team owners and team members. Can set the company carbon footprint standard.",
-      picture: greyBackground,
+      description: "Functions such as set the company carbon footprint standard, add/delete office, and delete employees.",
+      picture: adminFunctionsPicture,
       link: "CompanyAdminFunctions"
     },
     {
       id: 3,
       name: "Add Teams",
-      description: "Create teams and set team owners for them.",
-      picture: greyBackground,
+      description: "Create teams with an assigned team owner and view all teams.",
+      picture: addTeamsPicture,
       link: "AddTeams"
     },
     {
       id: 4,
       name: "Add Employees",
       description: "Add new employees and see who has registered.",
-      picture: greyBackground,
+      picture: addEmployeesPicture,
       link: "AddEmployees"
     },
   ];

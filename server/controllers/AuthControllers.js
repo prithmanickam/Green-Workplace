@@ -72,6 +72,35 @@ module.exports.getAllUsers = async (req, res) => {
   }
 };
 
+// users that are not admin or team owner
+module.exports.getUsersToDelete = async (req, res) => {
+  const { company } = req.body;
+
+  try {
+    // Fetch all team owners in the company
+    const { data: teamOwners, error: teamOwnersError } = await supabase
+      .from("Team")
+      .select("team_owner_id")
+      .eq("company_id", company);
+
+    // Extract team owner IDs
+    const ownerIds = teamOwners.map(owner => owner.team_owner_id);
+
+    // fetch all users who are not admins, not in the ownerIds list, and belong to the company
+    const { data, error } = await supabase
+      .from("User")
+      .select(`*, Office(name)`)
+      .neq("type", "Admin")
+      .not("id", "in", `(${ownerIds.join(",")})`) 
+      .eq("company_id", company);
+
+    res.status(200).json({ status: "ok", users: data });
+  } catch (error) {
+    res.status(500).json({ status: "error", error: error.message || 'Internal server error' });
+  }
+};
+
+
 module.exports.sendResetPasswordEmail = async (req, res) => {
   try {
     const email = req.body.email;

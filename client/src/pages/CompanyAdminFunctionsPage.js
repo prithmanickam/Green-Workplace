@@ -14,6 +14,7 @@ export default function CompanyAdminFunctions() {
   const [amberStandard, setAmberStandard] = useState('');
   const [redStandard, setRedStandard] = useState('');
   const [registeredAccounts, setRegisteredAccounts] = useState([]);
+  const [usersToDelete, setUsersToDelete] = useState([]);
   const [offices, setOffices] = useState([]);
   const [newOffice, setNewOffice] = useState('');
   const [selectedDeleteOffice, setSelectedDeleteOffice] = useState('');
@@ -31,7 +32,7 @@ export default function CompanyAdminFunctions() {
   };
 
   const handleConfirmDelete = () => {
-    handleDeleteEmployee(); 
+    handleDeleteEmployee();
     setOpenDeleteDialog(false);
   };
 
@@ -81,8 +82,29 @@ export default function CompanyAdminFunctions() {
           toast.error("An error occurred while fetching user data.");
         });
 
+      fetch(`${baseURL}/getUserstoDelete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ company: userData.company_id }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            const allEmails = data.users.map((user) => user.email);
+            setUsersToDelete(allEmails);
+          } else {
+            toast.error("Failed to fetch user data. Please try again.");
+          }
+        })
+        .catch((error) => {
+          toast.error("An error occurred while fetching user data.");
+        });
     }
   }, [userData]);
+
+
 
   const handleSaveStandards = () => {
     if (userData) {
@@ -162,7 +184,7 @@ export default function CompanyAdminFunctions() {
       .then(data => {
         if (data.status === 'ok') {
           toast.success('Office deleted successfully');
-          setOffices(offices.filter(office => office.id !== selectedDeleteOffice)); 
+          setOffices(offices.filter(office => office.id !== selectedDeleteOffice));
           setSelectedDeleteOffice('');
         } else {
           toast.error('Failed to delete office');
@@ -381,6 +403,7 @@ export default function CompanyAdminFunctions() {
         <Card>
           <CardContent>
             <h3>Delete Employee</h3>
+            <p>Can only delete users who are not also team owners.</p>
             <FormControl fullWidth margin="normal">
               <InputLabel>Employee</InputLabel>
               <Select
@@ -388,7 +411,7 @@ export default function CompanyAdminFunctions() {
                 label="Employee"
                 onChange={(e) => setSelectedDeleteEmployee(e.target.value)}
               >
-                {registeredAccounts.map((email, index) => (
+                {usersToDelete.map((email, index) => (
                   <MenuItem key={index} value={email}>
                     {email}
                   </MenuItem>

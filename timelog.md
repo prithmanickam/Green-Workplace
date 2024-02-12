@@ -335,3 +335,6 @@
 
 ### 10 February 2023
 * *1 hour* Fixing bugs from Overlap Sliding Window Method for Mobile App
+
+### 12 February 2023
+* *1.5 hours* Fixing bugs from Pilot Evaluation

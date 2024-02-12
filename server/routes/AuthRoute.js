@@ -10,6 +10,7 @@ const {
   getAllUsers,
   updateUsername,
   updatePassword,
+  getUsersToDelete,
 } = require("../controllers/AuthControllers");
 
 const router = Router();
@@ -32,6 +33,9 @@ router.post("/register", registerUser);
 
 //to retrive all users that are not admins in that company
 router.post("/getAllUsers", getAllUsers);
+
+//to retrive all users that are not admins or team owers in that company
+router.post("/getUsersToDelete", getUsersToDelete);
 
 //to update firstname and lastname of user
 router.post("/updateUsername", updateUsername);

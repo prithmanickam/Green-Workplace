@@ -279,7 +279,7 @@ export default function AddTeams() {
                         <TextField
                           required
                           name="divisions"
-                          label="Divisions (in order from company, separated by commas)"
+                          label="Divisions (e.g. Europe/Banking/Funds)"
                           variant="outlined"
                           fullWidth
                         />

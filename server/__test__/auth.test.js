@@ -159,26 +159,26 @@ describe("Authentication Controller Tests", () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       };
-  
+
       // Ensure the mock simulates a found user correctly
       supabase.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
         single: jest.fn().mockResolvedValue({ data: { email: req.body.email }, error: null })
       });
-  
+
       // Mock uuid generation
       uuid.v4.mockReturnValue('1234-uuid');
-  
+
       // Mock JWT signing
       jwt.sign.mockReturnValue('mocked-jwt-token');
-  
+
       // Mock nodemailer transport and sendMail function
       const sendMailMock = jest.fn().mockResolvedValue(true);
       nodemailer.createTransport.mockReturnValue({ sendMail: sendMailMock });
-  
+
       await authControllers.sendResetPasswordEmail(req, res);
-  
+
       // Check jwt.sign was called with a payload and the correct secret
       expect(jwt.sign).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -187,14 +187,14 @@ describe("Authentication Controller Tests", () => {
         }),
         JWT_SECRET_FOR_REGISTRATION
       );
-  
+
       // Verify nodemailer was used with expected arguments
       expect(sendMailMock).toHaveBeenCalledWith(expect.objectContaining({
         from: 'no-reply@greenworkplace.com',
         to: 'user@example.com',
         subject: 'Green-Workplace Reset Password Link',
       }));
-  
+
       // Verify response was as expected
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ status: "ok" });
@@ -690,6 +690,7 @@ describe("Authentication Controller Tests", () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ status: "ok" });
     });
+    
     it('should return a 500 error if fetching users fails in getAllUsers', async () => {
       const req = {
         body: {
@@ -737,6 +738,79 @@ describe("Authentication Controller Tests", () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
+  });
+
+  describe('getUsersToDelete', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should successfully return users not admin or team owner', async () => {
+      const req = {
+        body: {
+          company: 1
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+  
+      // Mock fetching team owners
+      const teamOwnersMock = [
+        { team_owner_id: 2 },
+        { team_owner_id: 3 }
+      ];
+      const usersMock = [
+        { id: 4, firstname: 'User', lastname: 'One', type: 'Employee' }
+      ];
+  
+      supabase.from = jest.fn().mockImplementation(table => {
+        if (table === "Team") {
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockResolvedValue({ data: teamOwnersMock, error: null })
+          };
+        } else if (table === "User") {
+          return {
+            select: jest.fn().mockReturnThis(),
+            neq: jest.fn().mockReturnThis(),
+            not: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockResolvedValue({ data: usersMock, error: null })
+          };
+        }
+      });
+  
+      await authControllers.getUsersToDelete(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: "ok", users: usersMock });
+    });
+
+    it('should return 500 if an error occurs fetching team owners', async () => {
+      const req = {
+        body: {
+          company: 1
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+  
+      // Mock an error during fetching team owners
+      const teamOwnersError = { message: 'Error fetching team owners' };
+      supabase.from = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockRejectedValue(teamOwnersError)
+      });
+  
+      await authControllers.getUsersToDelete(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error", error: teamOwnersError.message });
+    });
+
   });
 
 });
