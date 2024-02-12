@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, ScrollView, StatusBar, Modal, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
@@ -119,6 +119,12 @@ export default function TransportDetectionPage() {
 	const [errorPercentagesModalVisible, setErrorPercentagesModalVisible] = useState(false);
 	const [errorSubmitModalVisible, setErrorSubmitModalVisible] = useState(false);
 	const [showHelpModal, setShowHelpModal] = useState(false);
+	const [editStates, setEditStates] = useState({
+		editModalVisible: false,
+		editIndex: null,
+		tempTransportMode: '',
+	  });
+
 
 
 	const getIconName = (mode) => {
@@ -567,7 +573,7 @@ export default function TransportDetectionPage() {
 								text2: 'Fetched transport mode: ' + accurateMode
 							});
 
-							
+
 						} else {
 							Toast.show({
 								type: 'error',
@@ -618,7 +624,7 @@ export default function TransportDetectionPage() {
 		return () => {
 			if (interval) {
 				clearInterval(interval);
-			} 
+			}
 		};
 	}, [isPredicting, isFetching]);
 
@@ -791,6 +797,24 @@ export default function TransportDetectionPage() {
 		const numPassengers = text === '' || isNaN(text) ? '' : parseInt(text);
 		setCarSettings(prev => ({ ...prev, passengers: numPassengers }));
 	};
+
+	const handleSaveEdit = useCallback(() => {
+		const updatedEntries = entries.map((item, index) => 
+		  index === editStates.editIndex ? { ...item, mode: editStates.tempTransportMode } : item
+		);
+		
+		setEntries(updatedEntries);
+		setEditStates(prev => ({ ...prev, editModalVisible: false }));
+	  }, [editStates.editIndex, editStates.tempTransportMode, entries]);
+
+	const openEditModal = (index) => {
+		setEditStates(prev => ({
+		  ...prev,
+		  editModalVisible: true,
+		  editIndex: index,
+		  tempTransportMode: entries[index].mode,
+		}));
+	  };
 
 
 	const editCarEntry = (index) => {
@@ -1016,13 +1040,93 @@ export default function TransportDetectionPage() {
 									onPress={() => deleteEntry(index)}
 									style={styles.iconStyle}
 								/>
+								<Icon
+									name="edit"
+									size={20}
+									color="#2488DD"
+									onPress={() => openEditModal(index)}
+								/>
+								<Modal
+									visible={editStates.editModalVisible}
+									onRequestClose={() => setEditModalVisible(false)}
+									animationType="slide"
+									transparent={true}
+								>
+									<View style={modalStyles.centeredView}>
+										<View style={modalStyles.modalView}>
+											<Text style={styles.modalLabelText}>Change Transport Mode:</Text>
+											<RNPickerSelect
+												onValueChange={(value) => setEditStates(prev => ({ ...prev, tempTransportMode: value }))}
+												items={transportPickerItems}
+												style={pickerSelectStyles}
+												value={editStates.tempTransportMode}
+												useNativeAndroidPickerStyle={false}
+											/>
+											<TouchableOpacity
+												style={[styles.customButton, { marginTop: 20 }]}
+												onPress={() => handleSaveEdit()}
+											>
+												<Text style={styles.customButtonText}>Save</Text>
+											</TouchableOpacity>
+										</View>
+									</View>
+								</Modal>
+
 								{entry.mode === 'Car' && (
-									<Icon
-										name="edit"
-										size={20}
-										color="#2488DD"
-										onPress={() => editCarEntry(index)}
-									/>
+									<>
+										<Modal
+											visible={showCarSettingsModal}
+											animationType="slide"
+											transparent={true}
+											onRequestClose={() => setShowCarSettingsModal(false)}
+										>
+											<View style={modalStyles.centeredView}>
+												<View style={modalStyles.modalView}>
+													<Text style={styles.modalLabelText}>Select Engine Type:</Text>
+													{/* Dropdown or Picker for engine type */}
+													<RNPickerSelect
+														onValueChange={(value) => setCarSettings(prev => ({ ...prev, engineType: value }))}
+														items={[{ label: 'Petrol', value: 'petrol' }, { label: 'Diesel', value: 'diesel' }]}
+														value={carSettings.engineType}
+														style={pickerSelectStyles}
+													/>
+													<Text style={styles.modalLabelText}>No. of Employee Passengers:</Text>
+													<RNPickerSelect
+														onValueChange={(value) => setCarSettings(prev => ({ ...prev, passengers: value }))}
+														items={[
+															{ label: '1', value: '1' },
+															{ label: '2', value: '2' },
+															{ label: '3', value: '3' },
+															{ label: '4', value: '4' },
+															{ label: '5', value: '5' }
+														]}
+														value={carSettings.passengers.toString()}
+														style={pickerSelectStyles}
+														useNativeAndroidPickerStyle={false}
+													/>
+
+													<TouchableOpacity
+														style={[styles.customButton, { backgroundColor: "#2488DD" }]}
+														onPress={saveCarSettings}
+														activeOpacity={0.7}
+													>
+														<Text style={styles.customButtonText}>
+															{"Save Settings"}
+														</Text>
+													</TouchableOpacity>
+
+												</View>
+											</View>
+										</Modal>
+										<Icon
+											name="cog"
+											size={20}
+											color="grey"
+											onPress={() => editCarEntry(index)}
+										/>
+									</>
+
+
 								)}
 								<Text style={styles.entryText}>
 									{entry.mode} - {entry.time} - {typeof entry.distance === 'number' ? entry.distance.toFixed(1) : 'N/A'}m - {entry.carbonFootprint} kg CO2e
@@ -1113,50 +1217,9 @@ export default function TransportDetectionPage() {
 					modalText="Successfully Saved Carbon Footprint."
 					color="green"
 				/>
-				<Modal
-					visible={showCarSettingsModal}
-					animationType="slide"
-					transparent={true}
-					onRequestClose={() => setShowCarSettingsModal(false)}
-				>
-					<View style={modalStyles.centeredView}>
-						<View style={modalStyles.modalView}>
-							<Text style={styles.modalLabelText}>Select Engine Type:</Text>
-							{/* Dropdown or Picker for engine type */}
-							<RNPickerSelect
-								onValueChange={(value) => setCarSettings(prev => ({ ...prev, engineType: value }))}
-								items={[{ label: 'Petrol', value: 'petrol' }, { label: 'Diesel', value: 'diesel' }]}
-								value={carSettings.engineType}
-								style={pickerSelectStyles}
-							/>
-							<Text style={styles.modalLabelText}>No. of Employee Passengers:</Text>
-							<RNPickerSelect
-								onValueChange={(value) => setCarSettings(prev => ({ ...prev, passengers: value }))}
-								items={[
-									{ label: '1', value: '1' },
-									{ label: '2', value: '2' },
-									{ label: '3', value: '3' },
-									{ label: '4', value: '4' },
-									{ label: '5', value: '5' }
-								]}
-								value={carSettings.passengers.toString()}
-								style={pickerSelectStyles}
-								useNativeAndroidPickerStyle={false}
-							/>
 
-							<TouchableOpacity
-								style={[styles.customButton, { backgroundColor: "#2488DD" }]}
-								onPress={saveCarSettings}
-								activeOpacity={0.7}
-							>
-								<Text style={styles.customButtonText}>
-									{"Save Settings"}
-								</Text>
-							</TouchableOpacity>
 
-						</View>
-					</View>
-				</Modal>
+
 				<Modal
 					animationType="slide"
 					transparent={true}

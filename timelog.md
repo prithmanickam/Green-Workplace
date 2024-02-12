@@ -338,3 +338,4 @@
 
 ### 12 February 2023
 * *1.5 hours* Fixing bugs from Pilot Evaluation
+* *2 hours* Edit Type of Transport Modes for Automatically Added Entries in Mobile App
