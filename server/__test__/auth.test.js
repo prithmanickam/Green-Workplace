@@ -11,7 +11,9 @@ jest.mock("jsonwebtoken");
 jest.mock("bcryptjs");
 jest.mock("nodemailer");
 jest.mock('uuid');
-
+jest.mock("../config/supabaseConfig", () => ({
+  from: jest.fn()
+}));
 
 // Auth Controllers
 describe("Authentication Controller Tests", () => {

@@ -1,7 +1,9 @@
 const carbonFootprintControllers = require("../controllers/CarbonFootprintControllers");
 const supabase = require("../config/supabaseConfig")
 
-jest.mock("../config/supabaseConfig");;
+jest.mock("../config/supabaseConfig", () => ({
+  from: jest.fn()
+}));
 
 describe("Carbon Footprint Controller Tests", () => {
   afterEach(() => {
