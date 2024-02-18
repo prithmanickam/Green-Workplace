@@ -47,7 +47,7 @@ const job = schedule.scheduleJob('55 23 * * 0', async function () {
 });
 
 
-const modelPath = path.join(__dirname, 'model.json');
+const modelPath = path.join(__dirname, '..', 'machine_learning', 'model.json');
 
 // Load the model and targetMap 
 const loadModel = (filePath) => {
