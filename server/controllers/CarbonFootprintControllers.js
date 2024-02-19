@@ -86,7 +86,7 @@ module.exports.postCarbonFootprint = async (req, res) => {
   const { user_id, day, duration, teamData } = req.body;
 
   try {
-    const tableName = `User_${day}_Stats`;
+    const tableName = `User_${day}_Duration`;
 
     const { error: userCFError } = await supabase.from(tableName).upsert([
       {
@@ -162,14 +162,14 @@ module.exports.getCarbonFootprint = async (req, res) => {
 
     const { data: userDuration, error: getUserDurationError } = await supabase
       .from("User")
-      .select(`User_Monday_Stats(duration), User_Tuesday_Stats(duration), User_Wednesday_Stats(duration), User_Thursday_Stats(duration), User_Friday_Stats(duration)`)
+      .select(`User_Monday_Duration(duration), User_Tuesday_Duration(duration), User_Wednesday_Duration(duration), User_Thursday_Duration(duration), User_Friday_Duration(duration)`)
       .eq('id', user_id);
 
-    totalStats["Monday"]["duration"] = `${userDuration[0].User_Monday_Stats ? userDuration[0].User_Monday_Stats.duration : `0 min`}`;
-    totalStats["Tuesday"]["duration"] = `${userDuration[0].User_Tuesday_Stats ? userDuration[0].User_Tuesday_Stats.duration : `0 min`}`;
-    totalStats["Wednesday"]["duration"] = `${userDuration[0].User_Wednesday_Stats ? userDuration[0].User_Wednesday_Stats.duration : `0 min`}`;
-    totalStats["Thursday"]["duration"] = `${userDuration[0].User_Thursday_Stats ? userDuration[0].User_Thursday_Stats.duration : `0 min`}`;
-    totalStats["Friday"]["duration"] = `${userDuration[0].User_Friday_Stats ? userDuration[0].User_Friday_Stats.duration : `0 min`}`;
+    totalStats["Monday"]["duration"] = `${userDuration[0].User_Monday_Duration ? userDuration[0].User_Monday_Duration.duration : `0 min`}`;
+    totalStats["Tuesday"]["duration"] = `${userDuration[0].User_Tuesday_Duration ? userDuration[0].User_Tuesday_Duration.duration : `0 min`}`;
+    totalStats["Wednesday"]["duration"] = `${userDuration[0].User_Wednesday_Duration ? userDuration[0].User_Wednesday_Duration.duration : `0 min`}`;
+    totalStats["Thursday"]["duration"] = `${userDuration[0].User_Thursday_Duration ? userDuration[0].User_Thursday_Duration.duration : `0 min`}`;
+    totalStats["Friday"]["duration"] = `${userDuration[0].User_Friday_Duration ? userDuration[0].User_Friday_Duration.duration : `0 min`}`;
 
     for (const team of user_teams) {
       const { data: teamInfo, getTeamInfoError } = await supabase
@@ -230,7 +230,7 @@ module.exports.resetCarbonFootprint = async (req, res) => {
   const { day, user_id } = req.body;
 
   try {
-    const tableName = `User_${day}_Stats`;
+    const tableName = `User_${day}_Duration`;
     const dayColumnName = day.toLowerCase() + '_cf';
 
     const { error: teamCFError } = await supabase

@@ -100,7 +100,7 @@ module.exports.deleteEmployee = async (req, res) => {
     const user_id = userData.id;
 
     // Delete from related tables
-    const tables = ["Team_Member", "Team_Member_History", "User_Monday_Stats", "User_Tuesday_Stats", "User_Wednesday_Stats", "User_Thursday_Stats", "User_Friday_Stats"];
+    const tables = ["Team_Member", "Team_Member_History", "User_Monday_Duration", "User_Tuesday_Duration", "User_Wednesday_Duration", "User_Thursday_Duration", "User_Friday_Duration"];
 
     for (const table of tables) {
       const { error } = await supabase.from(table).delete().eq("user_id", user_id);
