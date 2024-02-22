@@ -525,7 +525,7 @@ export default function TransportDetectionPage() {
 					const gyroscopeStats = calculateStats(gyroscopeDataRef.current);
 
 					newData = {
-						'distance_meters_twenty_sec': distanceTravelledLastDetectRef.current,
+						'distance_meters_twenty_sec': currentDistanceTravelledRef.current,
 						'android.sensor.accelerometer#mean': accelerometerStats.mean,
 						'android.sensor.accelerometer#min': accelerometerStats.min,
 						'android.sensor.accelerometer#max': accelerometerStats.max,
@@ -540,7 +540,7 @@ export default function TransportDetectionPage() {
 					const gyroscopeStats = calculateStats(gyroscopeDataRefW2.current);
 
 					newData = {
-						'distance_meters_twenty_sec': distanceTravelledLastDetectRef.current,
+						'distance_meters_twenty_sec': currentDistanceTravelledRefW2.current,
 						'android.sensor.accelerometer#mean': accelerometerStats.mean,
 						'android.sensor.accelerometer#min': accelerometerStats.min,
 						'android.sensor.accelerometer#max': accelerometerStats.max,
