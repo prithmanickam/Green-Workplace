@@ -525,7 +525,7 @@ export default function TransportDetectionPage() {
 					const gyroscopeStats = calculateStats(gyroscopeDataRef.current);
 
 					newData = {
-						'distance_meters_twenty_sec': currentDistanceTravelledRef.current,
+						'distance_meters_twenty_sec': distanceTravelledLastDetectRef.current,
 						'android.sensor.accelerometer#mean': accelerometerStats.mean,
 						'android.sensor.accelerometer#min': accelerometerStats.min,
 						'android.sensor.accelerometer#max': accelerometerStats.max,
@@ -540,7 +540,7 @@ export default function TransportDetectionPage() {
 					const gyroscopeStats = calculateStats(gyroscopeDataRefW2.current);
 
 					newData = {
-						'distance_meters_ten_sec': currentDistanceTravelledRefW2.current,
+						'distance_meters_twenty_sec': distanceTravelledLastDetectRef.current,
 						'android.sensor.accelerometer#mean': accelerometerStats.mean,
 						'android.sensor.accelerometer#min': accelerometerStats.min,
 						'android.sensor.accelerometer#max': accelerometerStats.max,
@@ -564,12 +564,12 @@ export default function TransportDetectionPage() {
 					.then((data) => {
 						if (data.status === "ok") {
 							let accurateMode = data.mode;
-							if (currentDistanceTravelledRef.current < 40 && data.mode !== "Walking") {
+							if (distanceTravelledLastDetectRef.current < 30 && data.mode !== "Walking") {
 								accurateMode = "Still";
 							}
 
 							const currentTime = new Date().toLocaleTimeString();
-							const modeWithTime = { mode: accurateMode, time: currentTime, distance: currentDistanceTravelledRef.current };
+							const modeWithTime = { mode: accurateMode, time: currentTime, distance: distanceTravelledLastDetectRef.current };
 							setTransportModes(modes => [modeWithTime, ...modes]);
 							Toast.show({
 								type: 'success',
@@ -665,8 +665,8 @@ export default function TransportDetectionPage() {
 	}, [currentWindowRef]);
 
 	useEffect(() => {
-		distanceTravelledLastDetectRef.current = distanceTravelledLastDetectRef;
-	}, [distanceTravelledLastDetectRef]);
+		distanceTravelledLastDetectRef.current = distanceTravelledLastDetect;
+	}, [distanceTravelledLastDetect]);
 
 	// Algorithm to predict overall journey from the transport predicted data
 	const getPrimaryTransportModes = (modes) => {
