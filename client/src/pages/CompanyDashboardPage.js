@@ -328,7 +328,7 @@ export default function CompanyDashboard() {
                     Company Total Commuting Carbon Footprint this Week:
                   </Typography>
                   <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {totalCarbonFootprint.toFixed(2)} kg CO2e
+                    {totalCarbonFootprint?.toFixed(2)} kg CO2e
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2 }}>
                     <Typography style={{ fontSize: '0.9rem', marginRight: '8px' }}>

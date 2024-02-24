@@ -202,6 +202,55 @@ describe("Authentication Controller Tests", () => {
       expect(res.json).toHaveBeenCalledWith({ status: "ok" });
     });
 
+    it('should return 404 if the email does not exist', async () => {
+      const req = {
+        body: {
+          email: 'nonexistent@example.com'
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+    
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({ data: null, error: null }) 
+      });
+    
+      await authControllers.sendResetPasswordEmail(req, res);
+    
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        status: "error",
+        error: "Email does not exist"
+      });
+    });
+
+    it('should return 500 on internal errors', async () => {
+      const req = {
+        body: {
+          email: 'user@example.com'
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+    
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockRejectedValue(new Error('Internal server error'))
+      });
+    
+      await authControllers.sendResetPasswordEmail(req, res);
+    
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ status: "error" });
+    });
+    
   });
 
 
