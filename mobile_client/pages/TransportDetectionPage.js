@@ -688,6 +688,7 @@ export default function TransportDetectionPage() {
 		let startTime = modes[0].time;
 		let totalDistance = 0;
 		let walkingCounter = 0;
+		let stillCounter = 0;
 		let modeSequence = [];
 
 		modes.forEach((entry, index) => {
@@ -697,6 +698,7 @@ export default function TransportDetectionPage() {
 
 			if (vehicleModes.includes(mode)) {
 				walkingCounter = 0;
+				stillCounter = 0;
 				modeSequence.push(mode);
 				if (currentMode === 'Walking') {
 					addSummaryEntry(currentMode, startTime, modes[index - 1].time, totalDistance);
@@ -704,20 +706,25 @@ export default function TransportDetectionPage() {
 					startTime = time;
 					totalDistance = 0;
 				}
-			} else if (mode === 'Walking') {
-				walkingCounter++;
-				if (walkingCounter >= 6 && vehicleModes.includes(currentMode)) {
+			} else if (mode === 'Walking' || entry.mode === 'Still') {
+				if (entry.mode === 'Walking') walkingCounter++;
+				if (entry.mode === 'Still') stillCounter++;
+
+				if ((walkingCounter >= 4 || stillCounter >= 10) && vehicleModes.includes(currentMode)) {
 					let mostCommonMode = modeSequence.sort((a, b) =>
 						modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
 					).pop();
-					addSummaryEntry(mostCommonMode, startTime, modes[index - 6].time, totalDistance);
+					// Determine the correct index for switching back to walking based on trigger condition
+					let switchIndex = walkingCounter >= 4 ? walkingCounter : stillCounter;
+					addSummaryEntry(mostCommonMode, startTime, modes[index - switchIndex].time, totalDistance);
 					currentMode = 'Walking';
-					startTime = modes[index - 5].time;
+					startTime = modes[index + 1 - switchIndex].time;
 					totalDistance = 0;
 					modeSequence = [];
 				}
 			} else {
 				walkingCounter = 0;
+				stillCounter = 0;
 			}
 		});
 
