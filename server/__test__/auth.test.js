@@ -307,11 +307,6 @@ describe("Authentication Controller Tests", () => {
         json: jest.fn(),
       };
 
-      const mockUser = {
-        email: "test@example.com",
-        password: "hashedPassword",
-      };
-
       bcrypt.compare = jest.fn().mockResolvedValue(false);
 
       await authControllers.loginUser(req, res);
@@ -627,7 +622,6 @@ describe("Authentication Controller Tests", () => {
       expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
       expect(supabase.from).toHaveBeenCalledWith("User");
       expect(supabase.from).toHaveBeenCalledWith("Company");
-      //expect(supabase.from).toHaveBeenCalledWith("Team_Member");
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ status: "error" });
     });
@@ -729,14 +723,6 @@ describe("Authentication Controller Tests", () => {
       });
 
       await authControllers.getAllUsers(req, res);
-
-      const expectedUsers = userData.map((user) => ({
-        id: user.id,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        email: user.email,
-        company_id: user.company_id,
-      }));
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ status: "ok" });

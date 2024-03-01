@@ -357,12 +357,6 @@ describe("Company Controller Tests", () => {
 
       await teamControllers.deleteEmployee(req, res);
 
-      // Verify subsequent calls to supabase.from were for deleting from each table
-      const tables = ["Team_Member", "Team_Member_History", "User_Monday_Duration", "User_Tuesday_Duration", "User_Wednesday_Duration", "User_Thursday_Duration", "User_Friday_Duration"];
-      tables.forEach((table, index) => {
-        const callIndex = supabase.from.mock.calls.findIndex(call => call[0] === table);
-      });
-
       expect(res.status).toHaveBeenCalledWith(500);
     });
 

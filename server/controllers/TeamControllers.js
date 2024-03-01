@@ -13,14 +13,13 @@ module.exports.addTeam = async (req, res) => {
   try {
 
     // Find the team owner
-    const { data: team_owner, getUserError } = await supabase
+    const { data: team_owner } = await supabase
       .from("User")
       .select("*")
       .eq("email", teamOwner)
       .single();
 
     if (!team_owner) {
-      //console.log("no team owner id")
       return res.status(404).json({ error: "Team Owner user not found" });
     }
 
@@ -56,8 +55,7 @@ module.exports.addTeam = async (req, res) => {
         .eq("email", memberEmail)
         .single();
 
-      const { error: teamMemberAddError } = await supabase.from("Team_Member").upsert([
-        //await supabase.from("Team_Member").upsert([
+      await supabase.from("Team_Member").upsert([
         {
           team_id,
           user_id: user_id.id,
@@ -68,7 +66,6 @@ module.exports.addTeam = async (req, res) => {
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
-    //console.error("Error:", error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -82,7 +79,7 @@ module.exports.getTeams = async (req, res) => {
     let allTeamsData = []
 
     // Fetch all the teams
-    const { data: allTeams, error } = await supabase
+    const { data: allTeams } = await supabase
       .from("Team")
       .select("*")
       .eq("company_id", company);
@@ -90,7 +87,7 @@ module.exports.getTeams = async (req, res) => {
     // Extract the desired properties for each team and add them to allTeamsData
     for (const team of allTeams) {
 
-      const { data: team_info, getTeamInfoError } = await supabase
+      const { data: team_info } = await supabase
         .from("Team")
         .select(`User(email), Team_Member(count) `)
         .eq("id", team.id)
@@ -108,7 +105,6 @@ module.exports.getTeams = async (req, res) => {
 
     res.status(200).json({ status: "ok", teams: allTeamsData });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -119,13 +115,13 @@ module.exports.deleteTeam = async (req, res) => {
 
   try {
     // Delete associated team members from the Team_Member table
-    const { error: deleteMembersError } = await supabase
+    await supabase
       .from("Team_Member")
       .delete()
       .eq("team_id", teamId);
 
     // Delete the team
-    const { error: deleteError } = await supabase
+    await supabase
       .from("Team")
       .delete()
       .eq("id", teamId);
@@ -133,7 +129,6 @@ module.exports.deleteTeam = async (req, res) => {
     res.status(200).json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ status: "error" });
-    //console.log(error);
   }
 };
 
@@ -144,7 +139,7 @@ module.exports.getUserTeamsData = async (req, res) => {
   try {
 
     // find teams user is in
-    const { data: user_teams, getUserTeamsError } = await supabase
+    const { data: user_teams } = await supabase
       .from("Team_Member")
       .select("team_id")
       .eq("user_id", user_id);
@@ -153,7 +148,7 @@ module.exports.getUserTeamsData = async (req, res) => {
 
     for (const team of user_teams) {
 
-      const { data: teamName, getTeamNameError } = await supabase
+      const { data: teamName } = await supabase
         .from("Team")
         .select("name")
         .eq("id", team.team_id);
@@ -178,7 +173,7 @@ module.exports.getYourDashboardData = async (req, res) => {
   const { user_id } = req.body;
 
   try {
-    const { data: user_details, getUserDetailsError } = await supabase
+    const { data: user_details } = await supabase
       .from("User")
       .select(`
         firstname,
@@ -236,7 +231,6 @@ module.exports.getYourDashboardData = async (req, res) => {
 
     res.status(200).json({ status: "ok", data: yourDashboardInfo });
   } catch (error) {
-    //console.log(error)
     res.status(500).json({ status: "error" });
   }
 };
@@ -248,7 +242,7 @@ module.exports.postWorkAtOfficePreference = async (req, res) => {
 
   try {
 
-    const { error: postPreferenceError } = await supabase
+    await supabase
       .from("Team_Member")
       .update(
         {
@@ -258,7 +252,6 @@ module.exports.postWorkAtOfficePreference = async (req, res) => {
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -270,7 +263,7 @@ module.exports.getUserTeams = async (req, res) => {
 
   try {
 
-    const { data: user_teams, getUserTeamsError } = await supabase
+    const { data: user_teams } = await supabase
       .from("Team_Member")
       .select(`
       team_id,
@@ -280,7 +273,6 @@ module.exports.getUserTeams = async (req, res) => {
 
     res.status(200).json({ status: "ok", user_teams });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -290,7 +282,7 @@ module.exports.getUserTeamOwnerTeams = async (req, res) => {
   const { user_id } = req.body;
 
   try {
-    const { data: user_teams, error: getUserTeamsError } = await supabase
+    const { data: user_teams } = await supabase
       .from("Team")
       .select(`
          id,
@@ -301,7 +293,6 @@ module.exports.getUserTeamOwnerTeams = async (req, res) => {
 
     res.status(200).json({ status: "ok", user_teams });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -313,7 +304,7 @@ module.exports.getTeamOwnerFunctionsData = async (req, res) => {
   try {
     console.log("Fetching teamInfo...");
 
-    const { data: teamInfo, error: getTeamInfoError } = await supabase
+    const { data: teamInfo } = await supabase
       .from("Team")
       .select(`
          wao_days,
@@ -322,13 +313,13 @@ module.exports.getTeamOwnerFunctionsData = async (req, res) => {
       .eq("id", team_id);
 
 
-    const { data: teamMembersToRemove, error: getMembersToRemoveError } = await supabase
+    const { data: teamMembersToRemove } = await supabase
       .from("Team_Member")
       .select("User(email)")
       .eq("team_id", team_id);
 
 
-    const { data: teamMembersToAdd, error: getMembersToAddError } = await supabase
+    const { data: teamMembersToAdd } = await supabase
       .from("User")
       .select(`email`)
       .eq("company_id", company_id)
@@ -356,7 +347,7 @@ module.exports.editTeamName = async (req, res) => {
 
   try {
 
-    const { editTeamNameError } = await supabase
+    await supabase
       .from("Team")
       .update({ name: new_team_name })
       .eq("id", team_id);
@@ -374,7 +365,7 @@ module.exports.editTeamWAODays = async (req, res) => {
 
   try {
 
-    const { editTeamWAODaysError } = await supabase
+    await supabase
       .from("Team")
       .update({ wao_days: selected_days })
       .eq("id", team_id);
@@ -393,7 +384,7 @@ module.exports.addTeamMember = async (req, res) => {
 
   try {
 
-    const { data: user_id, error: getUserIdError } = await supabase
+    const { data: user_id } = await supabase
       .from("User")
       .select(`
          id,
@@ -402,14 +393,14 @@ module.exports.addTeamMember = async (req, res) => {
       .eq("email", new_team_member);
 
 
-    const { error: addTeamMemberError } = await supabase
+    await supabase
       .from("Team_Member")
       .insert([
         { "user_id": user_id[0].id, "team_id": team_id },
       ]);
 
 
-    const { error: error3 } = await supabase
+    await supabase
       .from("Team_Member")
       .delete()
       .eq("team_id", user_id[0].Company.temporary_team)
@@ -429,7 +420,7 @@ module.exports.removeTeamMember = async (req, res) => {
 
   try {
 
-    const { data: user_id, error: getUserIdError } = await supabase
+    const { data: user_id } = await supabase
       .from("User")
       .select(`
          id,
@@ -438,21 +429,21 @@ module.exports.removeTeamMember = async (req, res) => {
       .eq("email", team_member);
 
 
-    const { error: removeTeamMemberError } = await supabase
+    await supabase
       .from("Team_Member")
       .delete()
       .eq('user_id', user_id[0].id)
       .eq('team_id', team_id)
 
 
-    const { data, error, count } = await supabase
+    const { count } = await supabase
       .from("Team_Member")
       .select('*', { count: 'exact' })
       .eq('user_id', user_id[0].id);
 
 
     if (count == 0) {
-      const { error: addToTempTeamError } = await supabase
+      await supabase
         .from("Team_Member")
         .insert([
           { "user_id": user_id[0].id, "team_id": user_id[0].Company.temporary_team },
@@ -471,7 +462,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
   const { team_id } = req.body;
 
   try {
-    const { data: team, error: getTeamError } = await supabase
+    const { data: team } = await supabase
       .from("Team")
       .select(`
         id,
@@ -498,7 +489,7 @@ module.exports.getTeamDashboardData = async (req, res) => {
       team_members: [],
     }
 
-    const { data: team_members_info, getTeamMemberError } = await supabase
+    const { data: team_members_info } = await supabase
       .from("Team_Member")
       .select(`
         monday_cf,

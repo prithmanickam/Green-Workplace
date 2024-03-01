@@ -800,8 +800,6 @@ describe("Team Controller Tests", () => {
       expect(mockSelect).toHaveBeenCalledWith("\n         id,\n         Company(temporary_team)\n    ");
       expect(supabase.from).toHaveBeenCalledWith('Team_Member');
       expect(mockDelete).toHaveBeenCalled();
-      //expect(mockSelectWithCount).toHaveBeenCalledWith('*', { count: 'exact' });
-      //expect(mockInsert).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(500);
     });
 

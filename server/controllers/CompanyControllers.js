@@ -14,7 +14,6 @@ module.exports.getOffices = async (req, res) => {
 
     res.status(200).json({ status: "ok", data: data });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -186,7 +185,7 @@ module.exports.getLineChartData = async (req, res) => {
     if (lineChartLength === "week") {
       dates = getLast4Mondays();
       for (const monday of dates) {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("Team_Member_History")
           .select("carbon_footprint")
           .eq(field_name, id_name)
@@ -204,7 +203,7 @@ module.exports.getLineChartData = async (req, res) => {
       dates = getFirstDayOfLast4Months();
 
       for (const month of dates) {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("Team_Member_History")
           .select("carbon_footprint, week")
           .eq(field_name, id_name)
@@ -297,7 +296,7 @@ module.exports.getCompanyDashboardData = async (req, res) => {
 
   try {
 
-    const { data: teams, getTeamsError } = await supabase
+    const { data: teams } = await supabase
       .from("Team")
       .select(`
         id,
@@ -382,7 +381,6 @@ module.exports.getCompanyDashboardData = async (req, res) => {
 
     res.status(200).json({ status: "ok", teamsInfo, companyInfo, userCount, totalCompanyCarbonFootprint, continentAverages });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: "error" });
   }
 };

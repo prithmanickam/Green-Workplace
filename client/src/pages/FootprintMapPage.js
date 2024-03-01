@@ -110,7 +110,7 @@ function FootprintMapPage() {
 
     } else {
       // For walking or cycling
-      return 0;
+      return "0";
     }
   }, [transitDistances]);
 

@@ -13,7 +13,7 @@ module.exports.updateUsername = async (req, res) => {
   const { userId, editedUser } = req.body;
 
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("User")
       .update({
         firstname: editedUser.firstname,
@@ -24,7 +24,6 @@ module.exports.updateUsername = async (req, res) => {
 
     res.status(200).json({ status: "ok", message: "User name updated successfully", user: data });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -36,7 +35,7 @@ module.exports.updatePassword = async (req, res) => {
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("User")
       .update({
         password: hashedPassword,
@@ -45,7 +44,6 @@ module.exports.updatePassword = async (req, res) => {
 
     res.status(200).json({ status: "ok", message: "User name updated successfully", user: data });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -78,7 +76,7 @@ module.exports.getUsersToDelete = async (req, res) => {
 
   try {
     // Fetch all team owners in the company
-    const { data: teamOwners, error: teamOwnersError } = await supabase
+    const { data: teamOwners } = await supabase
       .from("Team")
       .select("team_owner_id")
       .eq("company_id", company);
@@ -87,7 +85,7 @@ module.exports.getUsersToDelete = async (req, res) => {
     const ownerIds = teamOwners.map(owner => owner.team_owner_id);
 
     // fetch all users who are not admins, not in the ownerIds list, and belong to the company
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("User")
       .select(`*, Office(name)`)
       .neq("type", "Admin")
@@ -106,7 +104,7 @@ module.exports.sendResetPasswordEmail = async (req, res) => {
     const email = req.body.email;
 
     // First, check if the email exists in the database
-    const { data: user, error } = await supabase
+    const { data: user } = await supabase
       .from("User")
       .select("email")
       .eq("email", email)
@@ -215,8 +213,6 @@ module.exports.sendRegistrationEmails = async (req, res) => {
         html: emailContent,
       });
 
-      //console.log(`Registration email sent to ${email}`);
-
     }
     res.status(200).json({ status: "ok" });
   } catch (error) {
@@ -251,7 +247,7 @@ module.exports.registerUser = async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
-    const { data: userData, error: error } = await supabase.from("User").upsert([
+    const { data: userData } = await supabase.from("User").upsert([
       {
         firstname,
         lastname,
@@ -263,13 +259,13 @@ module.exports.registerUser = async (req, res) => {
     ])
     .select();
 
-    const { data: companyInfo, error: error2 } = await supabase
+    const { data: companyInfo } = await supabase
       .from("Company")
       .select("*")
       .eq("id", company)
       .single();
 
-    const { error: addToTempTeamError } = await supabase
+    await supabase
       .from("Team_Member")
       .insert([
         { "user_id": userData[0].id, "team_id": companyInfo.temporary_team },
@@ -278,7 +274,6 @@ module.exports.registerUser = async (req, res) => {
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -295,7 +290,6 @@ module.exports.loginUser = async (req, res) => {
       .single();
 
     if (error) {
-      //console.error("Error logging in user:", error);
       return res.status(404).json({ error: "User not found" });
     }
 
@@ -313,7 +307,6 @@ module.exports.loginUser = async (req, res) => {
 
     res.status(200).json({ status: "ok", token });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -339,7 +332,6 @@ module.exports.getUserData = async (req, res) => {
 
     res.status(200).json({ status: "ok", data });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };

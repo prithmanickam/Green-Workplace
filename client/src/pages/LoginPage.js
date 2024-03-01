@@ -4,7 +4,6 @@ import TextField from "@mui/material/TextField";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import Link from "@mui/material/Link";
-import Paper from "@mui/material/Paper";
 import Card from "@mui/material/Card";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
@@ -13,6 +12,7 @@ import { Container } from "@mui/material";
 import React, { useState } from "react";
 import { baseURL } from "../utils/constant";
 import TopNavbar from '../components/TopNavbar';
+import AuthBackground from '../components/AuthBackground';
 import { toast } from "react-toastify";
 
 const LoginPage = () => {
@@ -68,24 +68,8 @@ const LoginPage = () => {
       >
         <CssBaseline />
         
-        <Grid
-          component={Paper}
-          elevation={10}
-          item
-          xs={12}
-          sm={4}
-          md={8}
-          sx={{
-            backgroundImage: `url(${process.env.PUBLIC_URL}/login-screen-bg.png)`,
-            backgroundRepeat: "no-repeat",
-            backgroundColor: (t) =>
-              t.palette.mode === "light"
-                ? t.palette.grey[50]
-                : t.palette.grey[900],
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
+        <AuthBackground backgroundImageUrl={`${process.env.PUBLIC_URL}/login-screen-bg.png`} />
+
         <Grid item xs={12} sm={8} md={4} component={Card} elevation={10} square>
           <Box
             sx={{

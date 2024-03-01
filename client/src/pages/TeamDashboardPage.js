@@ -22,7 +22,7 @@ export default function TeamDashboard() {
     team_created: '',
     wao_days: [],
     carbon_footprint_total: 0,
-    carbon_footprint_metric: 0,
+    carbon_footprint_metric: '',
     team_members: [],
   });
   const [selectedTeam, setSelectedTeam] = useState('');

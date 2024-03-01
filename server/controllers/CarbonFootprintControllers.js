@@ -11,7 +11,7 @@ const job = schedule.scheduleJob('55 23 * * 0', async function () {
     console.log('Executing the scheduled task every Sunday at evening');
 
     // Fetch data from Team_Member
-    const { data: usersTeams, error: getUsersTeamsError } = await supabase
+    const { data: usersTeams } = await supabase
       .from("Team_Member")
       .select(`team_id, user_id, monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf, Team(company_id)`);
 
@@ -28,7 +28,7 @@ const job = schedule.scheduleJob('55 23 * * 0', async function () {
     for (const entry of usersTeams) {
       const totalCarbonFootprint = entry.monday_cf + entry.tuesday_cf + entry.wednesday_cf + entry.thursday_cf + entry.friday_cf;
 
-      const { error: insertError } = await supabase
+      await supabase
         .from("Team_Member_History")
         .insert([
           {
@@ -88,7 +88,7 @@ module.exports.postCarbonFootprint = async (req, res) => {
   try {
     const tableName = `User_${day}_Duration`;
 
-    const { error: userCFError } = await supabase.from(tableName).upsert([
+    await supabase.from(tableName).upsert([
       {
         user_id,
         duration,
@@ -101,7 +101,7 @@ module.exports.postCarbonFootprint = async (req, res) => {
 
       const dayColumnName = day.toLowerCase() + '_cf';
 
-      const { error: teamCFError } = await supabase
+      await supabase
         .from("Team_Member")
         .update(
           {
@@ -113,7 +113,6 @@ module.exports.postCarbonFootprint = async (req, res) => {
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
-    //console.error(error);
     res.status(500).json({ status: "error" });
   }
 };
@@ -155,12 +154,12 @@ module.exports.getCarbonFootprint = async (req, res) => {
 
   try {
     // find teams user us in
-    const { data: user_teams, error: getUserTeamsError } = await supabase
+    const { data: user_teams } = await supabase
       .from("Team_Member")
       .select("team_id")
       .eq("user_id", user_id);
 
-    const { data: userDuration, error: getUserDurationError } = await supabase
+    const { data: userDuration } = await supabase
       .from("User")
       .select(`User_Monday_Duration(duration), User_Tuesday_Duration(duration), User_Wednesday_Duration(duration), User_Thursday_Duration(duration), User_Friday_Duration(duration)`)
       .eq('id', user_id);
@@ -172,7 +171,7 @@ module.exports.getCarbonFootprint = async (req, res) => {
     totalStats["Friday"]["duration"] = `${userDuration[0].User_Friday_Duration ? userDuration[0].User_Friday_Duration.duration : `0 min`}`;
 
     for (const team of user_teams) {
-      const { data: teamInfo, getTeamInfoError } = await supabase
+      const { data: teamInfo } = await supabase
         .from("Team_Member")
         .select(`monday_cf, tuesday_cf, wednesday_cf, thursday_cf, friday_cf, Team(name)`)
         .eq("team_id", team.team_id)
@@ -233,7 +232,7 @@ module.exports.resetCarbonFootprint = async (req, res) => {
     const tableName = `User_${day}_Duration`;
     const dayColumnName = day.toLowerCase() + '_cf';
 
-    const { error: teamCFError } = await supabase
+    await supabase
       .from("Team_Member")
       .update(
         {
@@ -241,7 +240,7 @@ module.exports.resetCarbonFootprint = async (req, res) => {
         },
       ).eq("user_id", user_id);
 
-    const { error: userCFError } = await supabase
+    await supabase
       .from(tableName)
       .delete()
       .eq("user_id", user_id);
@@ -258,7 +257,7 @@ module.exports.editCompanyCarbonStandard = async (req, res) => {
 
   try {
 
-    const { editCarbonStandardError } = await supabase
+    await supabase
       .from("Company")
       .update({
         "green_carbon_standard": greenStandard,
@@ -280,7 +279,7 @@ module.exports.getCompanyCarbonStandard = async (req, res) => {
 
   try {
 
-    const { data: companyStandard, error: editCarbonStandardError } = await supabase
+    const { data: companyStandard } = await supabase
       .from("Company")
       .select("green_carbon_standard, amber_carbon_standard, red_carbon_standard")
       .eq("id", company_id);
