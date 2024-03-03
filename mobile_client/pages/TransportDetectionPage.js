@@ -125,7 +125,7 @@ export default function TransportDetectionPage() {
 		editModalVisible: false,
 		editIndex: null,
 		tempTransportMode: '',
-	  });
+	});
 
 
 
@@ -381,6 +381,7 @@ export default function TransportDetectionPage() {
 	const stopPredicting = () => {
 		setIsPredicting(false);
 		setPredictionEnded(true);
+		setTransportModes(transportModes.reverse());
 		addPrimaryTransportModeEntries();
 	};
 
@@ -670,27 +671,29 @@ export default function TransportDetectionPage() {
 
 	// Algorithm to predict overall journey from the transport predicted data
 	const getPrimaryTransportModes = (modes) => {
-
 		if (!modes || modes.length === 0) {
 			return []; // Return an empty array if no valid modes are provided
 		}
 
 		const vehicleModes = ["Car", "Bus", "Train"];
+
+		// Helper function to add a summary entry to the result
 		const addSummaryEntry = (mode, start, end, totalDistance) => {
-			// Only add entry if start time and end time are different (else its likely a mis-detection)
 			if ((start !== end) || (mode == "Walking")) {
 				summary.push({ mode, startTime: start, endTime: end, distance: totalDistance });
 			}
 		};
 
+		// Initialise variables for tracking summary, current state, and counters
 		let summary = [];
 		let currentMode = modes[0].mode === 'Still' ? 'Walking' : modes[0].mode;
 		let startTime = modes[0].time;
 		let totalDistance = 0;
 		let walkingCounter = 0;
 		let stillCounter = 0;
-		let modeSequence = [];
+		let modeFrequency = {};
 
+		// Iterate through the all the mode detections
 		modes.forEach((entry, index) => {
 			let mode = entry.mode === 'Still' ? 'Walking' : entry.mode;
 			let time = entry.time;
@@ -699,28 +702,33 @@ export default function TransportDetectionPage() {
 			if (vehicleModes.includes(mode)) {
 				walkingCounter = 0;
 				stillCounter = 0;
-				modeSequence.push(mode);
+				modeFrequency[mode] = (modeFrequency[mode] || 0) + 1;
+
+				// If transitioning from walking, add summary entry for walking segment
 				if (currentMode === 'Walking') {
 					addSummaryEntry(currentMode, startTime, modes[index - 1].time, totalDistance);
 					currentMode = mode;
 					startTime = time;
 					totalDistance = 0;
 				}
+
 			} else if (mode === 'Walking' || entry.mode === 'Still') {
 				if (entry.mode === 'Walking') walkingCounter++;
 				if (entry.mode === 'Still') stillCounter++;
 
+				// If criteria met (walking or still duration), and coming from a vehicle mode
 				if ((walkingCounter >= 4 || stillCounter >= 10) && vehicleModes.includes(currentMode)) {
-					let mostCommonMode = modeSequence.sort((a, b) =>
-						modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
-					).pop();
-					// Determine the correct index for switching back to walking based on trigger condition
+					let mostCommonMode = Object.keys(modeFrequency).reduce((a, b) => modeFrequency[a] > modeFrequency[b] ? a : b);
 					let switchIndex = walkingCounter >= 4 ? walkingCounter : stillCounter;
+
+					// Add summary entry for the most common vehicle mode
 					addSummaryEntry(mostCommonMode, startTime, modes[index - switchIndex].time, totalDistance);
+
+					// Reset for a new walking segment
 					currentMode = 'Walking';
-					startTime = modes[index + 1 - switchIndex].time;
+					startTime = modes[index - switchIndex + 1].time;
 					totalDistance = 0;
-					modeSequence = [];
+					modeFrequency = {};
 				}
 			} else {
 				walkingCounter = 0;
@@ -728,14 +736,13 @@ export default function TransportDetectionPage() {
 			}
 		});
 
-		if (currentMode === 'Walking' || modeSequence.length) {
-			let mostCommonMode = modeSequence.length ? modeSequence.sort((a, b) =>
-				modeSequence.filter(v => v === a).length - modeSequence.filter(v => v === b).length
-			).pop() : currentMode;
+		// After the loop, add a final summary entry if necessary
+		if (currentMode === 'Walking' || Object.keys(modeFrequency).length) {
+			let mostCommonMode = currentMode === 'Walking' ? 'Walking' : Object.keys(modeFrequency).reduce((a, b) => modeFrequency[a] > modeFrequency[b] ? a : b);
 			addSummaryEntry(mostCommonMode, startTime, modes[modes.length - 1].time, totalDistance);
 		}
 
-		return summary.reverse();
+		return summary;
 	};
 
 	// Function to calculate the duration between two times in HH:MM format
@@ -815,22 +822,22 @@ export default function TransportDetectionPage() {
 	};
 
 	const handleSaveEdit = useCallback(() => {
-		const updatedEntries = entries.map((item, index) => 
-		  index === editStates.editIndex ? { ...item, mode: editStates.tempTransportMode } : item
+		const updatedEntries = entries.map((item, index) =>
+			index === editStates.editIndex ? { ...item, mode: editStates.tempTransportMode } : item
 		);
-		
+
 		setEntries(updatedEntries);
 		setEditStates(prev => ({ ...prev, editModalVisible: false }));
-	  }, [editStates.editIndex, editStates.tempTransportMode, entries]);
+	}, [editStates.editIndex, editStates.tempTransportMode, entries]);
 
 	const openEditModal = (index) => {
 		setEditStates(prev => ({
-		  ...prev,
-		  editModalVisible: true,
-		  editIndex: index,
-		  tempTransportMode: entries[index].mode,
+			...prev,
+			editModalVisible: true,
+			editIndex: index,
+			tempTransportMode: entries[index].mode,
 		}));
-	  };
+	};
 
 
 	const editCarEntry = (index) => {
