@@ -381,7 +381,6 @@ export default function TransportDetectionPage() {
 	const stopPredicting = () => {
 		setIsPredicting(false);
 		setPredictionEnded(true);
-		setTransportModes(transportModes.reverse());
 		addPrimaryTransportModeEntries();
 	};
 
