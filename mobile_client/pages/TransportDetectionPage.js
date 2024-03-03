@@ -742,7 +742,8 @@ export default function TransportDetectionPage() {
 			addSummaryEntry(mostCommonMode, startTime, modes[modes.length - 1].time, totalDistance);
 		}
 
-		return summary;
+		// Present information in a more logical order for the user 
+		return summary.reverse();
 	};
 
 	// Function to calculate the duration between two times in HH:MM format
