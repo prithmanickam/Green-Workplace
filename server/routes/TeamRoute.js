@@ -15,6 +15,8 @@ const {
     editTeamWAODays,
     addTeamMember,
     removeTeamMember,
+    getMessages,
+    postMessage
 } = require("../controllers/TeamControllers");
 
 const router = Router();
@@ -61,5 +63,11 @@ router.post("/removeTeamMember", removeTeamMember);
 
 //to get the users team dashboard data from the database
 router.post("/getTeamDashboardData", getTeamDashboardData);
+
+//to get team chat messages
+router.post("/getMessages", getMessages);
+
+//to post message to team chat
+router.post("/postMessage", postMessage);
 
 module.exports = router;

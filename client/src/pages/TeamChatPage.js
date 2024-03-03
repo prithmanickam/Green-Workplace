@@ -105,27 +105,35 @@ export default function TeamChat() {
   }, [messagesContainerRef]);
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from('Message')
-        .select(`
-        date,
-        message,
-        user_id,
-        User(firstname, lastname)
-        `)
-        .eq('team_id', selectedTeamId);
+    if (selectedTeamId) {
 
-      if (error) {
-        toast.error("Failed to fetch chat messages.");
-        return;
-      }
-      setMessages(data);
+      fetch(`${baseURL}/getMessages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          team_id: selectedTeamId,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "ok") {
+            setMessages(data.messages);
 
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-      }
-    };
+            if (messagesContainerRef.current) {
+              messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
+
+          } else {
+            toast.error("Failed to user's messages.");
+          }
+        })
+        .catch((error) => {
+          toast.error("Failed to fetch chat messages. Error:" + error);
+        });
+    }
+
     if (userData) {
       fetch(`${baseURL}/getUserTeams`, {
         method: "POST",
@@ -149,15 +157,13 @@ export default function TeamChat() {
           }
         })
         .catch((error) => {
-          toast.error("An error occurred while fetching teams data.");
+          toast.error("An error occurred while fetching teams data. Error:" + error);
         });
     }
 
     if (!selectedTeamId) {
       return;
     }
-
-    fetchMessages();
 
     const teamChannel = supabase.channel(`team-channel-${selectedTeamId}`);
 
@@ -170,6 +176,12 @@ export default function TeamChat() {
         (payload) => {
           console.log('Change received!', payload)
           setMessages((prevMessages) => [...prevMessages, payload.new]);
+          setTimeout(() => {
+            if (messagesContainerRef.current) {
+              messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
+
+          }, 100);
         }
       )
       .subscribe()
@@ -190,20 +202,34 @@ export default function TeamChat() {
       team_id: selectedTeamId,
     };
 
-    const { error } = await supabase.from('Message').upsert([newMessageData]);
+    fetch(`${baseURL}/postMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: newMessageData,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          setNewMessage('');
 
-    if (error) {
-      toast.error("Failed to send the message.");
-    }
+          setTimeout(() => {
+            if (messagesContainerRef.current) {
+              messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
 
-    setNewMessage('');
+          }, 100);
 
-    setTimeout(() => {
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-      }
-
-    }, 100);
+        } else {
+          toast.error("Failed to send the message.");
+        }
+      })
+      .catch((error) => {
+        toast.error("Failed to send message. Error:" + error);
+      });
   };
 
 

@@ -533,3 +533,42 @@ module.exports.getTeamDashboardData = async (req, res) => {
   }
 };
 
+
+module.exports.getMessages = async (req, res) => {
+  const { team_id } = req.body; 
+
+  try {
+    const { data, error } = await supabase
+      .from('Message')
+      .select(`
+        date,
+        message,
+        user_id,
+        User(firstname, lastname)
+      `)
+      .eq('team_id', team_id);
+
+    res.status(200).json({ status: "ok",  messages: data, error: error});
+  } catch (error) {
+    res.status(500).json({ error: error});
+  }
+};
+
+module.exports.postMessage = async (req, res) => {
+  const { message } = req.body;
+
+  try {
+
+    const { error } = await supabase
+    .from('Message')
+    .upsert([
+      message
+    ]);
+
+    res.status(200).json({ status: "ok", error:error});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+

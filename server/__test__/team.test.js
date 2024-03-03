@@ -892,4 +892,102 @@ describe("Team Controller Tests", () => {
 
   });
 
+  describe('getMessages', () => {
+    it('should fetch messages successfully', async () => {
+      const req = {
+        body: {
+          team_id: 1
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+  
+      const mockMessagesData = [
+        { date: '2021-01-01', message: 'Test Message', user_id: 2, User: { firstname: 'Jane', lastname: 'Doe' } }
+      ];
+  
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockResolvedValue({ data: mockMessagesData, error: null })
+      });
+  
+      await teamControllers.getMessages(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: "ok", messages: mockMessagesData, error: null });
+    });
+  
+    it('should handle errors', async () => {
+      const req = {
+        body: {
+          team_id: 1
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+  
+      const mockError = new Error('Failed to fetch messages');
+  
+      supabase.from.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockRejectedValue(mockError)
+      });
+  
+      await teamControllers.getMessages(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: mockError });
+    });
+  });
+
+  describe('postMessage', () => {
+    it('should post a message successfully', async () => {
+      const req = {
+        body: {
+          message: { date: '2021-01-01', message: 'Hello World', user_id: 2, team_id: 1 }
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+  
+      supabase.from.mockReturnValue({
+        upsert: jest.fn().mockResolvedValue({ data: null, error: null })
+      });
+  
+      await teamControllers.postMessage(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: "ok", error: null });
+    });
+  
+    it('should handle unexpected errors', async () => {
+      const req = {
+        body: {
+          message: { date: '2021-01-01', message: 'Hello World', user_id: 2, team_id: 1 }
+        }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+
+      supabase.from.mockImplementation(() => {
+        throw new Error('Unexpected error');
+      });
+  
+      await teamControllers.postMessage(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Unexpected error' });
+    });
+  });
+  
+  
+
 });
