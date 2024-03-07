@@ -25,7 +25,6 @@ export default function TeamFields({ teams, teamPercentages, handleTeamPercentag
                         <TextField
                             size="small"
                             style={{ width: '30%' }} 
-                            value={isSingleTeamUser ? 100 : teamPercentages[team.teamName] || ''}
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">%</InputAdornment>,
                             }}
