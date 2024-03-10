@@ -9,9 +9,7 @@ export default function TeamFields({ teams, teamPercentages, handleTeamPercentag
 		handleTeamPercentageChange: PropTypes.func.isRequired,
 		carbonFootprint: PropTypes.string.isRequired
 	};
-
-	const isSingleTeamUser = Array.isArray(teams) && teams.length === 1
-
+	
 	return (
 		<>
 			{teams.map((team) => (

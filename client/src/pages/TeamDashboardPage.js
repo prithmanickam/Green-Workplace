@@ -114,7 +114,6 @@ export default function TeamDashboard() {
             const sortedMembers = data.data.team_members.sort((a, b) => a.carbon_footprint - b.carbon_footprint);
             setTeamDashboardData({ ...data.data, team_members: sortedMembers });
 
-            //console.log(data.data.line_graph_values)
           } else {
             toast.error("Failed to fetch team dashboard data.");
           }

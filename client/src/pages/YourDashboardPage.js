@@ -51,7 +51,7 @@ export default function YourDashboard() {
 
   // Adjust the goal message accordingly
   const goalMessage = wasInGreenRegion
-    ? "Goal for This Week: Maintain Carbon Footprint in this Green Region."
+    ? "Goal for This Week: Maintain Carbon Footprint in Green Region."
     : `Goal for This Week: 5% Reduction in Carbon Footprint (Target: ${targetReduction.toFixed(2)} kg CO2e)`;
 
   useAuth(["Employee"]);
