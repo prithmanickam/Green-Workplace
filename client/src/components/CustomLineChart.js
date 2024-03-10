@@ -6,7 +6,7 @@ import { Button } from '@mui/material';
 import Box from '@mui/material/Box';
 import PropTypes from 'prop-types';
 
-function CustomLineChart({ type, userData, team_id }) {
+function CustomLineChart({ type, userData, team_id, setLastWeeksFootprint }) {
   const [lineChartData, setLineChartData] = useState({
     footprintList: [],
     dates: []
@@ -20,6 +20,7 @@ function CustomLineChart({ type, userData, team_id }) {
       company_id: PropTypes.number.isRequired,
     }).isRequired,
     team_id: PropTypes.number.isRequired,
+    setLastWeeksFootprint: PropTypes.func,
   };
 
   useEffect(() => {
@@ -41,6 +42,10 @@ function CustomLineChart({ type, userData, team_id }) {
         .then((data) => {
           if (data.status === "ok") {
             setLineChartData(data.data);
+            const lastWeeksValue = data.data.footprintList[data.data.footprintList.length - 1];
+            if (setLastWeeksFootprint) {
+              setLastWeeksFootprint(lastWeeksValue);
+            }
           } else {
             toast.error("Failed to fetch line chart data.");
           }
@@ -49,7 +54,7 @@ function CustomLineChart({ type, userData, team_id }) {
           toast.error("An error occurred while fetching line chart data.");
         });
     }
-  }, [userData, lineChartLength, type, team_id]);
+  }, [userData, lineChartLength, type, team_id, setLastWeeksFootprint]);
 
   const handleLineChartLengthChange = (length) => {
     setLineChartLength(length);

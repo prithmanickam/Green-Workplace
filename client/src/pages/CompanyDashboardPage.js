@@ -4,6 +4,7 @@ import CustomLineChart from '../components/CustomLineChart';
 import CustomBarChart from '../components/CustomBarChart';
 import CustomPieChart from '../components/CustomPieChart';
 import CarbonStandardPopover from '../components/CarbonStandardPopover';
+import CarbonChangeIndicator from '../components/CarbonChangeIndicator';
 import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import Popover from '@mui/material/Popover';
@@ -31,7 +32,7 @@ export default function CompanyDashboard() {
   const [sortedTeamsData, setSortedTeamsData] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [divisionSearchText, setDivisionSearchText] = useState('');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [sortBy, setSortBy] = useState('carbonFootprintAverage');
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
@@ -69,6 +70,11 @@ export default function CompanyDashboard() {
     if (newMode !== null) {
       setDashboardMode(newMode);
     }
+  };
+
+  const [lastWeeksCarbonFootprint, setLastWeeksCarbonFootprint] = useState(null);
+  const handleSetLastWeeksCarbonFootprint = (footprint) => {
+    setLastWeeksCarbonFootprint(footprint);
   };
 
   useEffect(() => {
@@ -250,11 +256,21 @@ export default function CompanyDashboard() {
                   </Typography>
 
                   <Typography variant="h7" paragraph>
-                  Company Average Commuting Carbon Footprint Per Employee this Week:
+                    Company Average Commuting Carbon Footprint Per Employee this Week:
                   </Typography>
-                  <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {companyData.averageCarbonFootprint} kg CO2e
-                  </Typography>
+
+                  <Stack direction="row" justifyContent="center" width="100%">
+                    <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
+                      {companyData.averageCarbonFootprint} kg CO2e
+                    </Typography>
+                    {lastWeeksCarbonFootprint !== null && (
+                      <CarbonChangeIndicator
+                        currentFootprint={companyData.averageCarbonFootprint}
+                        lastWeeksFootprint={lastWeeksCarbonFootprint}
+                      />
+                    )}
+                  </Stack>
+
                   <IconButton
                     onClick={handleInfoPopoverOpen}
                     aria-label="info"
@@ -273,6 +289,7 @@ export default function CompanyDashboard() {
                     lineChartLength={"week"}
                     userData={userData}
                     team_id={0}
+                    setLastWeeksFootprint={handleSetLastWeeksCarbonFootprint}
                   />
 
                 </CardContent>

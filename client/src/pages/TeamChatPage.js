@@ -283,6 +283,7 @@ export default function TeamChat() {
           style={{
             flex: 1,
             maxHeight: 400,
+            minHeight: 400,
             overflowY: 'auto',
             padding: '10px',
             marginBottom: '10px',

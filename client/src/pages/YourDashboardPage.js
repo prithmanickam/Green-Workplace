@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
 import CustomLineChart from '../components/CustomLineChart';
 import CarbonStandardPopover from '../components/CarbonStandardPopover';
-import { Box, Typography, Button, Card, CardContent, Grid, IconButton, Popover } from '@mui/material';
+import CarbonChangeIndicator from '../components/CarbonChangeIndicator';
+import { Box, Stack, Typography, Button, Card, CardContent, Grid, IconButton, Popover } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { toast } from "react-toastify";
 import InfoIcon from '@mui/icons-material/Info';
 import { baseURL } from "../utils/constant";
@@ -22,6 +25,34 @@ export default function YourDashboard() {
   const [infoPopoverAnchorEl, setInfoPopoverAnchorEl] = useState(null);
   const isInfoPopoverOpen = Boolean(infoPopoverAnchorEl);
   const { companyCarbonStandard } = useCompanyCarbonStandard(userData?.company_id);
+
+
+  const [lastWeeksCarbonFootprint, setLastWeeksCarbonFootprint] = useState(null);
+  const handleSetLastWeeksCarbonFootprint = (footprint) => {
+    setLastWeeksCarbonFootprint(footprint);
+  };
+
+  const currentFootprint = parseFloat(dashboardData.totalCarbonFootprint);
+  const lastWeeksFootprint = parseFloat(lastWeeksCarbonFootprint);
+
+  // Initial and current status of green region
+  const isInGreenRegion = (footprint) => footprint < companyCarbonStandard.amber_carbon_standard;
+  const wasInGreenRegion = isInGreenRegion(lastWeeksFootprint);
+  const isInGreenRegionCurrently = isInGreenRegion(dashboardData.totalCarbonFootprint);
+  const targetReduction = lastWeeksFootprint * 0.95;
+
+  // Determine if the goal is met
+  let goalAchievement;
+  if (wasInGreenRegion) {
+    goalAchievement = isInGreenRegionCurrently;
+  } else {
+    goalAchievement = currentFootprint <= targetReduction;
+  }
+
+  // Adjust the goal message accordingly
+  const goalMessage = wasInGreenRegion
+    ? "Goal for This Week: Maintain Carbon Footprint in this Green Region."
+    : `Goal for This Week: 5% Reduction in Carbon Footprint (Target: ${targetReduction.toFixed(2)} kg CO2e)`;
 
   useAuth(["Employee"]);
 
@@ -70,7 +101,6 @@ export default function YourDashboard() {
     }
 
   }, [userData, confirmedPreferences, firstLoad]);
-
 
 
   useEffect(() => {
@@ -169,9 +199,19 @@ export default function YourDashboard() {
                   <Typography variant="h6" paragraph>
                     Your Total Commuting Carbon Footprint This Week:
                   </Typography>
-                  <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {dashboardData.totalCarbonFootprint} kg CO2e
-                  </Typography>
+                  <Stack direction="row" justifyContent="center" width="100%">
+                    <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
+                      {dashboardData.totalCarbonFootprint} kg CO2e
+                    </Typography>
+
+                    {lastWeeksCarbonFootprint !== null && (
+                      <CarbonChangeIndicator
+                        currentFootprint={dashboardData.totalCarbonFootprint}
+                        lastWeeksFootprint={lastWeeksCarbonFootprint}
+                      />
+                    )}
+                  </Stack>
+
                   <IconButton
                     onClick={handleInfoPopoverOpen}
                     aria-label="info"
@@ -179,6 +219,7 @@ export default function YourDashboard() {
                   >
                     <InfoIcon />
                   </IconButton>
+
                 </CardContent>
               </Card>
             </Grid>
@@ -191,11 +232,32 @@ export default function YourDashboard() {
                     lineChartLength={"week"}
                     userData={userData}
                     team_id={0}
+                    setLastWeeksFootprint={handleSetLastWeeksCarbonFootprint}
                   />
                 </CardContent>
               </Card>
             </Grid>
 
+            {/* Card for Goal Achievement */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Box display="flex" flexDirection="column" alignItems="center">
+                    <Typography variant="h6">
+                      {goalMessage}
+                    </Typography>
+                    {lastWeeksCarbonFootprint !== null ? (
+                      <Typography variant="body1" style={{ display: 'flex', alignItems: 'center' }}>
+                        {goalAchievement ? 'Goal Met' : 'Goal Not Met'}
+                        {goalAchievement ? <CheckCircleIcon color="success" sx={{ ml: 2 }} /> : <CancelIcon color="error" sx={{ ml: 2 }} />}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body1">Last week's data is not available.</Typography>
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
             {/* Third row */}
             <Grid item xs={12}>

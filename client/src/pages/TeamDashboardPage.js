@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SideNavbar from '../components/SideNavbar';
 import CustomLineChart from '../components/CustomLineChart';
 import CarbonStandardPopover from '../components/CarbonStandardPopover';
+import CarbonChangeIndicator from '../components/CarbonChangeIndicator';
 import { Box, Typography, Card, CardContent, Grid, Select, MenuItem, Stack, IconButton, Popover, TablePagination } from '@mui/material';
 import { toast } from "react-toastify";
 import { useUser } from '../context/UserContext';
@@ -36,6 +37,10 @@ export default function TeamDashboard() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(8);
 
+  const [lastWeeksCarbonFootprint, setLastWeeksCarbonFootprint] = useState(null);
+  const handleSetLastWeeksCarbonFootprint = (footprint) => {
+    setLastWeeksCarbonFootprint(footprint);
+  };
 
   useAuth(["Employee"]);
 
@@ -210,9 +215,17 @@ export default function TeamDashboard() {
                   <Typography variant="h6" paragraph>
                     This Weeks Teams Average Commuting Carbon Footprint:
                   </Typography>
-                  <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {teamDashboardData.carbon_footprint_metric} kg CO2e
-                  </Typography>
+                  <Stack direction="row" justifyContent="center" width="100%">
+                    <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
+                      {teamDashboardData.carbon_footprint_metric} kg CO2e
+                    </Typography>
+                    {lastWeeksCarbonFootprint !== null && (
+                      <CarbonChangeIndicator
+                        currentFootprint={teamDashboardData.carbon_footprint_metric}
+                        lastWeeksFootprint={lastWeeksCarbonFootprint}
+                      />
+                    )}
+                  </Stack>
                   <IconButton
                     onClick={handleInfoPopoverOpen}
                     aria-label="info"
@@ -233,6 +246,7 @@ export default function TeamDashboard() {
                         lineChartLength={"week"}
                         userData={userData}
                         team_id={selectedTeamId}
+                        setLastWeeksFootprint={handleSetLastWeeksCarbonFootprint}
                       />
                     )
                   }

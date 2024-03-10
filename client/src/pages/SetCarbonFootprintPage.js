@@ -14,6 +14,8 @@ export default function SetCarbonFootprint() {
   const [teams, setTeams] = useState([]);
   const [totalStats, setTotalStats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const googleMapsPicture = process.env.PUBLIC_URL + '/google-maps-api-page-picture.png';
+  const addManuallyPicture = process.env.PUBLIC_URL + '/add-manually-page-picture.png';
 
   useAuth(["Employee"]);
 
@@ -110,6 +112,7 @@ export default function SetCarbonFootprint() {
             <Link to={"/SetCarbonFootprint/UseMap"}>
               <Button
                 type='submit'
+                startIcon={<img src={googleMapsPicture} alt="Google Maps" style={{ height: '100px' }} />}
                 sx={{
                   mt: 3, mb: 2,
                   color: "white",
@@ -122,10 +125,12 @@ export default function SetCarbonFootprint() {
                 }}>
                 Add Using Google Maps
               </Button>
+
             </Link>
             <Link to={"/SetCarbonFootprint/ManuallyAddFootprint"}>
               <Button
                 aria-label='center back'
+                startIcon={<img src={addManuallyPicture} alt="Google Maps" style={{ height: '100px' }} />}
                 sx={{
                   mt: 3, mb: 2,
                   color: "white",
