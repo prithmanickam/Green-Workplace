@@ -324,9 +324,17 @@ export default function CompanyDashboard() {
                   <Typography variant="h7" paragraph>
                     Company Average Commuting Carbon Footprint Per Employee this Week:
                   </Typography>
-                  <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
-                    {companyData.averageCarbonFootprint} kg CO2e
-                  </Typography>
+                  <Stack direction="row" justifyContent="center" width="100%">
+                    <Typography variant="h4" style={{ fontSize: '1.8rem', marginTop: '10px' }}>
+                      {companyData.averageCarbonFootprint} kg CO2e
+                    </Typography>
+                    {lastWeeksCarbonFootprint !== null && (
+                      <CarbonChangeIndicator
+                        currentFootprint={companyData.averageCarbonFootprint}
+                        lastWeeksFootprint={lastWeeksCarbonFootprint}
+                      />
+                    )}
+                  </Stack>
                   <IconButton
                     onClick={handleInfoPopoverOpen}
                     aria-label="info"
