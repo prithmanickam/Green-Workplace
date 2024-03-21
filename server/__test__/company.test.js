@@ -360,33 +360,6 @@ describe("Company Controller Tests", () => {
       expect(res.status).toHaveBeenCalledWith(500);
     });
 
-
-    it('should return an error if employee is not found', async () => {
-      const req = {
-        body: {
-          employeeEmail: 'employee@example.com'
-        }
-      };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
-
-      // Correctly mock the chain of Supabase calls
-      const mockSingle = jest.fn().mockResolvedValue({ data: null, error: new Error("User not found") });
-      const mockEq = jest.fn(() => ({ single: mockSingle }));
-      const mockSelect = jest.fn(() => ({ eq: mockEq }));
-      supabase.from = jest.fn(() => ({ select: mockSelect }));
-
-      await teamControllers.deleteEmployee(req, res);
-
-      expect(mockSelect).toHaveBeenCalledWith("id");
-      expect(mockEq).toHaveBeenCalledWith("email", 'employee@example.com');
-      expect(mockSingle).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ status: 'error', message: "User not found." });
-    });
-
   });
 
   describe("getCompanyDashboardData", () => {

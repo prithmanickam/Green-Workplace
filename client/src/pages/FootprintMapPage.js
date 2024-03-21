@@ -67,16 +67,18 @@ function FootprintMapPage() {
   const [day, setDay] = React.useState('');
   const [map, setMap] = useState(null);
   const [directionsResponse, setDirectionsResponse] = useState(null);
-  const [distance, setDistance] = useState('');
+  const [distance, setDistance] = useState(0);
+  const [formattedDistance, setFormattedDistance] = useState('');
   const [duration, setDuration] = useState('');
   const [doubledDuration, setDoubledDuration] = useState('');
   const [doubledDistance, setDoubledDistance] = useState('');
+  const [totalDurationMinutes, setTotalDurationMinutes] = useState(0);
   const [travelMode, setTravelMode] = useState('TRANSIT');
   const [departureTime, setDepartureTime] = useState('08:00');
   const [carbonFootprint, setCarbonFootprint] = useState('');
   const [leafIconColour, setLeafIconColour] = useState('#eed202');
   const [teamPercentages, setTeamPercentages] = useState({});
-  const [transitDistances, setTransitDistances] = useState({});
+  const [transitDistances, setTransitDistances] = useState({"Walking":0, "Bus":0,"Train":0,"Subway":0,"Tram":0,"Car":0, "Cycling": 0});
   const [totalPercentage, setTotalPercentage] = useState(0);
   const { teams } = useUserTeamsData(userData?.id);
   const [teamFieldsOpen, setTeamFieldsOpen] = useState(true);
@@ -91,70 +93,37 @@ function FootprintMapPage() {
   useAuth(["Employee"]);
 
 
-  const calculateCarbonFootprint = useCallback((distance, travelMode) => {
+  const calculateCarbonFootprint = useCallback(() => {   
+    let totalCarbonFootprint = 0;
+    totalCarbonFootprint += transitDistances["Walking"] * CO2_EMISSIONS_PER_METER.Walking;
+    totalCarbonFootprint += transitDistances["Bus"] * CO2_EMISSIONS_PER_METER.Bus;
+    totalCarbonFootprint += transitDistances["Train"] * CO2_EMISSIONS_PER_METER.Train;
+    totalCarbonFootprint += transitDistances["Subway"] * CO2_EMISSIONS_PER_METER.Subway;
+    totalCarbonFootprint += transitDistances["Tram"] * CO2_EMISSIONS_PER_METER.Tram;
+    totalCarbonFootprint += transitDistances["Car"] * CO2_EMISSIONS_PER_METER.Car;
 
-    if (travelMode === 'DRIVING') {
-      const carbonFootprint = distance * 1000 * 0.00016637;
-      return carbonFootprint.toFixed(2);
-
-    } else if (travelMode === 'TRANSIT') {
-      let totalCarbonFootprint = 0;
-      totalCarbonFootprint += transitDistances.walking * CO2_EMISSIONS_PER_METER.Walking;
-      totalCarbonFootprint += transitDistances.bus * CO2_EMISSIONS_PER_METER.Bus;
-      totalCarbonFootprint += transitDistances.train * CO2_EMISSIONS_PER_METER.Train;
-      totalCarbonFootprint += transitDistances.subway * CO2_EMISSIONS_PER_METER.Subway;
-      totalCarbonFootprint += transitDistances.tram * CO2_EMISSIONS_PER_METER.Tram;
-
-      const carbonFootprint = totalCarbonFootprint * 2;
-      return carbonFootprint.toFixed(2);
-
-    } else {
-      // For walking or cycling
-      return "0";
-    }
+    
+    return totalCarbonFootprint.toFixed(2);
   }, [transitDistances]);
 
-  useEffect(() => {
-    if (distance !== '') {
-      const carbonFootprint = calculateCarbonFootprint(parseFloat(doubledDistance), travelMode);
-      setCarbonFootprint(carbonFootprint);
-    }
-  }, [distance, doubledDistance, travelMode, calculateCarbonFootprint]);
-
-  // Utility function to convert minutes into hours and minutes format
-  const formatDuration = (totalMinutes) => {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${hours > 0 ? `${hours} h and ` : ''}${minutes} min`;
-  };
+  
 
   useEffect(() => {
     if (duration !== '') {
-      setDoubledDistance(`${distance.slice(0, -3) * 2} km`);
-      
-      const regexHoursAndMinutes = /(\d+)\s*hours?\s*(\d+)?\s*mins?/;
-      const regexMinutesOnly = /(\d+)\s*mins?/;
-      let totalMinutes = 0;
-      
-      const matchesHoursAndMinutes = duration.match(regexHoursAndMinutes);
-      if (matchesHoursAndMinutes) {
-        const hours = parseInt(matchesHoursAndMinutes[1]);
-        const minutes = parseInt(matchesHoursAndMinutes[2] || '0');
-        totalMinutes = (hours * 60) + minutes;
-      } else {
-        const matchesMinutesOnly = duration.match(regexMinutesOnly);
-        if (matchesMinutesOnly) {
-          totalMinutes = parseInt(matchesMinutesOnly[1]);
-        }
-      }
+      // Convert distance from meters to kilometers with two decimal places
+
+      const distanceInKm = (distance / 1000).toFixed(2) + ' km';
+      console.log(distance)
+      console.log(distanceInKm)
   
-      // Double the duration
-      const doubledTotalMinutes = totalMinutes * 2;
-      const formattedDoubledDuration = formatDuration(doubledTotalMinutes);
-      setDoubledDuration(formattedDoubledDuration);
+      // Update the state to display distance in 'X.XX km' format
+      setFormattedDistance(distanceInKm);
+
+      const carbonFootprint = calculateCarbonFootprint();
+      setCarbonFootprint(carbonFootprint);
     }
   }, [distance, duration]);
-
+  
 
   if (!isLoaded) {
     console.log(map)
@@ -191,14 +160,20 @@ function FootprintMapPage() {
       });
 
       setDirectionsResponse(results);
-      setDistance(results.routes[0].legs[0].distance.text);
+      //setDistance(distance + results.routes[0].legs[0].distance.text);
+      console.log(distance + results.routes[0].legs[0].distance.text)
       setDuration(results.routes[0].legs[0].duration.text);
+      const routeDurationStr = results.routes[0].legs[0].duration.text;
+      const routeDurationMinutes = durationToMinutes(routeDurationStr);
+      setTotalDurationMinutes(prevMinutes => prevMinutes + routeDurationMinutes);
 
       let totalWalkingDistance = 0;
       let totalBusDistance = 0;
       let totalTrainDistance = 0;
       let totalSubwayDistance = 0;
       let totalTramDistance = 0;
+      let totalCarDistance = 0;
+      let totalCyclingDistance = 0;
 
       results.routes[0].legs.forEach((leg) => {
         leg.steps.forEach((step) => {
@@ -224,18 +199,32 @@ function FootprintMapPage() {
               default:
                 console.log(`Unhandled vehicle type: ${vehicleType}`);
             }
+          } else if (step.travel_mode === 'DRIVING') {
+            totalCarDistance += stepDistance;
+          } else if (step.travel_mode === 'BICYCLING') {
+            totalCyclingDistance += stepDistance; 
           }
         });
       });
 
       const totalDistances = {
-        walking: totalWalkingDistance,
-        bus: totalBusDistance,
-        train: totalTrainDistance,
-        subway: totalSubwayDistance,
-        tram: totalTramDistance
+        "Walking": transitDistances["Walking"] + totalWalkingDistance,
+        "Bus": transitDistances["Bus"] + totalBusDistance,
+        "Train": transitDistances["Train"] + totalTrainDistance,
+        "Subway": transitDistances["Subway"] + totalSubwayDistance,
+        "Tram": transitDistances["Tram"] + totalTramDistance,
+        "Car": transitDistances["Car"] + totalCarDistance,
+        "Cycling": transitDistances["Cycling"] + totalCyclingDistance,
       };
 
+      const sumOfDistances = Object.values(totalDistances).reduce((acc, distance) => acc + distance, 0);
+
+      // Update the total distance
+      setDistance(sumOfDistances);
+
+      console.log(sumOfDistances)
+      
+      // Used to calculate carbon footprint for each mode accumulated
       setTransitDistances(totalDistances)
 
       if (travelMode === 'DRIVING') {
@@ -252,6 +241,28 @@ function FootprintMapPage() {
       toast.error("Google Maps API has not loaded")
     }
   }
+
+  // Converts a duration string to total minutes
+function durationToMinutes(durationStr) {
+  const regex = /(\d+)\s*hours?|(\d+)\s*mins?/g;
+  let totalMinutes = 0;
+  let match;
+
+  while ((match = regex.exec(durationStr))) {
+    if (match[1]) totalMinutes += parseInt(match[1]) * 60; // hours to minutes
+    if (match[2]) totalMinutes += parseInt(match[2]); // minutes
+  }
+
+  return totalMinutes;
+}
+
+// Formats total minutes back into a readable duration string
+function formatDuration(minutes) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours > 0 ? `${hours} hour${hours > 1 ? 's' : ''} ` : ''}${mins > 0 ? `${mins} min${mins > 1 ? 's' : ''}` : ''}`.trim();
+}
+
 
   // percentage to distribute carbon footprint value to users teams
   const handleTeamPercentageChange = (event, teamName) => {
@@ -273,7 +284,8 @@ function FootprintMapPage() {
 
   function clearRoute() {
     setDirectionsResponse(null);
-    setDistance('');
+    setDistance(0);
+    setFormattedDistance('');
     setDuration('');
     setCarbonFootprint('');
     originRef.current.value = '';
@@ -521,8 +533,8 @@ function FootprintMapPage() {
           <CardContent>
             <Grid container alignItems="center" spacing={1}>
               <Grid item xs={9}>
-                <Typography style={{ fontSize: '13px' }}>Distance: {distance} x 2 = {doubledDistance}</Typography>
-                <Typography style={{ fontSize: '13px' }}>Duration: {duration} x 2 = {doubledDuration} </Typography>
+                <Typography style={{ fontSize: '13px' }}>Distance: {formattedDistance}</Typography>
+                <Typography style={{ fontSize: '13px' }}>Duration: {formatDuration(totalDurationMinutes)}</Typography>
                 <Box py={1}>
                   <Divider />
                 </Box>

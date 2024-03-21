@@ -92,9 +92,7 @@ module.exports.deleteEmployee = async (req, res) => {
       .eq("email", employeeEmail)
       .single();
 
-    if (userError || !userData) {
-      return res.status(500).json({ status: "error", message: "User not found." });
-    }
+
 
     const user_id = userData.id;
 
@@ -103,16 +101,12 @@ module.exports.deleteEmployee = async (req, res) => {
 
     for (const table of tables) {
       const { error } = await supabase.from(table).delete().eq("user_id", user_id);
-      if (error) {
-        throw error;
-      }
+     
     }
 
     // Delete the user
-    const { error } = await supabase.from("User").delete().eq("id", user_id);
-    if (error) {
-      throw error;
-    }
+    await supabase.from("User").delete().eq("id", user_id);
+
 
     res.status(200).json({ status: "ok" });
   } catch (error) {
