@@ -70,8 +70,6 @@ function FootprintMapPage() {
   const [distance, setDistance] = useState(0);
   const [formattedDistance, setFormattedDistance] = useState('');
   const [duration, setDuration] = useState('');
-  const [doubledDuration, setDoubledDuration] = useState('');
-  const [doubledDistance, setDoubledDistance] = useState('');
   const [totalDurationMinutes, setTotalDurationMinutes] = useState(0);
   const [travelMode, setTravelMode] = useState('TRANSIT');
   const [departureTime, setDepartureTime] = useState('08:00');
@@ -110,19 +108,16 @@ function FootprintMapPage() {
 
   useEffect(() => {
     if (duration !== '') {
-      // Convert distance from meters to kilometers with two decimal places
-
+      // Convert distance from meters to kilometers
       const distanceInKm = (distance / 1000).toFixed(2) + ' km';
       console.log(distance)
       console.log(distanceInKm)
-  
-      // Update the state to display distance in 'X.XX km' format
       setFormattedDistance(distanceInKm);
 
       const carbonFootprint = calculateCarbonFootprint();
       setCarbonFootprint(carbonFootprint);
     }
-  }, [distance, duration]);
+  }, [distance, duration, calculateCarbonFootprint]);
   
 
   if (!isLoaded) {
@@ -160,8 +155,6 @@ function FootprintMapPage() {
       });
 
       setDirectionsResponse(results);
-      //setDistance(distance + results.routes[0].legs[0].distance.text);
-      console.log(distance + results.routes[0].legs[0].distance.text)
       setDuration(results.routes[0].legs[0].duration.text);
       const routeDurationStr = results.routes[0].legs[0].duration.text;
       const routeDurationMinutes = durationToMinutes(routeDurationStr);
@@ -221,8 +214,6 @@ function FootprintMapPage() {
 
       // Update the total distance
       setDistance(sumOfDistances);
-
-      console.log(sumOfDistances)
       
       // Used to calculate carbon footprint for each mode accumulated
       setTransitDistances(totalDistances)
@@ -332,7 +323,7 @@ function formatDuration(minutes) {
         body: JSON.stringify({
           user_id: userData.id,
           day,
-          duration: doubledDuration,
+          duration: formatDuration(totalDurationMinutes),
           carbonFootprint: parseFloat(carbonFootprint),
           teamData,
         }),
