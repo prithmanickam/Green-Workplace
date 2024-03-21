@@ -26,7 +26,7 @@ module.exports.addTeam = async (req, res) => {
     const team_owner_id = team_owner.id
 
     // Create the team
-    const { data: createdTeam, error: createTeamError } = await supabase.from("Team").upsert([
+    const { data: createdTeam } = await supabase.from("Team").upsert([
       {
         team_owner_id,
         name: teamName,
@@ -40,7 +40,7 @@ module.exports.addTeam = async (req, res) => {
 
     // Add the team owner to the "Team_Member" table
 
-    const { error: teamOwnerAddError } = await supabase.from("Team_Member").upsert([
+    await supabase.from("Team_Member").upsert([
       {
         team_id,
         user_id: team_owner_id,

@@ -7,7 +7,7 @@ module.exports.getOffices = async (req, res) => {
 
   try {
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("Office")
       .select("*")
       .eq("company_id", company);
@@ -86,7 +86,7 @@ module.exports.deleteEmployee = async (req, res) => {
 
   try {
     // Retrieve the User ID
-    const { data: userData, error: userError } = await supabase
+    const { data: userData } = await supabase
       .from("User")
       .select("id")
       .eq("email", employeeEmail)
@@ -100,7 +100,7 @@ module.exports.deleteEmployee = async (req, res) => {
     const tables = ["Team_Member", "Team_Member_History", "User_Monday_Duration", "User_Tuesday_Duration", "User_Wednesday_Duration", "User_Thursday_Duration", "User_Friday_Duration"];
 
     for (const table of tables) {
-      const { error } = await supabase.from(table).delete().eq("user_id", user_id);
+      await supabase.from(table).delete().eq("user_id", user_id);
      
     }
 

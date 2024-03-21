@@ -146,7 +146,6 @@ export default function SideNavbar() {
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
-              //color="inherit"
               aria-label="open drawer"
               onClick={() => setOpen(!open)}
               edge="start"

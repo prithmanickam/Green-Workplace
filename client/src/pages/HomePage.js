@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
 import { baseURL } from "../utils/constant";
 import { Link } from "react-router-dom";
-import { Container } from "@mui/material";
-import { Card, CardContent, Typography, CardMedia } from "@mui/material";
+import { Card, CardContent, Typography, CardMedia, Container } from "@mui/material";
 import TopNavbar from '../components/TopNavbar';
 import Box from '@mui/material/Box';
 import { ThemeContext } from '../context/ThemeContext';

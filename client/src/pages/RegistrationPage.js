@@ -209,7 +209,6 @@ export default function Registration() {
 										required
 										fullWidth
 										id="email"
-										//label="Email Address"
 										name="email"
 										autoComplete="email"
 										value={email}

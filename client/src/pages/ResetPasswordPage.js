@@ -85,7 +85,6 @@ export default function ResetPasswordPage() {
 							required
 							fullWidth
 							id="email"
-							//label="Email Address"
 							name="email"
 							autoComplete="email"
 							value={email}

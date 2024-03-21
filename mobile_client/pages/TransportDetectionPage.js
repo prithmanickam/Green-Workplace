@@ -815,12 +815,6 @@ export default function TransportDetectionPage() {
 		return minutesToDuration(totalMinutes);
 	};
 
-	const handlePassengerChange = (text) => {
-		// Set to 1 if the input is empty or non-numeric
-		const numPassengers = text === '' || isNaN(text) ? '' : parseInt(text);
-		setCarSettings(prev => ({ ...prev, passengers: numPassengers }));
-	};
-
 	const handleSaveEdit = useCallback(() => {
 		const updatedEntries = entries.map((item, index) =>
 			index === editStates.editIndex ? { ...item, mode: editStates.tempTransportMode } : item
