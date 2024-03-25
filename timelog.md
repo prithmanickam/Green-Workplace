@@ -212,6 +212,8 @@
 ### 12 Nov 2023
 * *10 hours*  Created Backend API to use ML Model to predict transport mode. And started working on frontend to use phone motion sensors to send to the backend.
 
+## Week 9
+
 ### 13 Nov 2023
 * *4 hours*  Fixed frontend to get the right sensor data to send to the backend, to display predicted transport modes every 7 seconds.
 * *0.5 hour*  Meeting with Supervisor.
@@ -221,6 +223,8 @@
 
 ### 21 Nov 2023
 * *0.5 hour*  Meeting with Supervisor.
+
+## Week 10
 
 ### 28 Nov 2023
 * *0.5 hour*  Meeting with Supervisor.
@@ -278,6 +282,8 @@
 * *3 hours* Double carbon footprint in Google Maps Page calculator for return journeys, and Fixed calculate route component overlapping top-navbar in Map Page Bug.
 * *2 hours* Started page reload and auth issues for all pages.
 
+## Week 11
+
 ### 8 Jan 2023
 * *3 hours* Fixed page reload and auth issues for all pages.
 * *7 hours* Created all apis for Admin Functions Page (Edit Company Standard, Add Office, Delete Office, Change Employee Office, and Delete Employee)
@@ -303,11 +309,15 @@
 * *2 hours* Removed unnecessary fields in add team page and added paigination.
 * *5 hours* Further refactoring code - remove code duplication, code smells, fixing minor bugs.
 
+## Week 12
+
 ### 15 Jan 2023
 * *5 hours* Further refactoring code - remove code duplication (-4.3% Duplications), code smells (-~50).
 
 ### 21 Jan 2023
 * *4 hours* Fixed Bugs and Added Edit Car Settings in Manually Set Carbon Footprint Page.
+
+## Week 13
 
 ### 22 Jan 2023
 * *8 hours* Dissertation section 1 to 3 further refined.
@@ -323,6 +333,10 @@
 * *1 hour* Undo send for Add Employees Page
 * *8 hours* Added more detailed Dashboard View. Fixed Typos, Bugs, UI Improvement
 
+## Week 14
+
+## Week 15
+
 ### 7 February 2023
 * *5 hours* Started UI/Graphics improvements to web app
 
@@ -336,9 +350,56 @@
 ### 10 February 2023
 * *1 hour* Fixing bugs from Overlap Sliding Window Method for Mobile App
 
+## Week 16
+
 ### 12 February 2023
 * *1.5 hours* Fixing bugs from Pilot Evaluation
 * *2 hours* Edit Type of Transport Modes for Automatically Added Entries in Mobile App
 
+## Week 16
+
+### 19 February 2023
+* *3 hours* Fix motivation and aims of dissertation
+
+## Week 17
+
+### 26 February 2023
+* *2 hours* Create Pilot Evaluation
+* *5 hours* Start Requirement Gathering Section of Dissertation
+
+### 29 February 2023
+* *5 hours* Create Evaluation Docs e.g. User study, User Testing Evaluation, forms, consent forms, debriefing and introduction forms
+
+### 29 February 2023
+* *8 hours* Finish Requirement Gathering Section of Dissertation
+
+## Week 18
+
+### 4 March 2023
+* *5 hours* Email particpants for User Study
+* *8 hours* Finish Requirement Gathering Section of Dissertation
+
+### 8 March 2023
+* *5 hours* Start User Study
+* *8 hours* Finish Design Section of Dissertation
+
 ### 10 March 2023
 * *3 hours* Code refactoring
+* *8 hours* Start implementation section of Dissertation
+
+## Week 19
+
+### 11 March 2023
+* *8 hours* Finish implementation Section and start evaluation section of Dissertation
+
+### 15 March 2023
+* *8 hours* Finish Evaluation section of Dissertation and start conclusion
+
+### 16 March 2023
+* *3 hours* Finish conclusion of dissertation
+
+## Week 20
+
+### 18 March 2023
+* *8 hours* Fix final errors of dissertation
+
