@@ -1,5 +1,24 @@
 # Green-Workplace
-Integrated Web and Mobile application to monitor and record commuting carbon footprint via transport mode detection.
+Integrated Web and Mobile application to monitor and record commuting carbon footprint via transport mode detection. For my University Year 4 Computer Science Project/Dissertation. Recieved grade A3 (84%) and Award for Best Evaluation.
+
+
+# Video Demo & Screenshots
+
+## Video of Dissertation Outline and Product Demo 
+https://www.youtube.com/watch?v=IgmVUZzCSis&ab_channel=PrithManickam
+
+## Web App Employee pages
+
+<img src="https://github.com/user-attachments/assets/59907ed9-7f2a-4e2a-bb9d-2627613630f9" width="800" /> 
+
+## Web App Admin pages
+
+<img src="https://github.com/user-attachments/assets/c0497d6f-d1ba-446f-9006-9f5f01c42846" width="800" />
+
+## Mobile App pages
+
+<img src="https://github.com/user-attachments/assets/08e06b5a-088f-471a-be96-95d57e741b70" width="500" />
+
 
 # Installation
 ## Frontend
